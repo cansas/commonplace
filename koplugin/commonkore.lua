@@ -1,5 +1,5 @@
--- Commonplace exporter target for KOReader
--- Drops into koreader/plugins/exporter.koplugin/target/commonplace.lua
+-- Commonkore exporter target for KOReader
+-- Drops into koreader/plugins/exporter.koplugin/target/commonkore.lua
 -- Adds an "Export to Commonplace" option in the exporter menu
 
 local InputDialog = require("ui/widget/inputdialog")
@@ -8,7 +8,7 @@ local logger = require("logger")
 local _ = require("gettext")
 
 local CommonplaceExporter = require("base"):new{
-    name = "commonplace",
+    name = "commonkore",
     is_remote = true,
 }
 

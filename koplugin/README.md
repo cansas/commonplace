@@ -1,55 +1,31 @@
-# Commonplace KOReader Exporter
+# Commonkore — KOReader → Commonplace Exporter
 
-Export highlights from KOReader directly to your Commonplace server.
+A single-file exporter target for KOReader that sends your book highlights to your **Commonplace** server.
 
 ## Installation
 
-1. Connect your KOReader device via USB (or copy wirelessly)
-2. Copy `commonplace.lua` to the exporter targets directory:
+1. Connect your KOReader device via USB
+2. Copy `commonkore.lua` into the exporter targets directory:
 
    ```
-   koreader/plugins/exporter.koplugin/target/commonplace.lua
+   koreader/plugins/exporter.koplugin/target/commonkore.lua
    ```
 
-3. Eject and reopen a book on your KOReader device
-4. Open the **Tools** menu (wrench icon) → **Export** → **Commonplace**
-5. Set your server URL (e.g., `https://commonplace.yourdomain.com`)
-6. Set your API token (from Commonplace's Settings page)
-7. Toggle **Export to Commonplace** on
-8. Export highlights from the **Export** submenu
+3. Eject your device and open any book
+4. Open the **Tools** menu (wrench icon) → **Export** → **Commonkore**
+5. Set your **server URL** (e.g., `http://192.168.1.130:8765` or `https://commonplace.yourdomain.com`)
+6. Set your **API token** (from Commonplace's Settings page)
+7. Toggle **Export to Commonkore** on
+8. Use the standard **Export** submenu to send highlights
 
 ## Usage
 
-The plugin supports the same export options as the built-in Readwise exporter:
-
-- **Current book** — Export highlights only for the book you're reading
-- **All books** — Export highlights from all books in your KOReader library
+Same as the built-in Readwise exporter — export highlights for the current book or all books from the Export menu.
 
 ## Cloudflare Tunnel
 
-If your Commonplace server is behind a Cloudflare Access tunnel, make sure you have a **Bypass** policy for paths starting with `/api/` so KOReader can reach the API without browser login.
+If Commonplace is behind Cloudflare Access, add a **Bypass** policy for paths starting with `/api/` so KOReader can reach the API without browser authentication.
 
-## Format
+## How it works
 
-Highlights are sent as:
-
-```json
-POST /api/v2/highlights
-Authorization: Token <your-token>
-
-{
-  "highlights": [{
-    "text": "highlighted text",
-    "title": "Book Title",
-    "author": "Author Name",
-    "source_type": "koreader",
-    "category": "books",
-    "note": "user note",
-    "location": 42,
-    "location_type": "order",
-    "highlighted_at": "2024-01-15T10:30:00Z"
-  }]
-}
-```
-
-This matches the Readwise API v2 format, so Commonplace handles it identically.
+Sends highlights to `{server_url}/api/v2/highlights` with `Authorization: Token {token}`, matching the Readwise API v2 format.
