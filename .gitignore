@@ -32,7 +32,7 @@ config/
 
 # Test files
 test_smoke.py
-seed_from_obsidian.py
+# seed_from_obsidian.py is committed — used for initial data import
 
 # Plan
 PLAN.md
