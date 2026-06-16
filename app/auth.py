@@ -19,7 +19,9 @@ def regenerate_token() -> str:
 class AuthMiddleware(BaseHTTPMiddleware):
     """Token auth for API routes. Web UI pages are exempt (listed in DISPATCH)."""
 
-    DISPATCH = {"/", "/books", "/highlights", "/review", "/import", "/settings", "/health"}
+    DISPATCH = {"/", "/books", "/highlights", "/review", "/import", "/settings", 
+                 "/settings/reset", "/settings/review-mode", "/settings/review-count",
+                 "/health"}
 
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
