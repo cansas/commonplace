@@ -5,6 +5,7 @@ interface CommonplaceSettings {
     apiToken: string;
     outputFolder: string;
     lastSync: string;
+    autoSync: boolean;
 }
 
 const DEFAULT_SETTINGS: CommonplaceSettings = {
@@ -12,6 +13,7 @@ const DEFAULT_SETTINGS: CommonplaceSettings = {
     apiToken: '',
     outputFolder: 'Commonplace',
     lastSync: '',
+    autoSync: true,
 };
 
 interface HighlightData {
@@ -59,6 +61,11 @@ export default class CommonplacePlugin extends Plugin {
         this.addRibbonIcon('download', 'Sync from Commonplace', () => {
             this.syncHighlights();
         });
+
+        // Auto-sync on startup if configured
+        if (this.settings.autoSync) {
+            this.syncHighlights();
+        }
     }
 
     async loadSettings() {
@@ -213,6 +220,16 @@ class CommonplaceSettingTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.outputFolder = value;
                     await this.plugin.saveSettings();
+                }));
+
+                new Setting(containerEl)
+                .setName('Auto-sync on startup')
+                .setDesc('Automatically sync highlights when Obsidian opens')
+                .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.autoSync)
+                .onChange(async (value) => {
+                this.plugin.settings.autoSync = value;
+                await this.plugin.saveSettings();
                 }));
 
         new Setting(containerEl)
