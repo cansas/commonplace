@@ -6,6 +6,7 @@ interface CommonplaceSettings {
     outputFolder: string;
     lastSync: string;
     autoSync: boolean;
+    syncInterval: number;
 }
 
 const DEFAULT_SETTINGS: CommonplaceSettings = {
@@ -14,6 +15,7 @@ const DEFAULT_SETTINGS: CommonplaceSettings = {
     outputFolder: 'Commonplace',
     lastSync: '',
     autoSync: true,
+    syncInterval: 6,
 };
 
 interface HighlightData {
@@ -43,6 +45,7 @@ interface ExportResponse {
 
 export default class CommonplacePlugin extends Plugin {
     settings: CommonplaceSettings;
+    _intervalHandle: number | null = null;
 
     async onload() {
         await this.loadSettings();
@@ -65,6 +68,21 @@ export default class CommonplacePlugin extends Plugin {
         // Auto-sync on startup if configured
         if (this.settings.autoSync) {
             this.syncHighlights();
+        }
+
+        // Periodic sync while open
+        this.setupInterval();
+    }
+
+    setupInterval() {
+        if (this._intervalHandle) {
+            clearInterval(this._intervalHandle);
+        }
+        const hours = this.settings.syncInterval;
+        if (hours > 0 && this.settings.serverUrl && this.settings.apiToken) {
+            this._intervalHandle = window.setInterval(() => {
+                this.syncHighlights();
+            }, hours * 3600000);
         }
     }
 
@@ -198,6 +216,7 @@ class CommonplaceSettingTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.serverUrl = value;
                     await this.plugin.saveSettings();
+                    this.plugin.setupInterval();
                 }));
 
         new Setting(containerEl)
@@ -209,6 +228,7 @@ class CommonplaceSettingTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.apiToken = value;
                     await this.plugin.saveSettings();
+                    this.plugin.setupInterval();
                 }));
 
         new Setting(containerEl)
@@ -222,14 +242,27 @@ class CommonplaceSettingTab extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 }));
 
-                new Setting(containerEl)
-                .setName('Auto-sync on startup')
-                .setDesc('Automatically sync highlights when Obsidian opens')
-                .addToggle(toggle => toggle
+        new Setting(containerEl)
+            .setName('Auto-sync on startup')
+            .setDesc('Automatically sync highlights when Obsidian opens')
+            .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.autoSync)
                 .onChange(async (value) => {
-                this.plugin.settings.autoSync = value;
-                await this.plugin.saveSettings();
+                    this.plugin.settings.autoSync = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('Sync interval')
+            .setDesc('How often to auto-sync while Obsidian is open (hours, 0 = off)')
+            .addSlider(slider => slider
+                .setLimits(0, 24, 1)
+                .setValue(this.plugin.settings.syncInterval)
+                .setDynamicTooltip()
+                .onChange(async (value) => {
+                    this.plugin.settings.syncInterval = value;
+                    await this.plugin.saveSettings();
+                    this.plugin.setupInterval();
                 }));
 
         new Setting(containerEl)
