@@ -1,20 +1,26 @@
 """Commonplace — Self-hosted Readwise alternative."""
 
 from fastapi import FastAPI, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 import os
+import hashlib
 
 from app.database import init_db, get_db
 from app.models import Highlight, Source
-from app.auth import AuthMiddleware
-from app.routes import highlights, review, import_routes, settings as settings_routes, books
+from app.auth import AuthMiddleware, get_token
+from app.routes import highlights, review, import_routes, settings as settings_routes, books, auth as auth_routes
 from app.services.resurface import get_dashboard_counts
 
 app = FastAPI(title="Commonplace", version="0.1.0")
+
+# Session middleware (signed cookie)
+secret = os.environ.get("SESSION_SECRET") or hashlib.sha256(get_token().encode()).hexdigest()
+app.add_middleware(SessionMiddleware, secret_key=secret, max_age=86400 * 30)  # 30 days
 
 # Templates
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
@@ -40,6 +46,10 @@ app.include_router(review.router)
 app.include_router(import_routes.router)
 app.include_router(settings_routes.router)
 app.include_router(books.router)
+app.include_router(auth_routes.router)
+
+# Expose templates to auth routes
+auth_routes.init(templates)
 
 
 @app.on_event("startup")
