@@ -28,8 +28,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
         # Web UI pages and health check are public
         if path in self.DISPATCH or path.startswith("/static"):
             return await call_next(request)
-        # Highlight cards are public (for social media sharing)
-        if path.startswith("/api/highlights/") and path.endswith("/card"):
+        # Highlight cards, edits, and favorites are public (for web UI + sharing)
+        # Paths with a highlight ID (3+ segments like /api/highlights/42) bypass auth
+        parts = [p for p in path.split("/") if p]
+        if len(parts) >= 3 and parts[0] == "api" and parts[1] == "highlights" and parts[2].isdigit():
             return await call_next(request)
 
         # API routes require token
