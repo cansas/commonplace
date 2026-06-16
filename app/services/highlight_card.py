@@ -46,7 +46,7 @@ def generate_card(highlight_text, book_title="", book_author="",
   </defs>
   <rect width="{W}" height="{H}" fill="url(#bg)"/>
   <rect x="40" y="40" width="{W-80}" height="{H-80}" rx="12" fill="none" stroke="#334155" stroke-width="1"/>
-  <text x="80" y="140" font-family="Georgia,serif" font-size="120" fill="#334155" opacity="0.4">&ldquo;</text>
+  <text x="80" y="140" font-family="Georgia,serif" font-size="120" fill="#334155" opacity="0.4">\u201c</text>
   <g font-family="Georgia,serif" font-size="44" fill="#e2e8f0" font-style="italic">
 '''
     for i, line in enumerate(lines):
