@@ -1,5 +1,5 @@
 services:
-  marginalia:
+  commonplace:
     build: .
     ports:
       - "8765:8765"
@@ -11,3 +11,5 @@ services:
     environment:
       - MARGINALIA_TOKEN=${MARGINALIA_TOKEN:-change-me}
     restart: unless-stopped
+    labels:
+      - "app=commonplace"

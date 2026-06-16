@@ -1,4 +1,4 @@
-"""Marginalia — Self-hosted Readwise alternative."""
+"""Commonplace — Self-hosted Readwise alternative."""
 
 from fastapi import FastAPI, Depends, Request
 from fastapi.responses import HTMLResponse
@@ -14,7 +14,7 @@ from app.auth import AuthMiddleware
 from app.routes import highlights, review, import_routes, settings as settings_routes, books
 from app.services.resurface import get_dashboard_counts
 
-app = FastAPI(title="Marginalia", version="0.1.0")
+app = FastAPI(title="Commonplace", version="0.1.0")
 
 # Templates
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
