@@ -176,8 +176,8 @@
 
     function confirmReset() {
         if (confirm('⚠️ Are you sure you want to reset the database? This will permanently delete all highlights, books, and review history. This action cannot be undone.')) {
-            if (confirm('Really? Type "reset" to confirm.')) {
-                // In production, submit a form
+            var response = prompt('Type "reset" to confirm:');
+            if (response === 'reset') {
                 window.location.href = '/settings/reset';
             }
         }
