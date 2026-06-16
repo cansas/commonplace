@@ -28,9 +28,30 @@ def generate_card(highlight_text, book_title="", book_author="",
         lines = lines[:7]
         lines[-1] = lines[-1] + "\u2026"
 
-    line_height = 58
-    text_start_y = 260 if len(lines) <= 3 else 220
-    attr_y = text_start_y + len(lines) * line_height + 50
+    # Vertically center: quote takes upper ~60%, attribution lower ~30%
+    total_lines = len(lines)
+    line_height = 56
+
+    # Quote block: center vertically in the upper portion
+    quote_block_height = total_lines * line_height
+    quote_start_y = int((H * 0.55) - quote_block_height / 2) + 20
+    if quote_start_y < 120:
+        quote_start_y = 120
+
+    # Attribution sits below quote with a gap
+    attr_gap = 36
+    attr_y = quote_start_y + quote_block_height + attr_gap
+    # Keep attribution above 80% of card height
+    max_attr_y = int(H * 0.78)
+    if attr_y > max_attr_y:
+        attr_y = max_attr_y
+
+    # Count attribution lines
+    attr_lines = 0
+    if book_title:
+        attr_lines += 1
+    if book_author:
+        attr_lines += 1
 
     s = f'''<?xml version="1.0" encoding="UTF-8"?>
 <svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg">
@@ -46,21 +67,22 @@ def generate_card(highlight_text, book_title="", book_author="",
   </defs>
   <rect width="{W}" height="{H}" fill="url(#bg)"/>
   <rect x="40" y="40" width="{W-80}" height="{H-80}" rx="12" fill="none" stroke="#334155" stroke-width="1"/>
-  <text x="80" y="140" font-family="Georgia,serif" font-size="120" fill="#334155" opacity="0.4">\u201c</text>
-  <g font-family="Georgia,serif" font-size="44" fill="#e2e8f0" font-style="italic">
+  <text x="80" y="120" font-family="Georgia,serif" font-size="100" fill="#334155" opacity="0.35">\u201c</text>
+  <g font-family="Georgia,serif" font-size="40" fill="#e2e8f0" font-style="italic">
 '''
     for i, line in enumerate(lines):
-        y = text_start_y + i * line_height
+        y = quote_start_y + i * line_height
         s += f'    <text x="100" y="{y}">{escape(line)}</text>\n'
 
-    s += f'''  </g>
-  <line x1="100" y1="{attr_y}" x2="400" y2="{attr_y}" stroke="url(#accent)" stroke-width="3" stroke-linecap="round"/>
-'''
-    if book_title:
-        s += f'  <text x="100" y="{attr_y + 40}" font-family="Georgia,serif" font-size="28" fill="#cbd5e1" font-weight="bold">{escape(book_title)}</text>\n'
-    if book_author:
-        s += f'  <text x="100" y="{attr_y + 72}" font-family="Arial,sans-serif" font-size="20" fill="#64748b">{escape(book_author)}</text>\n'
+    s += '  </g>\n'
 
-    s += f'  <text x="{W - 200}" y="{H - 40}" font-family="Arial,sans-serif" font-size="14" fill="#475569" text-anchor="end">Marginalia</text>\n'
+    if book_title or book_author:
+        s += f'  <line x1="100" y1="{attr_y}" x2="400" y2="{attr_y}" stroke="url(#accent)" stroke-width="3" stroke-linecap="round"/>\n'
+        if book_title:
+            s += f'  <text x="100" y="{attr_y + 38}" font-family="Georgia,serif" font-size="26" fill="#cbd5e1" font-weight="bold">{escape(book_title)}</text>\n'
+        if book_author:
+            ay = attr_y + 38 + (30 if book_title else 0)
+            s += f'  <text x="100" y="{ay}" font-family="Arial,sans-serif" font-size="18" fill="#64748b">{escape(book_author)}</text>\n'
+
     s += '</svg>\n'
     return s
