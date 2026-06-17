@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey, Table, Boolean, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey, Table, Boolean
 from sqlalchemy.orm import relationship
 from app.database import Base
 from datetime import datetime
@@ -92,18 +92,3 @@ class ApiToken(Base):
     last_used_at = Column(DateTime, nullable=True)
 
     user = relationship("User", back_populates="tokens")
-
-
-class BookCover(Base):
-    __tablename__ = "book_covers"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    book_title = Column(String(511), nullable=False)
-    book_author = Column(String(511), nullable=False, default="")
-    cover_source = Column(String(16), nullable=False, default="none")
-    cover_url = Column(String(1024), nullable=True)
-    updated_at = Column(DateTime, default=datetime.utcnow)
-
-    __table_args__ = (
-        UniqueConstraint("book_title", "book_author", name="uq_book_cover"),
-    )

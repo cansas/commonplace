@@ -6,13 +6,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
 import os
-import hashlib
-import secrets
 
 from app.database import init_db, get_db, async_session
 from app.models import Highlight, Source
-from app.auth import AuthMiddleware, ensure_admin, get_token
+from app.auth import AuthMiddleware, ensure_admin
 from app.routes import highlights, review, import_routes, settings as settings_routes, books, auth as auth_routes, share as share_routes
 from app.services.resurface import get_dashboard_counts
 
@@ -25,11 +24,6 @@ templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "t
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.isdir(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
-
-# Uploaded cover images
-covers_dir = os.path.join(os.path.dirname(__file__), "..", "data", "covers")
-os.makedirs(covers_dir, exist_ok=True)
-app.mount("/static/covers", StaticFiles(directory=covers_dir), name="covers")
 
 # Auth middleware (inner — checks session, runs after Session populates it)
 app.add_middleware(AuthMiddleware)
