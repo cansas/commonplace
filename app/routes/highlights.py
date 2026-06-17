@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func as sa_func, or_
+from sqlalchemy import select, func as sa_func
 from app.database import get_db
 from app.models import Highlight, Tag
 from app.schemas import HighlightOut, HighlightCreate, HighlightUpdate
@@ -39,13 +39,19 @@ async def highlights_page(
     query = select(Highlight).order_by(Highlight.created_at.desc())
 
     if search:
-        query = query.where(
-            or_(
-                Highlight.text.ilike(f"%{search}%"),
-                Highlight.book_title.ilike(f"%{search}%"),
-                Highlight.book_author.ilike(f"%{search}%"),
-            )
+        from sqlalchemy import text
+        fts_q = text(
+            "SELECT rowid FROM highlights_fts WHERE highlights_fts MATCH :q ORDER BY rank"
         )
+        try:
+            fts_r = await db.execute(fts_q, {"q": search.strip()})
+            ids = [r[0] for r in fts_r.fetchall()]
+            if ids:
+                query = query.where(Highlight.id.in_(ids))
+            else:
+                query = query.where(Highlight.id == -1)  # No results
+        except Exception:
+            pass  # Fall back to no filter on bad query syntax
     if source:
         query = query.where(Highlight.source_type == source)
     if book:
@@ -138,9 +144,21 @@ async def list_highlights(
     skip: int = 0,
     limit: int = 50,
     since: Optional[str] = "",
+    search: Optional[str] = "",
     db: AsyncSession = Depends(get_db),
 ):
-    query = select(Highlight).order_by(Highlight.created_at.desc())
+    if search and search.strip():
+        from sqlalchemy import text
+        fts_query = text(
+            "SELECT rowid FROM highlights_fts WHERE highlights_fts MATCH :q ORDER BY rank"
+        )
+        fts_result = await db.execute(fts_query, {"q": search.strip()})
+        ids = [row[0] for row in fts_result.fetchall()]
+        if not ids:
+            return []
+        query = select(Highlight).where(Highlight.id.in_(ids)).order_by(Highlight.created_at.desc())
+    else:
+        query = select(Highlight).order_by(Highlight.created_at.desc())
     if since:
         try:
             since_dt = datetime.fromisoformat(since)

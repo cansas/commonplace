@@ -58,3 +58,60 @@ async def init_db():
             ))
         except Exception:
             pass  # Already exists or not supported
+
+    # ── FTS5 Full-Text Search ─────────────────────────────────────────────
+    async with engine.begin() as conn:
+        from sqlalchemy import text as sqltext
+        # Create FTS5 virtual table
+        await conn.execute(sqltext(
+            "CREATE VIRTUAL TABLE IF NOT EXISTS highlights_fts USING fts5("
+            "  text, note, book_title, book_author,"
+            "  content='highlights', content_rowid='id',"
+            "  tokenize='porter unicode61'"
+            ")"
+        ))
+        # Sync triggers
+        await conn.execute(sqltext(
+            "CREATE TRIGGER IF NOT EXISTS highlights_ai AFTER INSERT ON highlights BEGIN "
+            "  INSERT INTO highlights_fts(rowid, text, note, book_title, book_author) "
+            "  VALUES (new.id, new.text, new.note, new.book_title, new.book_author); "
+            "END"
+        ))
+        await conn.execute(sqltext(
+            "CREATE TRIGGER IF NOT EXISTS highlights_ad AFTER DELETE ON highlights BEGIN "
+            "  INSERT INTO highlights_fts(highlights_fts, rowid, text, note, book_title, book_author) "
+            "  VALUES ('delete', old.id, old.text, old.note, old.book_title, old.book_author); "
+            "END"
+        ))
+        await conn.execute(sqltext(
+            "CREATE TRIGGER IF NOT EXISTS highlights_au AFTER UPDATE ON highlights BEGIN "
+            "  INSERT INTO highlights_fts(highlights_fts, rowid, text, note, book_title, book_author) "
+            "  VALUES ('delete', old.id, old.text, old.note, old.book_title, old.book_author); "
+            "  INSERT INTO highlights_fts(rowid, text, note, book_title, book_author) "
+            "  VALUES (new.id, new.text, new.note, new.book_title, new.book_author); "
+            "END"
+        ))
+
+    # Backfill FTS index for existing highlights
+    async with async_session() as session:
+        from app.models import Highlight
+        from sqlalchemy import select, func
+        result = await session.execute(
+            select(func.count()).select_from(
+                sqltext("highlights_fts")
+            )
+        )
+        fts_count = result.scalar() or 0
+        hl_count = await session.execute(select(func.count(Highlight.id)))
+        total = hl_count.scalar() or 0
+
+        if fts_count < total:
+            print(f"  Backfilling FTS index ({fts_count}/{total} rows present)...")
+            await session.execute(sqltext(
+                "INSERT INTO highlights_fts(rowid, text, note, book_title, book_author) "
+                "SELECT h.id, h.text, h.note, h.book_title, h.book_author "
+                "FROM highlights h LEFT JOIN highlights_fts f ON h.id = f.rowid "
+                "WHERE f.rowid IS NULL"
+            ))
+            await session.commit()
+            print("  FTS backfill complete")

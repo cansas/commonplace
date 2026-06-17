@@ -58,7 +58,7 @@ async def settings_page(
             "total_books": books,
             "review_mode": _settings.get("review_mode", "random"),
             "review_count": _settings.get("review_count", 10),
-            "version": "0.4.1",
+            "version": "0.4.2",
             "saved": saved,
             "new_token": new_token,
             "username": request.session.get("username", ""),

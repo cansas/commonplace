@@ -16,7 +16,7 @@ from app.routes import highlights, review, import_routes, settings as settings_r
 from app.services.resurface import get_dashboard_counts
 from app.services.book_covers import batch_search
 
-app = FastAPI(title="Commonplace", version="0.4.1")
+app = FastAPI(title="Commonplace", version="0.4.2")
 
 # Ensure covers directory exists on the mounted volume
 COVERS_DIR = os.environ.get("COVERS_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "covers"))
