@@ -121,7 +121,9 @@
                                     {% endif %}
                                     <button onclick="event.stopPropagation(); toggleEdit({{ h.id }})" class="px-3 py-1 bg-white border border-slate-200 text-slate-600 rounded text-xs font-medium hover:bg-slate-50 transition-colors">✏️ Edit</button>
                                     <button onclick="event.stopPropagation(); deleteHighlight({{ h.id }})" class="px-3 py-1 bg-red-50 border border-red-200 text-red-600 rounded text-xs font-medium hover:bg-red-100 transition-colors">🗑️ Delete</button>
+                                    {% if h.share_token %}
                                     <a href="/share/{{ h.share_token }}" target="_blank" class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-medium hover:bg-indigo-100 transition-colors">📤 Share</a>
+                                    {% endif %}
                                 </div>
                             </div>
                             <!-- Inline Edit Form -->
