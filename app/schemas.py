@@ -1,22 +1,26 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
 
 
 class HighlightCreate(BaseModel):
+    """Accept Readwise v2 field names (title, author, location) as aliases
+    for internal names (book_title, book_author, page)."""
     text: str
     note: Optional[str] = None
-    page: Optional[int] = None
+    page: Optional[int] = Field(None, validation_alias="location")
     chapter: Optional[str] = None
     source_type: str = "manual"
     source_id: Optional[str] = None
-    book_title: str = "Untitled"
-    book_author: Optional[str] = None
+    book_title: str = Field("Untitled", validation_alias="title")
+    book_author: Optional[str] = Field(None, validation_alias="author")
     book_url: Optional[str] = None
     category: Optional[str] = "books"
     color: Optional[str] = None
     highlighted_at: Optional[datetime] = None
     tags: Optional[List[str]] = None
+
+    model_config = {"populate_by_name": True}
 
 
 class HighlightOut(BaseModel):
