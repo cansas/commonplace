@@ -41,3 +41,5 @@ test_smoke.py
 
 # Plan
 PLAN.md
+logo/
+settings.reader.lua
