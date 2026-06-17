@@ -30,13 +30,13 @@ except Exception:
 # Templates
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
+# Uploaded cover images — mount BEFORE /static so covers take priority
+app.mount("/static/covers", StaticFiles(directory=COVERS_DIR), name="covers")
+
 # Static files
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.isdir(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
-
-# Uploaded cover images
-app.mount("/static/covers", StaticFiles(directory=COVERS_DIR), name="covers")
 
 # Auth middleware (inner — checks session, runs after Session populates it)
 app.add_middleware(AuthMiddleware)
