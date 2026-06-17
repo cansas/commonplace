@@ -19,19 +19,23 @@ def _wrap_text(text, max_chars):
 
 
 def _calc_sizes(num_lines):
-    """Pick font size, line height, and wrap width based on line count."""
+    """Pick font size, line height, and wrap width based on line count.
+
+    wrap_chars is conservative — Georgia italic at 64px is ~36px per char,
+    so 30 chars = 1080px, fitting within 1100px of usable width.
+    """
     if num_lines <= 2:
-        return 64, 82, 35, 90   # font, line_h, wrap, quote_size
+        return 64, 82, 30, 90   # font, line_h, wrap, quote_size
     elif num_lines <= 3:
-        return 56, 72, 38, 90
+        return 56, 72, 33, 90
     elif num_lines <= 4:
-        return 48, 64, 40, 80
+        return 48, 64, 36, 80
     elif num_lines <= 5:
-        return 44, 58, 42, 70
+        return 44, 58, 38, 70
     elif num_lines <= 6:
-        return 40, 54, 44, 65
+        return 40, 54, 40, 65
     else:
-        return 36, 50, 48, 60
+        return 36, 50, 42, 60
 
 
 def generate_card(highlight_text, book_title="", book_author="",
@@ -72,7 +76,7 @@ def generate_card(highlight_text, book_title="", book_author="",
         attr_y = H - 160
 
     s = f'''<?xml version="1.0" encoding="UTF-8"?>
-<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg">
+<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" overflow="hidden">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#1e293b"/>
