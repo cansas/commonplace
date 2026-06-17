@@ -124,6 +124,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
             ):
                 return await call_next(request)
 
+            # Allow API calls from logged-in web sessions (no token needed)
+            if request.session.get("user_id"):
+                return await call_next(request)
+
             auth = request.headers.get("Authorization", "")
             if not auth.startswith("Token "):
                 raise HTTPException(
