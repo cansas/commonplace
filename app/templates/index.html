@@ -12,37 +12,37 @@
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <!-- Total Highlights -->
-        <div class="stat-card bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+        <a href="/highlights" class="stat-card bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group block">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Highlights</p>
-                    <p class="text-3xl font-bold text-slate-900 mt-1">{{ total_highlights }}</p>
+                    <p class="text-3xl font-bold text-slate-900 mt-1 group-hover:text-indigo-600 transition-colors">{{ total_highlights }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-2xl">📝</div>
             </div>
-        </div>
+        </a>
 
         <!-- Books -->
-        <div class="stat-card bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+        <a href="/books" class="stat-card bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all group block">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Books</p>
-                    <p class="text-3xl font-bold text-slate-900 mt-1">{{ total_books }}</p>
+                    <p class="text-3xl font-bold text-slate-900 mt-1 group-hover:text-emerald-600 transition-colors">{{ total_books }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-2xl">📚</div>
             </div>
-        </div>
+        </a>
 
         <!-- Today's Review -->
-        <div class="stat-card bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+        <a href="/review" class="stat-card bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-amber-300 transition-all group block">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Today's Review</p>
-                    <p class="text-3xl font-bold text-slate-900 mt-1">{{ today_review_count }} <span class="text-lg font-normal text-slate-400">remaining</span></p>
+                    <p class="text-3xl font-bold text-slate-900 mt-1 group-hover:text-amber-600 transition-colors">{{ today_review_count }} <span class="text-lg font-normal text-slate-400">remaining</span></p>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-2xl">📖</div>
             </div>
-        </div>
+        </a>
     </div>
 
     <!-- Quick Actions -->

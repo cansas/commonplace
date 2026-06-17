@@ -1,17 +1,20 @@
 """Books browse route — list books by title/author with highlight counts."""
 
-from fastapi import APIRouter, Depends, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, Query, Request, UploadFile, File, Form
+from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func as sa_func, or_
 from app.database import get_db
-from app.models import Highlight
+from app.models import Highlight, BookCover
+from app.services.book_covers import search_cover
 from typing import Optional
 import math
+import os
 
 router = APIRouter(tags=["books"])
 
 _jinja = None
+COVERS_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "covers")
 
 
 def init(templates):
@@ -70,11 +73,20 @@ async def books_page(
 
     books = []
     for row in rows:
+        cover_result = await db.execute(
+            select(BookCover).where(
+                BookCover.book_title == row.book_title,
+                BookCover.book_author == (row.book_author or ""),
+            )
+        )
+        cover = cover_result.scalar_one_or_none()
         books.append({
             "title": row.book_title,
             "author": row.book_author or "Unknown",
             "highlight_count": row.highlight_count,
             "last_highlighted": row.last_highlighted.strftime("%Y-%m-%d") if row.last_highlighted else "",
+            "cover_url": cover.cover_url if cover else None,
+            "cover_source": cover.cover_source if cover else "none",
         })
 
     return _jinja.TemplateResponse(
@@ -90,3 +102,81 @@ async def books_page(
             "total_books": total,
         },
     )
+
+
+@router.post("/api/books/cover/fetch")
+async def fetch_cover(title: str = Form(...), author: str = Form(default=""), db: AsyncSession = Depends(get_db)):
+    url = await search_cover(title, author)
+    if not url:
+        return {"ok": False, "error": "No cover found on Open Library"}
+
+    result = await db.execute(
+        select(BookCover).where(
+            BookCover.book_title == title,
+            BookCover.book_author == author,
+        )
+    )
+    cover = result.scalar_one_or_none()
+    if cover:
+        cover.cover_url = url
+        cover.cover_source = "openlibrary"
+    else:
+        db.add(BookCover(book_title=title, book_author=author, cover_url=url, cover_source="openlibrary"))
+    await db.commit()
+    return {"ok": True, "cover_url": url}
+
+
+@router.post("/api/books/cover/upload")
+async def upload_cover(title: str = Form(...), author: str = Form(default=""), file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in (".jpg", ".jpeg", ".png", ".webp"):
+        return JSONResponse({"ok": False, "error": "Only JPG, PNG, and WebP are accepted"}, status_code=400)
+
+    dest = os.path.join(COVERS_DIR, f"{title.replace('/', '-')}_{author.replace('/', '-')}{ext}")
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    content = await file.read()
+    with open(dest, "wb") as f:
+        f.write(content)
+    cover_url = f"/static/covers/{os.path.basename(dest)}"
+
+    result = await db.execute(
+        select(BookCover).where(
+            BookCover.book_title == title,
+            BookCover.book_author == author,
+        )
+    )
+    cover = result.scalar_one_or_none()
+    if cover:
+        cover.cover_url = cover_url
+        cover.cover_source = "upload"
+    else:
+        db.add(BookCover(book_title=title, book_author=author, cover_url=cover_url, cover_source="upload"))
+    await db.commit()
+    return {"ok": True, "cover_url": cover_url}
+
+
+@router.post("/api/books/cover/backfill")
+async def backfill_covers(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Highlight.book_title, Highlight.book_author)
+        .distinct()
+        .group_by(Highlight.book_title, Highlight.book_author)
+        .order_by(sa_func.count(Highlight.id).desc())
+    )
+    books = result.all()
+    fetched = 0
+    for row in books:
+        existing = await db.execute(
+            select(BookCover).where(
+                BookCover.book_title == row.book_title,
+                BookCover.book_author == (row.book_author or ""),
+            )
+        )
+        if existing.scalar_one_or_none():
+            continue
+        url = await search_cover(row.book_title, row.book_author or "")
+        if url:
+            db.add(BookCover(book_title=row.book_title, book_author=row.book_author or "", cover_url=url, cover_source="openlibrary"))
+            fetched += 1
+            await db.commit()
+    return {"ok": True, "fetched": fetched}
