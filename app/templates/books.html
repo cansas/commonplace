@@ -36,7 +36,7 @@
   {% if books %}
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
     {% for book in books %}
-    <a href="/highlights?book={{ book.title | urlencode }}" class="block bg-white rounded-lg border border-slate-200 overflow-hidden hover:border-indigo-300 hover:shadow-md transition-all group">
+    <a href="/highlights?book={{ book.title | urlencode }}" class="block bg-white rounded-lg border border-slate-200 overflow-hidden hover:border-indigo-300 hover:shadow-md transition-all group" data-title="{{ book.title }}" data-author="{{ book.author }}">
       <!-- Cover -->
       <div class="aspect-[2/3] bg-slate-100 flex items-center justify-center overflow-hidden">
         {% if book.cover_url %}
@@ -55,9 +55,9 @@
         {% endif %}
         <div class="flex items-center justify-between mt-2">
           <span class="text-xs font-medium text-indigo-600">{{ book.highlight_count }} highlight{% if book.highlight_count != 1 %}s{% endif %}</span>
-          <div class="flex gap-1">
-              <span onclick="event.preventDefault(); event.stopPropagation(); fetchCover('{{ book.title|urlencode }}', '{{ book.author|urlencode }}')" class="text-xs text-slate-400 hover:text-indigo-500 cursor-pointer" title="Fetch cover from Goodreads">🔍</span>
-              <span onclick="event.preventDefault(); event.stopPropagation(); uploadCover('{{ book.title|urlencode }}', '{{ book.author|urlencode }}')" class="text-xs text-slate-400 hover:text-emerald-500 cursor-pointer" title="Upload custom cover">📤</span>
+            <div class="flex gap-1">
+              <span onclick="event.preventDefault(); event.stopPropagation(); fetchCover(this)" class="text-xs text-slate-400 hover:text-indigo-500 cursor-pointer" title="Fetch cover from Goodreads">🔍</span>
+              <span onclick="event.preventDefault(); event.stopPropagation(); uploadCover(this)" class="text-xs text-slate-400 hover:text-emerald-500 cursor-pointer" title="Upload custom cover">📤</span>
             </div>
         </div>
       </div>
@@ -91,12 +91,18 @@
 
 {% block scripts %}
 <script>
-  function fetchCover(title, author) {
-    title = decodeURIComponent(title);
-    author = decodeURIComponent(author);
+  function cardData(el) {
+    var card = el.closest('[data-title]');
+    return {
+      title: card ? card.dataset.title : '',
+      author: card ? card.dataset.author : ''
+    };
+  }
+  function fetchCover(el) {
+    var d = cardData(el);
     var fd = new FormData();
-    fd.append('title', title);
-    fd.append('author', author);
+    fd.append('title', d.title);
+    fd.append('author', d.author);
     fetch('/api/books/cover/fetch', { method: 'POST', body: fd })
       .then(function(r) { return r.json(); })
       .then(function(d) {
@@ -113,16 +119,15 @@
         else alert('Error: ' + (d.error || 'unknown'));
       });
   }
-  function uploadCover(title, author) {
-    title = decodeURIComponent(title);
-    author = decodeURIComponent(author);
+  function uploadCover(el) {
+    var d = cardData(el);
     var input = document.createElement('input');
     input.type = 'file';
     input.accept = '.jpg,.jpeg,.png,.webp';
     input.onchange = function() {
       var fd = new FormData();
-      fd.append('title', title);
-      fd.append('author', author);
+      fd.append('title', d.title);
+      fd.append('author', d.author);
       fd.append('file', input.files[0]);
       fetch('/api/books/cover/upload', { method: 'POST', body: fd })
         .then(function(r) { return r.json(); })
