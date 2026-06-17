@@ -15,7 +15,7 @@ from app.auth import AuthMiddleware, ensure_admin
 from app.routes import highlights, review, import_routes, settings as settings_routes, books, auth as auth_routes
 from app.services.resurface import get_dashboard_counts
 
-app = FastAPI(title="Commonplace", version="0.1.0")
+app = FastAPI(title="Commonplace", version="0.3.0")
 
 # Templates
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
