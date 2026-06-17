@@ -18,6 +18,15 @@ from app.services.book_covers import batch_search
 
 app = FastAPI(title="Commonplace", version="0.4.0")
 
+# Ensure covers directory exists on the mounted volume
+COVERS_DIR = os.environ.get("COVERS_DIR", "/app/data/covers")
+os.makedirs(COVERS_DIR, exist_ok=True)
+# Ensure covers dir is writable by appuser
+try:
+    os.chmod(COVERS_DIR, 0o755)
+except Exception:
+    pass
+
 # Templates
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
@@ -27,9 +36,7 @@ if os.path.isdir(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # Uploaded cover images
-covers_dir = os.path.join(os.path.dirname(__file__), "..", "data", "covers")
-os.makedirs(covers_dir, exist_ok=True)
-app.mount("/static/covers", StaticFiles(directory=covers_dir), name="covers")
+app.mount("/static/covers", StaticFiles(directory=COVERS_DIR), name="covers")
 
 # Auth middleware (inner — checks session, runs after Session populates it)
 app.add_middleware(AuthMiddleware)

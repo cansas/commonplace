@@ -24,7 +24,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 COPY . .
 
-RUN chown -R appuser:appgroup /app
+RUN mkdir -p /app/data/covers && chown -R appuser:appgroup /app
 
 USER appuser
 

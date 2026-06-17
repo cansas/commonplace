@@ -14,7 +14,7 @@ import os
 router = APIRouter(tags=["books"])
 
 _jinja = None
-COVERS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "covers")
+COVERS_DIR = os.environ.get("COVERS_DIR", "/app/data/covers")
 
 
 def init(templates):
