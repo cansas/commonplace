@@ -55,9 +55,7 @@
         {% endif %}
         <div class="flex items-center justify-between mt-2">
           <span class="text-xs font-medium text-indigo-600">{{ book.highlight_count }} highlight{% if book.highlight_count != 1 %}s{% endif %}</span>
-          {% if book.cover_source == 'none' %}
-          <span onclick="event.preventDefault(); event.stopPropagation(); fetchCover('{{ book.title|urlencode }}', '{{ book.author|urlencode }}')" class="text-xs text-slate-400 hover:text-indigo-500 cursor-pointer" title="Fetch cover from Open Library">🔍</span>
-          {% endif %}
+          <span onclick="event.preventDefault(); event.stopPropagation(); fetchCover('{{ book.title|urlencode }}', '{{ book.author|urlencode }}')" class="text-xs text-slate-400 hover:text-indigo-500 cursor-pointer" title="Fetch/replace cover from Open Library">🔍</span>
         </div>
       </div>
     </a>
