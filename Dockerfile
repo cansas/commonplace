@@ -1,11 +1,19 @@
 FROM python:3.11-slim AS builder
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcairo2-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcairo2 \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
