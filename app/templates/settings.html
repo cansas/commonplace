@@ -20,6 +20,13 @@
     </div>
     {% endif %}
 
+    {% set error = request.query_params.get('error', '') %}
+    {% if error == 'wrong-password' %}
+    <div class="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">❌ Current password is incorrect.</div>
+    {% elif error == 'weak-password' %}
+    <div class="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">❌ New password must be at least 4 characters.</div>
+    {% endif %}
+
     <!-- Device Tokens -->
     <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -62,6 +69,31 @@
                 </div>
                 <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm shrink-0">
                     + Create
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Account -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100">
+            <h2 class="text-base font-semibold text-slate-800">👤 Account</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Signed in as <strong>{{ username }}</strong>.</p>
+        </div>
+        <div class="px-6 py-5">
+            <form method="POST" action="/settings/change-password" class="max-w-sm space-y-4">
+                <div>
+                    <label for="current_password" class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">Current Password</label>
+                    <input type="password" id="current_password" name="current_password" required autocomplete="current-password"
+                           class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent" />
+                </div>
+                <div>
+                    <label for="new_password" class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">New Password</label>
+                    <input type="password" id="new_password" name="new_password" required autocomplete="new-password" minlength="4"
+                           class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent" />
+                </div>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                    Change Password
                 </button>
             </form>
         </div>

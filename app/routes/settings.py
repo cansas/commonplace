@@ -1,13 +1,11 @@
-"""
-Settings page routes + API token management.
-"""
+"""Settings page routes + API token management."""
 from fastapi import APIRouter, Depends, Request, Form, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, delete
 from app.database import get_db
-from app.models import Highlight, ApiToken
-from app.auth import generate_api_token
+from app.models import Highlight, ApiToken, User
+from app.auth import generate_api_token, hash_password, verify_password
 
 router = APIRouter(tags=["settings"])
 
@@ -58,6 +56,7 @@ async def settings_page(
             "version": "0.2.0",
             "saved": saved,
             "new_token": new_token,
+            "username": request.session.get("username", ""),
         },
     )
 
@@ -71,6 +70,37 @@ async def set_review_mode(spaced_mode: str = Form(default="")):
 @router.post("/settings/review-count")
 async def set_review_count(count: int = Form(default=10)):
     _settings["review_count"] = max(5, min(30, count))
+    return RedirectResponse(url="/settings?saved=1", status_code=303)
+
+
+# ── Password change ───────────────────────────────────────────────────────
+
+
+@router.post("/settings/change-password")
+async def change_password(
+    request: Request,
+    current_password: str = Form(...),
+    new_password: str = Form(...),
+    db: AsyncSession = Depends(get_db),
+):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return RedirectResponse(url="/login", status_code=303)
+
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    if not verify_password(current_password, user.password_hash):
+        return RedirectResponse(url="/settings?error=wrong-password", status_code=303)
+
+    if len(new_password) < 4:
+        return RedirectResponse(url="/settings?error=weak-password", status_code=303)
+
+    user.password_hash = hash_password(new_password)
+    await db.commit()
+
     return RedirectResponse(url="/settings?saved=1", status_code=303)
 
 
