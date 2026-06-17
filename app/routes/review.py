@@ -1,5 +1,5 @@
-"""Daily review — flash-card style. Simple: Favorite, Delete, or Next."""
-from fastapi import APIRouter, Depends, Request, Form, Query
+"""Daily review — flash-card style. Respects daily limit from settings."""
+from fastapi import APIRouter, Depends, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
@@ -19,84 +19,81 @@ def init(templates):
 
 
 def _today_start() -> datetime:
+    """Start of today (midnight UTC)."""
     return datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
 
-async def _count_unreviewed(db) -> int:
+async def _reviewed_today_count(db) -> int:
+    """How many highlights have been reviewed so far today (UTC)."""
+    today_start = _today_start()
+    result = await db.execute(
+        select(func.count(ReviewLog.id))
+        .where(ReviewLog.reviewed_at >= today_start)
+    )
+    return result.scalar() or 0
+
+
+async def _get_unreviewed_highlight(db):
+    """Pick one random highlight not yet logged in ReviewLog today."""
     today_start = _today_start()
     reviewed_today = (
         select(ReviewLog.highlight_id)
         .where(ReviewLog.reviewed_at >= today_start)
     )
     result = await db.execute(
-        select(func.count(Highlight.id))
+        select(Highlight)
         .where(Highlight.id.notin_(reviewed_today))
-    )
-    return result.scalar() or 0
-
-
-async def _build_session(db) -> list[int]:
-    """Pick highlights not yet reviewed today, up to the user's session count."""
-    today_start = _today_start()
-    count = review_settings.get("review_count", 10)
-
-    candidates = await get_random_highlights(db, count * 2)
-
-    session_ids = []
-    for c in candidates:
-        if len(session_ids) >= count:
-            break
-        result = await db.execute(
-            select(func.count(ReviewLog.id)).where(
-                ReviewLog.highlight_id == c.id,
-                ReviewLog.reviewed_at >= today_start,
-            )
-        )
-        if (result.scalar() or 0) == 0:
-            session_ids.append(c.id)
-
-    return session_ids
-
-
-async def _get_highlight(db, hl_id: int):
-    result = await db.execute(
-        select(Highlight).where(Highlight.id == hl_id)
+        .order_by(func.random())
+        .limit(1)
     )
     return result.scalar_one_or_none()
+
+
+async def _log_review(db, hl_id: int):
+    """Record that a highlight was reviewed (seen) right now."""
+    log = ReviewLog(
+        highlight_id=hl_id,
+        rating=None,  # no SM-2 rating in flash-card mode
+        reviewed_at=datetime.utcnow(),
+    )
+    db.add(log)
+    await db.commit()
 
 
 @router.get("/review", response_class=HTMLResponse)
 async def review_page(
     request: Request,
-    s: str = "",  # comma-separated highlight IDs for the session
-    i: int = 0,   # current index into s
     db: AsyncSession = Depends(get_db),
 ):
-    # Parse or build session
-    if s:
-        session_ids = [int(x) for x in s.split(",") if x.strip().isdigit()]
-    else:
-        session_ids = await _build_session(db)
+    daily_limit = review_settings.get("review_count", 10)
+    done_today = await _reviewed_today_count(db)
 
-    if not session_ids or i >= len(session_ids):
-        total_remaining = await _count_unreviewed(db)
+    # If at or over daily limit, you're done for the day
+    if done_today >= daily_limit:
         return _jinja.TemplateResponse(
             request,
             "review.html",
             {
                 "active_page": "review",
                 "highlight": None,
-                "total_count": total_remaining,
+                "current_index": daily_limit,
+                "total_count": daily_limit,
             },
         )
 
-    hl = await _get_highlight(db, session_ids[i])
+    hl = await _get_unreviewed_highlight(db)
+
     if not hl:
-        # Highlight was deleted since session was built — skip it
-        i += 1
-        s_str = ",".join(str(x) for x in session_ids)
-        return RedirectResponse(
-            url=f"/review?s={s_str}&i={i}", status_code=303
+        # All highlights have been reviewed — done for the day
+        return _jinja.TemplateResponse(
+            request,
+            "review.html",
+            {
+                "active_page": "review",
+                "highlight": None,
+                "current_index": done_today,
+                "total_count": daily_limit,
+            },
         )
 
     highlight_data = {
@@ -112,74 +109,53 @@ async def review_page(
         "favorite": hl.favorite,
     }
 
-    session_str = ",".join(str(x) for x in session_ids)
-
     return _jinja.TemplateResponse(
         request,
         "review.html",
         {
             "active_page": "review",
             "highlight": highlight_data,
-            "session_ids": session_str,
-            "current_index": i + 1,
-            "total_count": len(session_ids),
+            "current_index": done_today + 1,
+            "total_count": daily_limit,
         },
     )
 
 
-def _next_url(session_ids: str, i: int) -> str:
-    """Build the redirect URL advancing to the next highlight."""
-    ids = [x for x in session_ids.split(",") if x.strip().isdigit()]
-    next_i = i + 1
-    if next_i >= len(ids):
-        return "/review"
-    return f"/review?s={session_ids}&i={next_i}"
+# ── Actions — each one logs the review and advances ──────────────────────
 
 
 @router.post("/review/next")
 async def review_next(
-    s: str = Form(""),
-    i: int = Form(0),
+    hl_id: int = Form(...),
+    db: AsyncSession = Depends(get_db),
 ):
-    return RedirectResponse(url=_next_url(s, i), status_code=303)
-
-
-@router.post("/review/skip")
-async def review_skip(
-    s: str = Form(""),
-    i: int = Form(0),
-):
-    return RedirectResponse(url=_next_url(s, i), status_code=303)
+    await _log_review(db, hl_id)
+    return RedirectResponse(url="/review", status_code=303)
 
 
 @router.post("/review/favorite")
 async def review_favorite(
-    s: str = Form(""),
-    i: int = Form(0),
+    hl_id: int = Form(...),
     db: AsyncSession = Depends(get_db),
 ):
-    ids = [int(x) for x in s.split(",") if x.strip().isdigit()]
-    if i < len(ids):
-        hl = await _get_highlight(db, ids[i])
-        if hl:
-            hl.favorite = 0 if hl.favorite else 1
-            await db.commit()
-    return RedirectResponse(url=_next_url(s, i), status_code=303)
+    hl = await db.get(Highlight, hl_id)
+    if hl:
+        hl.favorite = 0 if hl.favorite else 1
+    await _log_review(db, hl_id)
+    return RedirectResponse(url="/review", status_code=303)
 
 
 @router.post("/review/delete")
 async def review_delete(
-    s: str = Form(""),
-    i: int = Form(0),
+    hl_id: int = Form(...),
     db: AsyncSession = Depends(get_db),
 ):
-    ids = [int(x) for x in s.split(",") if x.strip().isdigit()]
-    if i < len(ids):
-        hl = await _get_highlight(db, ids[i])
-        if hl:
-            await db.delete(hl)
-            await db.commit()
-    return RedirectResponse(url=_next_url(s, i), status_code=303)
+    hl = await db.get(Highlight, hl_id)
+    if hl:
+        await db.delete(hl)
+    await _log_review(db, hl_id)
+    await db.commit()
+    return RedirectResponse(url="/review", status_code=303)
 
 
 from sqlalchemy import select, func

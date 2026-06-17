@@ -65,23 +65,20 @@
     <div class="flex gap-3 justify-center">
         <form method="POST" action="/review/delete" class="contents"
               onsubmit="return confirm('Delete this highlight? This cannot be undone.')">
-            <input type="hidden" name="s" value="{{ session_ids }}" />
-            <input type="hidden" name="i" value="{{ current_index - 1 }}" />
+            <input type="hidden" name="hl_id" value="{{ highlight.id }}" />
             <button type="submit" class="px-5 py-2.5 bg-red-50 border border-red-200 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors shadow-sm">
                 🗑️ Delete
             </button>
         </form>
         <form method="POST" action="/review/favorite" class="contents">
-            <input type="hidden" name="s" value="{{ session_ids }}" />
-            <input type="hidden" name="i" value="{{ current_index - 1 }}" />
+            <input type="hidden" name="hl_id" value="{{ highlight.id }}" />
             <button type="submit" class="px-5 py-2.5 border border-slate-200 text-sm font-medium rounded-lg transition-colors shadow-sm
                 {% if highlight.favorite %}bg-amber-50 border-amber-200 text-amber-600 hover:bg-amber-100{% else %}bg-white text-slate-600 hover:bg-slate-50{% endif %}">
                 {% if highlight.favorite %}⭐ Unfavorite{% else %}☆ Favorite{% endif %}
             </button>
         </form>
         <form method="POST" action="/review/next" class="contents">
-            <input type="hidden" name="s" value="{{ session_ids }}" />
-            <input type="hidden" name="i" value="{{ current_index - 1 }}" />
+            <input type="hidden" name="hl_id" value="{{ highlight.id }}" />
             <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
                 Next →
             </button>
