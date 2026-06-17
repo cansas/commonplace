@@ -47,3 +47,14 @@ async def init_db():
         if missing:
             await session.commit()
             print(f"  Backfilled share_token for {len(missing)} highlights")
+
+    # Create dedup index (text + book_title + highlighted_at)
+    async with engine.begin() as conn:
+        from sqlalchemy import text as sqltext
+        try:
+            await conn.execute(sqltext(
+                "CREATE INDEX IF NOT EXISTS ix_highlights_dedup "
+                "ON highlights(text, book_title, highlighted_at)"
+            ))
+        except Exception:
+            pass  # Already exists or not supported

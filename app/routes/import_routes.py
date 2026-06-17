@@ -52,21 +52,45 @@ async def import_page(
     )
 
 
+async def _is_duplicate(db, text, book_title, highlighted_at):
+    """Check if a highlight with the same text, book, and timestamp already exists."""
+    from sqlalchemy import and_
+    result = await db.execute(
+        select(Highlight).where(
+            and_(
+                Highlight.text == text,
+                Highlight.book_title == book_title,
+                Highlight.highlighted_at == highlighted_at,
+            )
+        ).limit(1)
+    )
+    return result.scalar_one_or_none() is not None
+
+
 async def _save_highlights(db, highlights_list, source_name, source_type):
-    """Bulk-save highlights and record source."""
+    """Bulk-save highlights and record source. Skips duplicates."""
     count = 0
+    skipped = 0
     for item in highlights_list:
+        text = item["text"]
+        book_title = item.get("book_title", "Untitled")
+        highlighted_at = item.get("highlighted_at")
+
+        if await _is_duplicate(db, text, book_title, highlighted_at):
+            skipped += 1
+            continue
+
         hl = Highlight(
-            text=item["text"],
+            text=text,
             note=item.get("note"),
             page=item.get("page"),
             chapter=item.get("chapter"),
             source_type=source_type,
-            book_title=item.get("book_title", "Untitled"),
+            book_title=book_title,
             book_author=item.get("book_author"),
             category=item.get("category", "books"),
             color=item.get("color"),
-            highlighted_at=item.get("highlighted_at") or datetime.utcnow(),
+            highlighted_at=highlighted_at or datetime.utcnow(),
             share_token=get_share_token(),
         )
         db.add(hl)
@@ -132,20 +156,29 @@ async def readwise_api_import(
     db: AsyncSession = Depends(get_db),
 ):
     count = 0
+    skipped = 0
     for item in data.highlights:
+        text = item.text
+        book_title = item.book_title or "Untitled"
+        highlighted_at = item.highlighted_at
+
+        if await _is_duplicate(db, text, book_title, highlighted_at):
+            skipped += 1
+            continue
+
         hl = Highlight(
-            text=item.text,
+            text=text,
             note=item.note,
             page=item.page,
             chapter=item.chapter,
             source_type=item.source_type or "koreader",
             source_id=item.source_id,
-            book_title=item.book_title or "Untitled",
+            book_title=book_title,
             book_author=item.book_author,
             book_url=item.book_url,
             category=item.category or "books",
             color=item.color,
-            highlighted_at=item.highlighted_at or datetime.utcnow(),
+            highlighted_at=highlighted_at or datetime.utcnow(),
             share_token=get_share_token(),
         )
         db.add(hl)
@@ -160,4 +193,4 @@ async def readwise_api_import(
     db.add(src)
     await db.commit()
 
-    return {"imported": count}
+    return {"imported": count, "skipped": skipped}
