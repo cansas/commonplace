@@ -247,9 +247,16 @@ async def revoke_token_form(
     return RedirectResponse(url="/settings?saved=1", status_code=303)
 
 
-@router.get("/settings/reset")
-async def reset_database(request: Request, db: AsyncSession = Depends(get_db)):
-    """Delete all highlights and review history."""
+@router.post("/settings/reset")
+async def reset_database(
+    request: Request,
+    confirm: str = Form(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete all highlights and review history. Requires typing 'reset'."""
+    if confirm.strip().lower() != "reset":
+        return RedirectResponse(url="/settings?error=Type+%22reset%22+to+confirm", status_code=303)
+
     from app.models import Highlight, ReviewLog, Source, Tag, highlight_tags
     await db.execute(highlight_tags.delete())
     await db.execute(ReviewLog.__table__.delete())

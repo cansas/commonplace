@@ -1,4 +1,6 @@
 """Login/logout routes — username/password session auth."""
+import time
+from collections import defaultdict
 from fastapi import APIRouter, Depends, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +13,11 @@ from app.auth import verify_password
 router = APIRouter(tags=["auth"])
 
 _jinja = None
+
+# Login rate limiting: 5 attempts per 5 minutes per IP
+LOGIN_MAX_ATTEMPTS = 5
+LOGIN_WINDOW = 300  # 5 minutes in seconds
+_login_attempts = defaultdict(list)
 
 
 def init(templates):
@@ -32,6 +39,16 @@ async def login(
     password: str = Form(...),
     db: AsyncSession = Depends(get_db),
 ):
+    # Rate limit check
+    ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    _login_attempts[ip] = [t for t in _login_attempts[ip] if now - t < LOGIN_WINDOW]
+    if len(_login_attempts[ip]) >= LOGIN_MAX_ATTEMPTS:
+        return _jinja.TemplateResponse(
+            request, "login.html",
+            {"error": "Too many login attempts. Try again in 5 minutes."},
+        )
+    
     result = await db.execute(
         select(User).where(User.username == username)
     )
@@ -42,6 +59,7 @@ async def login(
         request.session["username"] = user.username
         return RedirectResponse(url="/", status_code=303)
 
+    _login_attempts[ip].append(now)
     return _jinja.TemplateResponse(
         request, "login.html",
         {"error": "Invalid username or password."},

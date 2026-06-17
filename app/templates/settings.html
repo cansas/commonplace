@@ -212,7 +212,16 @@
         if (confirm('⚠️ Are you sure you want to reset the database? This will permanently delete all highlights, books, and review history. This action cannot be undone.')) {
             var response = prompt('Type "reset" to confirm:');
             if (response === 'reset') {
-                window.location.href = '/settings/reset';
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/settings/reset';
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'confirm';
+                input.value = 'reset';
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
             }
         }
     }
