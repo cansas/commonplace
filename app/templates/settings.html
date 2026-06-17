@@ -13,35 +13,55 @@
     <div class="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-lg">✅ Settings saved.</div>
     {% endif %}
 
-    <!-- API Access -->
+    {% if new_token %}
+    <div class="bg-amber-50 border border-amber-200 text-amber-900 text-sm px-4 py-3 rounded-lg space-y-1">
+        <p class="font-semibold">⚠️ New token created — copy it now. You won't see it again.</p>
+        <code class="block px-3 py-2 bg-white border border-amber-300 rounded font-mono text-xs break-all select-all">{{ new_token }}</code>
+    </div>
+    {% endif %}
+
+    <!-- Device Tokens -->
     <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-100">
-            <h2 class="text-base font-semibold text-slate-800">🔑 API Access</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Use the API token to access Commonplace programmatically.</p>
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h2 class="text-base font-semibold text-slate-800">🔑 Device Tokens</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Each device or app gets its own token. Revoke individually if compromised.</p>
+            </div>
         </div>
         <div class="px-6 py-5 space-y-4">
-            <div class="flex items-center gap-3">
-                <div class="flex-1">
-                    <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">API Token</label>
-                    <div class="flex items-center gap-2">
-                        <code id="api-token-display" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 font-mono select-all">
-                            {% if api_token %}
-                            {{ api_token[:8] }}••••••••••••{{ api_token[-4:] }}
-                            {% else %}
-                            No token configured
-                            {% endif %}
-                        </code>
-                        {% if api_token %}
-                        <button onclick="copyToken()" class="px-3 py-2 bg-white border border-slate-200 text-sm text-slate-600 rounded-lg hover:bg-slate-50 transition-colors shrink-0" title="Copy token">
-                            📋
-                        </button>
-                        {% endif %}
+            {% if tokens %}
+            <div class="space-y-3">
+                {% for tok in tokens %}
+                <div class="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-lg border border-slate-100">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-slate-800">{{ tok.name }}</span>
+                            <code class="text-xs text-slate-500 font-mono">{{ tok.token_prefix }}</code>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            Created {{ tok.created_at.strftime('%Y-%m-%d %H:%M') if tok.created_at else '?' }}
+                            {% if tok.last_used_at %} · Last used {{ tok.last_used_at.strftime('%Y-%m-%d %H:%M') }}{% endif %}
+                        </p>
                     </div>
+                    <form method="POST" action="/settings/revoke-token/{{ tok.id }}" onsubmit="return confirm('Revoke token \'{{ tok.name }}\'? This will break the device until a new token is configured.')">
+                        <button type="submit" class="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">Revoke</button>
+                    </form>
                 </div>
+                {% endfor %}
             </div>
-            <form method="POST" action="/settings/regenerate-token">
-                <button type="submit" class="px-4 py-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-100 transition-colors">
-                    🔄 Regenerate Token
+            {% else %}
+            <p class="text-sm text-slate-400 text-center py-4">No device tokens yet. Create one below.</p>
+            {% endif %}
+
+            <form method="POST" action="/settings/create-token" class="flex items-end gap-3 pt-2 border-t border-slate-100">
+                <div class="flex-1">
+                    <label for="token_name" class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">New Token</label>
+                    <input type="text" id="token_name" name="token_name" required
+                           placeholder="e.g. koreader, obsidian, ios-app"
+                           class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent" />
+                </div>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm shrink-0">
+                    + Create
                 </button>
             </form>
         </div>
@@ -68,9 +88,9 @@
                         </p>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" name="spaced_mode" value="1" 
+                        <input type="checkbox" name="spaced_mode" value="1"
                                onchange="this.form.submit()"
-                               {% if review_mode == 'spaced' %}checked{% endif %} 
+                               {% if review_mode == 'spaced' %}checked{% endif %}
                                class="sr-only peer" />
                         <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                         <span class="ml-3 text-sm text-slate-500">
@@ -141,8 +161,8 @@
                 <span class="font-medium text-slate-700">{{ version or '0.1.0' }}</span>
             </div>
             <div class="flex items-center justify-between">
-                <span class="text-slate-500">Documentation</span>
-                <a href="https://marginalia-docs.example.com" class="text-indigo-600 hover:text-indigo-800 font-medium" target="_blank" rel="noopener">View docs →</a>
+                <span class="text-slate-500">Username</span>
+                <span class="font-medium text-slate-700">{{ request.session.get('username', '—') }}</span>
             </div>
             <div class="flex items-center justify-between">
                 <span class="text-slate-500">Framework</span>
@@ -156,24 +176,6 @@
 
 {% block scripts %}
 <script>
-    function copyToken() {
-        var display = document.getElementById('api-token-display');
-        // In a real app, you'd fetch the full token via API
-        // For now, select the masked text
-        var range = document.createRange();
-        range.selectNodeContents(display);
-        var selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        try {
-            document.execCommand('copy');
-            var btn = event.target;
-            btn.textContent = '✅';
-            setTimeout(function() { btn.textContent = '📋'; }, 2000);
-        } catch(e) {}
-        selection.removeAllRanges();
-    }
-
     function confirmReset() {
         if (confirm('⚠️ Are you sure you want to reset the database? This will permanently delete all highlights, books, and review history. This action cannot be undone.')) {
             var response = prompt('Type "reset" to confirm:');

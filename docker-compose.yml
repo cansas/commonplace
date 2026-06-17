@@ -9,7 +9,9 @@ services:
     env_file:
       - .env
     environment:
-      - MARGINALIA_TOKEN=${MARGINALIA_TOKEN:-change-me}
+      - COMMONPLACE_USERNAME=${COMMONPLACE_USERNAME:-admin}
+      - COMMONPLACE_PASSWORD=${COMMONPLACE_PASSWORD}
+      - SESSION_SECRET=${SESSION_SECRET}
     restart: unless-stopped
     labels:
       - "app=commonplace"

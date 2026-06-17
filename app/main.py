@@ -8,11 +8,10 @@ from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 import os
-import hashlib
 
-from app.database import init_db, get_db
+from app.database import init_db, get_db, async_session
 from app.models import Highlight, Source
-from app.auth import AuthMiddleware, get_token
+from app.auth import AuthMiddleware, ensure_admin
 from app.routes import highlights, review, import_routes, settings as settings_routes, books, auth as auth_routes
 from app.services.resurface import get_dashboard_counts
 
@@ -30,7 +29,7 @@ if os.path.isdir(static_dir):
 app.add_middleware(AuthMiddleware)
 
 # Session middleware (outer — runs first, populates session cookie)
-secret = os.environ.get("SESSION_SECRET") or hashlib.sha256(get_token().encode()).hexdigest()
+secret = os.environ.get("SESSION_SECRET") or os.urandom(32).hex()
 app.add_middleware(SessionMiddleware, secret_key=secret, max_age=86400 * 30)  # 30 days
 
 # Init route modules with templates
@@ -55,6 +54,8 @@ auth_routes.init(templates)
 @app.on_event("startup")
 async def startup():
     await init_db()
+    async with async_session() as db:
+        await ensure_admin(db)
 
 
 @app.get("/health")

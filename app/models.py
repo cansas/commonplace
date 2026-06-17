@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey, Table, Boolean
 from sqlalchemy.orm import relationship
 from app.database import Base
 from datetime import datetime
@@ -66,3 +66,28 @@ class ReviewLog(Base):
     next_review_at = Column(DateTime, nullable=True)
 
     highlight = relationship("Highlight", back_populates="reviews")
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String(128), unique=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    tokens = relationship("ApiToken", back_populates="user", cascade="all, delete-orphan")
+
+
+class ApiToken(Base):
+    __tablename__ = "api_tokens"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    name = Column(String(128), nullable=False)  # e.g. "koreader", "obsidian-plugin"
+    token_hash = Column(String(255), nullable=False)  # SHA256 of the token secret
+    token_prefix = Column(String(16), nullable=False)  # first chars for display
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_used_at = Column(DateTime, nullable=True)
+
+    user = relationship("User", back_populates="tokens")
