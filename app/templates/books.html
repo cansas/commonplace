@@ -88,9 +88,8 @@
   </div>
   {% endif %}
 </div>
-{% endblock %}
 
-<!-- Rename Modal -->
+<!-- Rename Modal (inside content block so Jinja2 renders it) -->
 <div id="rename-modal" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center">
   <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden" onclick="event.stopPropagation()">
     <div class="px-6 py-4 border-b border-slate-100">
@@ -121,6 +120,7 @@
     </form>
   </div>
 </div>
+{% endblock %}
 
 {% block scripts %}
 <script>
