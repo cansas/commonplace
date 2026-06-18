@@ -50,14 +50,14 @@ async def _get_unreviewed_highlight(db):
 
 
 async def _log_review(db, hl_id: int):
-    """Record that a highlight was reviewed (seen) right now."""
+    """Record that a highlight was reviewed (seen) right now.
+    Does NOT commit — caller is responsible for committing."""
     log = ReviewLog(
         highlight_id=hl_id,
         rating=None,  # no SM-2 rating in flash-card mode
         reviewed_at=datetime.utcnow(),
     )
     db.add(log)
-    await db.commit()
 
 
 @router.get("/review", response_class=HTMLResponse)
@@ -130,6 +130,7 @@ async def review_next(
     db: AsyncSession = Depends(get_db),
 ):
     await _log_review(db, hl_id)
+    await db.commit()
     return RedirectResponse(url="/review", status_code=303)
 
 
@@ -142,6 +143,7 @@ async def review_favorite(
     if hl:
         hl.favorite = 0 if hl.favorite else 1
     await _log_review(db, hl_id)
+    await db.commit()
     return RedirectResponse(url="/review", status_code=303)
 
 

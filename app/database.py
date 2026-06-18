@@ -21,17 +21,22 @@ async def init_db():
     async with engine.begin() as conn:
         from app.models import Base  # noqa: F401
         await conn.run_sync(Base.metadata.create_all)
-    # Migrations for existing databases
+    # Migrations for existing databases — use PRAGMA to check column existence
     async with engine.begin() as conn:
-        from sqlalchemy import text
-        try:
-            await conn.execute(text("ALTER TABLE highlights ADD COLUMN favorite INTEGER DEFAULT 0"))
-        except Exception:
-            pass  # Column already exists
-        try:
-            await conn.execute(text("ALTER TABLE highlights ADD COLUMN share_token VARCHAR(64)"))
-        except Exception:
-            pass  # Column already exists
+        from sqlalchemy import text as sqltext
+        # Check which columns actually exist in highlights
+        pragma = await conn.execute(sqltext("PRAGMA table_info('highlights')"))
+        existing = {row[1] for row in pragma.fetchall()}  # row[1] = column name
+
+        pending = []
+        if "favorite" not in existing:
+            pending.append("ALTER TABLE highlights ADD COLUMN favorite INTEGER DEFAULT 0")
+        if "share_token" not in existing:
+            pending.append("ALTER TABLE highlights ADD COLUMN share_token VARCHAR(64)")
+
+        for stmt in pending:
+            print(f"  Running migration: {stmt}")
+            await conn.execute(sqltext(stmt))
 
     # Backfill share_token for highlights that don't have one
     async with async_session() as session:
