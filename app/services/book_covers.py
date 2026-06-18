@@ -110,12 +110,8 @@ async def _hardcover_search(title: str, author: str, client: httpx.AsyncClient) 
                     print(f"  [covers] Hardcover cover from image field: {cover}")
                     return cover
 
-            # Construct from slug
-            slug = book.get("slug")
-            if slug:
-                cover = f"https://hardcovercdn.com/books/{slug}.jpg"
-                print(f"  [covers] Hardcover cover from slug: {cover}")
-                return cover
+            # Note: slug-based URL construction (~hardcovercdn.com) is unreliable
+            # and often blocked by hotlink protection. Fall through to Open Library.
 
         # Fallback: try querying books by ID
         if ids_list:
@@ -129,12 +125,13 @@ async def _hardcover_search(title: str, author: str, client: httpx.AsyncClient) 
             if book_resp.status_code == 200:
                 book_data = book_resp.json().get("data", {}).get("book", {})
                 if book_data:
-                    slug = book_data.get("slug")
-                    if slug:
-                        return f"https://hardcovercdn.com/books/{slug}.jpg"
+                    # Prefer explicit image URL over slug-based construction
                     img = book_data.get("image")
                     if img and isinstance(img, dict) and img.get("url"):
                         return img["url"]
+                    slug = book_data.get("slug")
+                    if slug:
+                        return f"https://hardcovercdn.com/books/{slug}.jpg"
 
         if results_list:
             print(f"  [covers] Hardcover first result keys: {list(results_list[0].keys())[:10] if isinstance(results_list[0], dict) else results_list[0]}")
