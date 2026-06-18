@@ -136,19 +136,19 @@ async def _opds_search(title: str, author: str, client: httpx.AsyncClient) -> Op
                 if len(img_bytes) < 500:
                     continue
 
-                # Quick content-type sanity check — must be an image
-                ctype = img_resp.headers.get("content-type", "")
-                if not any(t in ctype for t in ["image/", "octet-stream"]) and not ctype:
-                    # If no mime from server, check magic bytes
-                    if not (img_bytes[:2] == b"\xff\xd8" or img_bytes[:4] == b"\x89PNG" or img_bytes[:4] == b"RIFF"):
-                        continue
+                # Validate actual image content via magic bytes
+                is_jpeg = img_bytes[:2] == b"\xff\xd8"
+                is_png = img_bytes[:4] == b"\x89PNG"
+                is_webp = img_bytes[:4] == b"RIFF" and img_bytes[8:12] == b"WEBP"
+                if not (is_jpeg or is_png or is_webp):
+                    print(f"  [covers] OPDS: invalid image for '{title}' (got {len(img_bytes)} bytes, starts {img_bytes[:8].hex()})")
+                    continue
 
-                # Save to covers directory
+                # Determine extension from actual content
                 ext = ".jpg"
-                content_type = img_resp.headers.get("content-type", "")
-                if "png" in content_type:
+                if is_png:
                     ext = ".png"
-                elif "webp" in content_type:
+                elif is_webp:
                     ext = ".webp"
 
                 import hashlib
