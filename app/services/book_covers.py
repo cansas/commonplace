@@ -127,7 +127,9 @@ async def _hardcover_search(title: str, author: str, client: httpx.AsyncClient) 
             print(f"  [covers] Hardcover IDs without results: {ids[:3]}")
 
     except Exception as e:
+        import traceback
         print(f"  [covers] Hardcover error for '{title}': {e}")
+        print(f"  [covers] Hardcover traceback: {traceback.format_exc()[:300]}")
     return None
 
 
