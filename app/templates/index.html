@@ -128,7 +128,7 @@
             <h2 class="text-sm font-semibold text-primary">📚 Recently Read</h2>
             <a href="/books" class="text-xs link-accent font-medium">View all →</a>
         </div>
-        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {% for book in recent_books %}
             <a href="/highlights?book={{ book.title | urlencode }}" class="group block">
                 <div class="aspect-[2/3] bg-page-alt rounded-xl border border-card overflow-hidden flex items-center justify-center">
@@ -147,12 +147,6 @@
                 {% endif %}
             </a>
             {% else %}
-            <div class="aspect-[2/3] bg-page-alt rounded-xl border border-card flex items-center justify-center">
-                <span class="text-muted-lighter text-xs">📚</span>
-            </div>
-            <div class="aspect-[2/3] bg-page-alt rounded-xl border border-card flex items-center justify-center">
-                <span class="text-muted-lighter text-xs">📚</span>
-            </div>
             <div class="aspect-[2/3] bg-page-alt rounded-xl border border-card flex items-center justify-center">
                 <span class="text-muted-lighter text-xs">📚</span>
             </div>

@@ -173,7 +173,7 @@ async def dashboard(
         )
         .group_by(Highlight.book_title, Highlight.book_author)
         .order_by(func.max(Highlight.highlighted_at).desc().nulls_last())
-        .limit(6)
+        .limit(4)
     )
     if recent_rows:
         from app.models import BookCover
