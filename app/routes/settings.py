@@ -114,6 +114,7 @@ async def change_password(
     request: Request,
     current_password: str = Form(...),
     new_password: str = Form(...),
+    confirm_password: str = Form(...),
     db: AsyncSession = Depends(get_db),
 ):
     user_id = request.session.get("user_id")
@@ -130,6 +131,9 @@ async def change_password(
 
     if len(new_password) < 8:
         return RedirectResponse(url="/settings?error=weak-password", status_code=303)
+
+    if new_password != confirm_password:
+        return RedirectResponse(url="/settings?error=mismatch", status_code=303)
 
     user.password_hash = hash_password(new_password)
     await db.commit()

@@ -25,6 +25,8 @@
     <div class="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">❌ Current password is incorrect.</div>
     {% elif error == 'weak-password' %}
     <div class="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">❌ New password must be at least 8 characters.</div>
+    {% elif error == 'mismatch' %}
+    <div class="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">❌ Passwords do not match.</div>
     {% endif %}
 
     <!-- Device Tokens -->
@@ -93,6 +95,11 @@
                 <div>
                     <label for="new_password" class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">New Password</label>
                     <input type="password" id="new_password" name="new_password" required autocomplete="new-password" minlength="8"
+                           class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent" />
+                </div>
+                <div>
+                    <label for="confirm_password" class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">Confirm New Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required autocomplete="new-password" minlength="8"
                            class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent" />
                 </div>
                 <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
