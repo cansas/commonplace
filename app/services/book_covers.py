@@ -65,7 +65,7 @@ async def _hardcover_search(title: str, author: str, client: httpx.AsyncClient) 
             headers={"Authorization": f"Bearer {HARDCOVER_API_KEY}"},
         )
         if resp.status_code != 200:
-            print(f"  [covers] Hardcover HTTP {resp.status_code} for '{title}'")
+            print(f"  [covers] Hardcover HTTP {resp.status_code} for '{title}': {resp.text[:300]}")
             return None
         data = resp.json()
         books = data.get("data", {}).get("books", [])
