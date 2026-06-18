@@ -76,7 +76,8 @@ async def init_db():
             "  tokenize='porter unicode61'"
             ")"
         ))
-        # Sync triggers
+        # Sync triggers — AU fires only when FTS-relevant columns change
+        # (not on favorite/share_token updates)
         await conn.execute(sqltext(
             "CREATE TRIGGER IF NOT EXISTS highlights_ai AFTER INSERT ON highlights BEGIN "
             "  INSERT INTO highlights_fts(rowid, text, note, book_title, book_author) "
@@ -89,8 +90,10 @@ async def init_db():
             "  VALUES ('delete', old.id, old.text, old.note, old.book_title, old.book_author); "
             "END"
         ))
+        # Replace old AU trigger that fired on EVERY column with one scoped to content columns
+        await conn.execute(sqltext("DROP TRIGGER IF EXISTS highlights_au"))
         await conn.execute(sqltext(
-            "CREATE TRIGGER IF NOT EXISTS highlights_au AFTER UPDATE ON highlights BEGIN "
+            "CREATE TRIGGER highlights_au AFTER UPDATE OF text, note, book_title, book_author ON highlights BEGIN "
             "  INSERT INTO highlights_fts(highlights_fts, rowid, text, note, book_title, book_author) "
             "  VALUES ('delete', old.id, old.text, old.note, old.book_title, old.book_author); "
             "  INSERT INTO highlights_fts(rowid, text, note, book_title, book_author) "
