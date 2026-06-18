@@ -272,7 +272,11 @@ def generate_card(
         s += f'  <text x="{QUOTE_START_X + 16}" y="{note_y}" font-family="Arial,sans-serif" font-size="13" fill="#a1a1aa" font-style="italic">\u2014 {escape(note[:200])}</text>\n'
 
     # Branding
-    s += f'  <text x="{W - RIGHT_PAD}" y="{brand_y}" text-anchor="end" font-family="Arial,sans-serif" font-size="12" fill="{BRAND}">commonplace</text>\n'
+    s += f'  <image x="{W - RIGHT_PAD - 100}" y="{brand_y - 8}" width="16" height="16" href="data:image/png;base64,'
+    with open(os.path.join(os.path.dirname(__file__), "..", "static", "logo-32.png"), "rb") as _f:
+        s += base64.b64encode(_f.read()).decode()
+    s += f'" preserveAspectRatio="xMidYMid meet"/>'
+    s += f'  <text x="{W - RIGHT_PAD - 80}" y="{brand_y}" font-family="Arial,sans-serif" font-size="12" fill="{BRAND}">commonplace</text>\n'
 
     s += '</svg>\n'
     return s
