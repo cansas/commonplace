@@ -55,7 +55,8 @@ async def _hardcover_search(title: str, author: str, client: httpx.AsyncClient) 
         return None
 
     query = """query SearchBooks($query: String!) {
-      search(query: $query, query_type: "Book", per_page: 5, page: 1) {
+      search(query: $query, query_type: "Book", per_page: 5, page: 1, fields: "title,slug,id,image") {
+        ids
         results
       }
     }"""
@@ -74,45 +75,57 @@ async def _hardcover_search(title: str, author: str, client: httpx.AsyncClient) 
         data = resp.json()
         search_data = data.get("data", {}).get("search", {})
         print(f"  [covers] Hardcover search keys: {list(search_data.keys())}")
+        ids = search_data.get("ids", [])
         results = search_data.get("results", [])
-        print(f"  [covers] Hardcover search returned {len(results)} results for '{title}'")
+        print(f"  [covers] Hardcover search returned {len(results)} results, {len(ids)} ids for '{title}'")
         if results:
             print(f"  [covers] First result type={type(results[0]).__name__}, value={results[0]}")
+        if ids:
+            print(f"  [covers] First ids: {ids[:3]}")
 
+        # Handle both object results and ID-only results
         for book in results:
             if not isinstance(book, dict):
-                print(f"  [covers] Skipping non-dict result: {book}")
                 continue
-
-        for book in results:
             # Try direct cover image field
             cover = book.get("image") or book.get("cover_url")
             if cover:
-                # It may be a dict with {url: ...} or a plain string
                 if isinstance(cover, dict):
                     cover = cover.get("url")
                 if cover:
                     print(f"  [covers] Hardcover cover from image field: {cover}")
                     return cover
 
-            # Fallback: construct from slug or id
+            # Construct from slug
             slug = book.get("slug")
             if slug:
                 cover = f"https://hardcovercdn.com/books/{slug}.jpg"
                 print(f"  [covers] Hardcover cover from slug: {cover}")
                 return cover
 
-            # Last fallback: try ID-based URL
-            book_id = book.get("id")
-            if book_id:
-                cover = f"https://hardcovercdn.com/books/{book_id}.jpg"
-                print(f"  [covers] Hardcover cover from id: {cover}")
-                return cover
+        # Fallback: try querying books by ID
+        if ids:
+            bid = ids[0]
+            book_query = "{ book: books_by_pk(id: " + str(bid) + ") { id title slug image { url } } }"
+            book_resp = await client.post(
+                "https://api.hardcover.app/v1/graphql",
+                json={"query": book_query},
+                headers={"Authorization": f"Bearer {HARDCOVER_API_KEY}"},
+            )
+            if book_resp.status_code == 200:
+                book_data = book_resp.json().get("data", {}).get("book", {})
+                if book_data:
+                    slug = book_data.get("slug")
+                    if slug:
+                        return f"https://hardcovercdn.com/books/{slug}.jpg"
+                    img = book_data.get("image")
+                    if img and isinstance(img, dict) and img.get("url"):
+                        return img["url"]
 
         if results:
-            print(f"  [covers] Hardcover first result keys: {list(results[0].keys())[:10]}")
-            if results[0].get("title"):
-                print(f"  [covers] Hardcover matched title: '{results[0].get('title')}'")
+            print(f"  [covers] Hardcover first result: {results[0]}")
+        if ids and not results:
+            print(f"  [covers] Hardcover IDs without results: {ids[:3]}")
 
     except Exception as e:
         print(f"  [covers] Hardcover error for '{title}': {e}")
