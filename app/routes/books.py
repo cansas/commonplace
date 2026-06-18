@@ -386,7 +386,7 @@ async def delete_book(
     if count == 0:
         return JSONResponse({"ok": False, "error": "No highlights found for that book"}, status_code=404)
 
-    from sqlalchemy import text as sqltext
+    from sqlalchemy import text as sqltext, bindparam
 
     # Get IDs to remove from FTS index
     ids = await db.execute(
@@ -395,12 +395,14 @@ async def delete_book(
             Highlight.book_author == author,
         )
     )
-    hl_ids = tuple(row[0] for row in ids.all())
+    hl_ids = [row[0] for row in ids.all()]
 
-    # Delete from FTS index directly (avoids trigger content-matching issues)
+    # Delete from FTS index using expanding bind param for IN clause
     if hl_ids:
-        placeholders = ",".join("?" for _ in hl_ids)
-        await db.execute(sqltext(f"DELETE FROM highlights_fts WHERE rowid IN ({placeholders})"), hl_ids)
+        stmt = sqltext("DELETE FROM highlights_fts WHERE rowid IN (:ids)").bindparams(
+            bindparam("ids", expanding=True)
+        )
+        await db.execute(stmt, {"ids": hl_ids})
 
     # Delete highlights
     await db.execute(
