@@ -3,21 +3,15 @@
 Priority:
   1. Hardcover.app API (requires API key, best quality for modern books)
   2. Open Library Covers API (free, no key, large catalog)
-  3. OPDS catalog (self-hosted Booklore/Kavita/Calibre — requires URL + auth)
 """
 
 import os
 import asyncio
-import xml.etree.ElementTree as ET
 from typing import Optional
-from urllib.parse import urlparse, quote as url_quote
 
 import httpx
 
 HARDCOVER_API_KEY = os.environ.get("HARDCOVER_API_KEY", "")
-OPDS_URL = os.environ.get("OPDS_URL", "")
-OPDS_USERNAME = os.environ.get("OPDS_USERNAME", "")
-OPDS_PASSWORD = os.environ.get("OPDS_PASSWORD", "")
 REQUEST_TIMEOUT = 12.0
 
 
@@ -93,86 +87,6 @@ async def _hardcover_search(title: str, author: str, client: httpx.AsyncClient) 
     return None
 
 
-OPDS_NS = {"atom": "http://www.w3.org/2005/Atom"}
-
-# Shared covers directory (same as books.py)
-_COVERS_DIR = os.environ.get("COVERS_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "covers"))
-
-
-async def _opds_search(title: str, author: str, client: httpx.AsyncClient) -> Optional[str]:
-    """Search an OPDS catalog for a book cover.
-
-    Requires OPDS_URL, OPDS_USERNAME, and OPDS_PASSWORD env vars.
-    Downloads the image and saves it locally, returns a local /static/covers/ URL.
-    """
-    if not OPDS_URL:
-        return None
-
-    auth_creds = (OPDS_USERNAME, OPDS_PASSWORD) if OPDS_USERNAME else None
-    search_url = f"{OPDS_URL.rstrip('/')}/catalog?q={url_quote(title.strip())}&size=5"
-
-    try:
-        resp = await client.get(search_url, auth=auth_creds, timeout=8.0)
-        if resp.status_code != 200:
-            return None
-
-        root = ET.fromstring(resp.text)
-        for entry in root.findall("atom:entry", OPDS_NS):
-            entry_title = entry.find("atom:title", OPDS_NS)
-            if entry_title is None or not entry_title.text:
-                continue
-            if title.strip().lower() not in entry_title.text.lower():
-                continue
-            for link in entry.findall("atom:link", OPDS_NS):
-                rel = link.get("rel", "")
-                href = link.get("href", "")
-                if "image" not in rel or not href:
-                    continue
-
-                # Resolve absolute URL
-                parsed = urlparse(href)
-                if not parsed.scheme:
-                    base = OPDS_URL.rstrip("/")
-                    href = f"{base}{href}"
-
-                # Download the cover image (follow redirects)
-                img_resp = await client.get(href, auth=auth_creds, follow_redirects=True, timeout=10.0)
-                if img_resp.status_code != 200:
-                    continue
-
-                img_bytes = img_resp.content
-                if len(img_bytes) < 500:
-                    continue
-
-                # Validate actual image content via magic bytes
-                is_jpeg = img_bytes[:2] == b"\xff\xd8"
-                is_png = img_bytes[:4] == b"\x89PNG"
-                is_webp = img_bytes[:4] == b"RIFF" and img_bytes[8:12] == b"WEBP"
-                if not (is_jpeg or is_png or is_webp):
-                    print(f"  [covers] OPDS: invalid image for '{title}' (got {len(img_bytes)} bytes, starts {img_bytes[:8].hex()})")
-                    continue
-
-                # Determine extension from actual content
-                ext = ".jpg"
-                if is_png:
-                    ext = ".png"
-                elif is_webp:
-                    ext = ".webp"
-
-                import hashlib
-                safe_name = hashlib.md5(f"opds_{title}_{author}".encode()).hexdigest() + ext
-                dest = os.path.join(_COVERS_DIR, safe_name)
-                os.makedirs(_COVERS_DIR, exist_ok=True)
-                with open(dest, "wb") as f:
-                    f.write(img_bytes)
-
-                local_url = f"/static/covers/{safe_name}"
-                return local_url
-    except Exception as e:
-        print(f"  [covers] OPDS error for '{title}': {e}")
-    return None
-
-
 async def search_cover(title: str, author: str = "", client: httpx.AsyncClient = None) -> tuple[Optional[str], str]:
     """Search for a book cover across multiple sources with fallback.
 
@@ -187,12 +101,7 @@ async def search_cover(title: str, author: str = "", client: httpx.AsyncClient =
         if url:
             return url, "hardcover"
 
-        # 2. OPDS catalog (self-hosted, configured via env vars)
-        url = await _opds_search(title, author, client)
-        if url:
-            return url, "opds"
-
-        # 3. Open Library (free, largest catalog)
+        # 2. Open Library (free, largest catalog)
         url = await _open_library_search(title, author, client)
         if url:
             return url, "openlibrary"
