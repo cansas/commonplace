@@ -127,14 +127,21 @@ async def _opds_search(title: str, author: str, client: httpx.AsyncClient) -> Op
                     base = OPDS_URL.rstrip("/")
                     href = f"{base}{href}"
 
-                # Download the cover image
-                img_resp = await client.get(href, auth=auth_creds, timeout=8.0)
+                # Download the cover image (follow redirects)
+                img_resp = await client.get(href, auth=auth_creds, follow_redirects=True, timeout=10.0)
                 if img_resp.status_code != 200:
                     continue
 
                 img_bytes = img_resp.content
-                if len(img_bytes) < 100:
+                if len(img_bytes) < 500:
                     continue
+
+                # Quick content-type sanity check — must be an image
+                ctype = img_resp.headers.get("content-type", "")
+                if not any(t in ctype for t in ["image/", "octet-stream"]) and not ctype:
+                    # If no mime from server, check magic bytes
+                    if not (img_bytes[:2] == b"\xff\xd8" or img_bytes[:4] == b"\x89PNG" or img_bytes[:4] == b"RIFF"):
+                        continue
 
                 # Save to covers directory
                 ext = ".jpg"
