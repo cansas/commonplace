@@ -36,7 +36,7 @@
   {% if books %}
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
     {% for book in books %}
-    <a href="/highlights?book={{ book.title | urlencode }}" class="block bg-white rounded-lg border border-slate-200 overflow-hidden hover:border-indigo-300 hover:shadow-md transition-all group" data-hl-id="{{ book.highlight_id }}" data-title="{{ book.title }}" data-author="{{ book.author }}">
+    <a href="/highlights?book={{ book.title | urlencode }}" class="block bg-white rounded-lg border border-slate-200 overflow-hidden hover:border-indigo-300 hover:shadow-md transition-all group" data-hl-id="{{ book.highlight_id }}" data-title="{{ book.title | e }}" data-author="{{ book.author | e }}">
       <!-- Cover -->
       <div class="aspect-[2/3] bg-slate-100 flex items-center justify-center overflow-hidden">
         {% if book.cover_url %}
@@ -231,19 +231,26 @@
 
   function renameBook(el) {
     renameCard = el.closest('[data-hl-id]');
-    if (!renameCard) return;
+    if (!renameCard) { alert('Could not find book data'); return; }
     var oldTitle = renameCard.dataset.title;
     var oldAuthor = renameCard.dataset.author;
-    var hlCount = renameCard.querySelector('.text-indigo-600')?.textContent || '?';
+    var hlEl = renameCard.querySelector('.text-indigo-600');
+    var hlCount = hlEl ? hlEl.textContent.trim() : '?';
 
-    document.getElementById('rename-old-title').value = oldTitle;
-    document.getElementById('rename-old-author').value = oldAuthor;
-    document.getElementById('rename-new-title').value = oldTitle;
-    document.getElementById('rename-new-author').value = oldAuthor === 'Unknown' ? '' : oldAuthor;
-    document.getElementById('rename-warning').textContent = 'Renaming will update ' + hlCount + '.';
-    document.getElementById('rename-submit').disabled = false;
-    document.getElementById('rename-submit').textContent = 'Save Changes';
-    document.getElementById('rename-modal').classList.remove('hidden');
+    var titleInput = document.getElementById('rename-new-title');
+    var authorInput = document.getElementById('rename-new-author');
+    var warningEl = document.getElementById('rename-warning');
+    var submitBtn = document.getElementById('rename-submit');
+    var modal = document.getElementById('rename-modal');
+    if (!titleInput || !modal) { alert('Modal elements not found'); return; }
+
+    document.getElementById('rename-old-title').value = oldTitle || '';
+    document.getElementById('rename-old-author').value = oldAuthor || '';
+    titleInput.value = oldTitle || '';
+    authorInput.value = (oldAuthor === 'Unknown' ? '' : (oldAuthor || ''));
+    if (warningEl) warningEl.textContent = 'Renaming will update ' + hlCount + '.';
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Save Changes'; }
+    modal.classList.remove('hidden');
   }
 
   function closeRenameModal() {
