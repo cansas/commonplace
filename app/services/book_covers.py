@@ -94,9 +94,10 @@ async def _hardcover_search(title: str, author: str, client: httpx.AsyncClient) 
                     # Walk the list for the first dict with book-like fields
                     for item in book:
                         if isinstance(item, dict):
-                            print(f"  [covers] Inner dict keys: {list(item.keys())[:15]}")
-                            if "slug" in item or "image" in item or "title" in item:
-                                book = item
+                            # Typesense format: actual book fields live under "document"
+                            doc = item.get("document") or item
+                            if isinstance(doc, dict):
+                                book = doc
                                 break
                     else:
                         continue  # no usable dict found in the list
