@@ -386,28 +386,12 @@ async def delete_book(
     if count == 0:
         return JSONResponse({"ok": False, "error": "No highlights found for that book"}, status_code=404)
 
-    from sqlalchemy import text as sqltext, bindparam
-
-    # Get IDs to remove from FTS index
-    ids = await db.execute(
-        select(Highlight.id).where(
-            Highlight.book_title == title,
-            Highlight.book_author == author,
-        )
-    )
-    hl_ids = [row[0] for row in ids.all()]
+    from sqlalchemy import text as sqltext
 
     # Drop FTS triggers to avoid content-matching issues during bulk delete
     await db.execute(sqltext("DROP TRIGGER IF EXISTS highlights_ai"))
     await db.execute(sqltext("DROP TRIGGER IF EXISTS highlights_ad"))
     await db.execute(sqltext("DROP TRIGGER IF EXISTS highlights_au"))
-
-    # Delete from FTS index directly
-    if hl_ids:
-        stmt = sqltext("DELETE FROM highlights_fts WHERE rowid IN (:ids)").bindparams(
-            bindparam("ids", expanding=True)
-        )
-        await db.execute(stmt, {"ids": hl_ids})
 
     # Delete highlights (no triggers to interfere)
     await db.execute(
@@ -420,6 +404,13 @@ async def delete_book(
         sqltext("DELETE FROM book_covers WHERE book_title = :t AND book_author = :a"),
         {"t": title, "a": author},
     )
+
+    # Rebuild FTS index from scratch (simpler than per-row deletion)
+    await db.execute(sqltext("DELETE FROM highlights_fts"))
+    await db.execute(sqltext(
+        "INSERT INTO highlights_fts(rowid, text, note, book_title, book_author) "
+        "SELECT id, text, note, book_title, book_author FROM highlights"
+    ))
 
     # Recreate FTS triggers
     await db.execute(sqltext(
