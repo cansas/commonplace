@@ -362,7 +362,9 @@ async def review_rate(
 
     # Check for newly unlocked achievements
     streaks = await calculate_streaks(db)
-    new_achievements = await check_and_unlock(db, streaks["current"])
+    daily_limit = review_settings.get("review_count", 10)
+    review_hour = datetime.utcnow().hour
+    new_achievements = await check_and_unlock(db, streaks["current"], review_hour=review_hour, daily_limit=daily_limit)
     if new_achievements:
         # Store in session so the redirect can show them
         request.session["new_achievements"] = new_achievements

@@ -4,20 +4,19 @@ Achievements are awarded once per milestone and persisted in the
 user_achievements table. Each has a key, label, and witty message.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.models import UserAchievement
+from sqlalchemy import select, func
+from app.models import UserAchievement, ReviewLog
 
 # ── Achievement definitions ─────────────────────────────────────────────────
-# Keys are used for idempotent checks. Messages are the witty unlock text.
-# The streak threshold is the minimum streak length to unlock.
 
 ACHIEVEMENTS = [
     {
         "key": "streak_7",
         "label": "Streak Starter",
         "icon": "🌱",
+        "check": "streak",
         "threshold": 7,
         "message": "Seven days! You've officially outlasted a trial of a streaming service.",
     },
@@ -25,6 +24,7 @@ ACHIEVEMENTS = [
         "key": "streak_30",
         "label": "Whole Month",
         "icon": "🌿",
+        "check": "streak",
         "threshold": 30,
         "message": "30 days! You've been highlighting longer than most New Year's resolutions last.",
     },
@@ -32,6 +32,7 @@ ACHIEVEMENTS = [
         "key": "streak_90",
         "label": "The Quarter Pounder",
         "icon": "🌳",
+        "check": "streak",
         "threshold": 90,
         "message": "90 days! That's a full season of bad TV you could have watched. Good choice.",
     },
@@ -39,6 +40,7 @@ ACHIEVEMENTS = [
         "key": "streak_180",
         "label": "Half a Year",
         "icon": "🏛️",
+        "check": "streak",
         "threshold": 180,
         "message": "Six months! You are more committed than most houseplants get watered.",
     },
@@ -46,8 +48,33 @@ ACHIEVEMENTS = [
         "key": "streak_365",
         "label": "The Yearling",
         "icon": "👑",
+        "check": "streak",
         "threshold": 365,
         "message": "A full year! You have officially been consistent longer than the author's writing schedule.",
+    },
+    {
+        "key": "centurion",
+        "label": "Centurion",
+        "icon": "⚔️",
+        "check": "total_days",
+        "threshold": 100,
+        "message": "100 days of reviewing! That's more commitment than a Roman legionnaire marching through Gaul.",
+    },
+    {
+        "key": "night_owl",
+        "label": "Night Owl",
+        "icon": "🦉",
+        "check": "night_owl",
+        "threshold": None,
+        "message": "Reviewing past midnight? The highlights aren't going to read themselves. Go to bed.",
+    },
+    {
+        "key": "completionist_7",
+        "label": "Completionist",
+        "icon": "🏅",
+        "check": "completionist",
+        "threshold": 7,
+        "message": "7 straight days of clearing your queue! You have the discipline of a zen monk with a to-do list.",
     },
 ]
 
@@ -60,49 +87,105 @@ def _get_achievement(key: str) -> dict | None:
     return None
 
 
-async def check_and_unlock(db: AsyncSession, current_streak: int) -> list[dict]:
-    """Check if any new achievements should be unlocked based on the
-    current streak. Returns a list of newly unlocked achievements.
+async def _is_unlocked(db: AsyncSession, key: str) -> bool:
+    """Check if an achievement has already been unlocked."""
+    result = await db.execute(
+        select(UserAchievement).where(
+            UserAchievement.user_id == 1,
+            UserAchievement.achievement_key == key,
+        )
+    )
+    return result.scalar_one_or_none() is not None
+
+
+async def _award(db: AsyncSession, ach: dict) -> dict:
+    """Record an unlocked achievement and return the payload."""
+    db.add(UserAchievement(
+        user_id=1,
+        achievement_key=ach["key"],
+        message=ach["message"],
+    ))
+    await db.commit()
+    return {
+        "key": ach["key"],
+        "label": ach["label"],
+        "icon": ach["icon"],
+        "message": ach["message"],
+    }
+
+
+async def check_and_unlock(
+    db: AsyncSession,
+    current_streak: int,
+    review_hour: int | None = None,
+    daily_limit: int = 10,
+) -> list[dict]:
+    """Check if any new achievements should be unlocked.
 
     Called after each review submission. Idempotent — will not re-award.
+
+    Args:
+        current_streak: Current streak from calculate_streaks()
+        review_hour: Hour of the current review (UTC, 0-23)
+        daily_limit: Review count limit from settings
     """
     newly_unlocked = []
 
     for ach in ACHIEVEMENTS:
-        if current_streak < ach["threshold"]:
+        if await _is_unlocked(db, ach["key"]):
             continue
 
-        # Check if already unlocked
-        existing = await db.execute(
-            select(UserAchievement).where(
-                UserAchievement.user_id == 1,
-                UserAchievement.achievement_key == ach["key"],
+        unlocked = False
+
+        if ach["check"] == "streak":
+            unlocked = current_streak >= ach["threshold"]
+
+        elif ach["check"] == "total_days":
+            # Count distinct dates with reviews
+            result = await db.execute(
+                select(func.count(func.distinct(func.date(ReviewLog.reviewed_at))))
             )
-        )
-        if existing.scalar_one_or_none():
-            continue
+            total_days = result.scalar() or 0
+            unlocked = total_days >= ach["threshold"]
 
-        # Award it
-        db.add(UserAchievement(
-            user_id=1,
-            achievement_key=ach["key"],
-            message=ach["message"],
-        ))
-        await db.commit()
+        elif ach["check"] == "night_owl":
+            # Reviewed between midnight and 5am UTC
+            unlocked = review_hour is not None and 0 <= review_hour < 5
 
-        newly_unlocked.append({
-            "key": ach["key"],
-            "label": ach["label"],
-            "icon": ach["icon"],
-            "message": ach["message"],
-        })
+        elif ach["check"] == "completionist":
+            # 7 consecutive days where reviews >= daily_limit
+            rows = await db.execute(
+                select(
+                    func.date(ReviewLog.reviewed_at).label("day"),
+                    func.count(ReviewLog.id).label("count"),
+                )
+                .group_by(func.date(ReviewLog.reviewed_at))
+                .order_by(func.date(ReviewLog.reviewed_at).desc())
+                .limit(ach["threshold"])
+            )
+            daily_counts = rows.all()
+            if len(daily_counts) >= ach["threshold"]:
+                # Check all 7 are complete and consecutive
+                unlocked = True
+                for i, row in enumerate(daily_counts):
+                    if row.count < daily_limit:
+                        unlocked = False
+                        break
+                    if i > 0:
+                        prev_date = datetime.strptime(daily_counts[i - 1].day, "%Y-%m-%d").date()
+                        cur_date = datetime.strptime(row.day, "%Y-%m-%d").date()
+                        if (prev_date - cur_date).days != 1:
+                            unlocked = False
+                            break
+
+        if unlocked:
+            newly_unlocked.append(await _award(db, ach))
 
     return newly_unlocked
 
 
 async def get_all_achievements(db: AsyncSession) -> list[dict]:
     """Return all achievement definitions with unlock status."""
-    # Fetch unlocked for user 1
     result = await db.execute(
         select(UserAchievement).where(UserAchievement.user_id == 1)
     )
@@ -128,21 +211,44 @@ async def backfill_achievements(db: AsyncSession, current_streak: int) -> int:
     """
     count = 0
     for ach in ACHIEVEMENTS:
-        if current_streak < ach["threshold"]:
+        if await _is_unlocked(db, ach["key"]):
             continue
-        existing = await db.execute(
-            select(UserAchievement).where(
-                UserAchievement.user_id == 1,
-                UserAchievement.achievement_key == ach["key"],
+
+        should_award = False
+        if ach["check"] == "streak":
+            should_award = current_streak >= ach["threshold"]
+        elif ach["check"] == "total_days":
+            result = await db.execute(
+                select(func.count(func.distinct(func.date(ReviewLog.reviewed_at))))
             )
-        )
-        if not existing.scalar_one_or_none():
+            total_days = result.scalar() or 0
+            should_award = total_days >= ach["threshold"]
+        elif ach["check"] == "completionist":
+            rows = await db.execute(
+                select(
+                    func.date(ReviewLog.reviewed_at).label("day"),
+                    func.count(ReviewLog.id).label("count"),
+                )
+                .group_by(func.date(ReviewLog.reviewed_at))
+                .order_by(func.date(ReviewLog.reviewed_at).desc())
+                .limit(ach["threshold"])
+            )
+            daily_counts = rows.all()
+            if len(daily_counts) >= ach["threshold"]:
+                should_award = True
+                for i, row in enumerate(daily_counts):
+                    if row.count < 1:  # Can't know daily_limit at startup, use 1
+                        should_award = False
+                        break
+
+        if should_award:
             db.add(UserAchievement(
                 user_id=1,
                 achievement_key=ach["key"],
                 message=ach["message"],
             ))
             count += 1
+
     if count > 0:
         await db.commit()
     return count
