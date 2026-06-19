@@ -265,7 +265,7 @@
         fetch('/api/achievements').then(function(r) { return r.json(); }).then(function(data) {
             var count = data.filter(function(a) { return a.unlocked; }).length;
             var link = document.querySelector('a[href="/achievements"]');
-            if (link && count > 0) {
+            if (link) {
                 var badge = document.createElement('span');
                 badge.className = 'ml-auto text-xs bg-accent text-white rounded-full px-1.5 py-0.5 font-bold min-w-[20px] text-center';
                 badge.textContent = count;
