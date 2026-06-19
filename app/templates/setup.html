@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Setup — commonplace</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/static/logo-32.png">
+<link rel="icon" type="image/png" sizes="128x128" href="/static/logo-128.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#fff;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(0,0,0,.06);padding:40px;max-width:440px;width:100%;margin:20px}
+h1{font-size:22px;font-weight:700;margin-top:12px}
+p{font-size:14px;color:#64748b;margin-top:4px;line-height:1.6}
+.logo{width:36px;height:36px}
+.error{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-size:13px;padding:10px 14px;border-radius:10px;margin-top:16px}
+label{display:block;font-size:12px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;margin-top:16px}
+input{width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;transition:border-color .15s}
+input:focus{border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.15)}
+button{width:100%;margin-top:20px;padding:11px;background:#4f46e5;color:#fff;font-size:14px;font-weight:600;border:none;border-radius:10px;cursor:pointer;transition:background .15s}
+button:hover{background:#4338ca}
+.hint{color:#94a3b8;font-size:12px;margin-top:4px}
+</style>
+</head>
+<body>
+<div class="card">
+    <img src="/static/logo-32.png" class="logo" alt="">
+    <h1>Welcome to commonplace</h1>
+    <p>Let's set up your admin account. This is a one-time setup — you'll be logged in immediately.</p>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/setup">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required minlength="2" autocomplete="off" placeholder="e.g. admin" />
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters" />
+
+        <label for="confirm">Confirm Password</label>
+        <input type="password" id="confirm" name="confirm" required minlength="8" autocomplete="new-password" placeholder="Repeat your password" />
+
+        <p class="hint">The env vars COMMONPLACE_USERNAME/PASSWORD also work for automated setups.</p>
+
+        <button type="submit">Create Account &amp; Get Started →</button>
+    </form>
+</div>
+</body>
+</html>

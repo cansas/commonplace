@@ -65,7 +65,7 @@ async def verify_api_token(token: str, db: AsyncSession) -> ApiToken | None:
 # ── First-run admin creation ──────────────────────────────────────────────
 
 async def ensure_admin(db: AsyncSession):
-    """Create the admin user on first run from env vars."""
+    """Create the admin user on first run from env vars or setup wizard."""
     result = await db.execute(select(User).limit(1))
     if result.scalar_one_or_none() is not None:
         return  # Already has a user
@@ -73,10 +73,7 @@ async def ensure_admin(db: AsyncSession):
     username = os.environ.get("COMMONPLACE_USERNAME")
     password = os.environ.get("COMMONPLACE_PASSWORD")
     if not username or not password:
-        raise RuntimeError(
-            "No admin user exists. Set COMMONPLACE_USERNAME and "
-            "COMMONPLACE_PASSWORD env vars to create the first admin."
-        )
+        return  # No env vars — setup wizard will handle first-run creation
 
     pwhash = hash_password(password)
     db.add(User(username=username, password_hash=pwhash))
@@ -85,7 +82,7 @@ async def ensure_admin(db: AsyncSession):
 
 # ── Middleware ─────────────────────────────────────────────────────────────
 
-PUBLIC_PATHS = {"/login", "/health"}
+PUBLIC_PATHS = {"/login", "/health", "/setup"}
 
 
 def _path_parts(path: str) -> list[str]:

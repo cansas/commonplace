@@ -6,10 +6,10 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.database import get_db
+from app.database import get_db, async_session
 from app.models import User
-from app.auth import verify_password
-from app.csrf import template_context, csrf_guard
+from app.auth import verify_password, hash_password, ensure_admin
+from app.csrf import template_context, csrf_guard, generate_csrf_token
 from app.routes.settings import get_theme
 
 router = APIRouter(tags=["auth"])
@@ -29,9 +29,13 @@ def init(templates):
 
 
 @router.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
+async def login_page(request: Request, db: AsyncSession = Depends(get_db)):
     if request.session.get("user_id"):
         return RedirectResponse(url="/", status_code=303)
+    # Redirect to setup if no admin user exists yet
+    result = await db.execute(select(User).limit(1))
+    if result.scalar_one_or_none() is None:
+        return RedirectResponse(url="/setup", status_code=303)
     return _jinja.TemplateResponse(request, "login.html", template_context(request, error=""))
 
 
@@ -87,3 +91,69 @@ async def session_status(request: Request):
         "authenticated": request.session.get("user_id") is not None,
         "username": request.session.get("username"),
     }
+
+
+# ── First-run setup wizard ─────────────────────────────────────────────
+
+
+async def _needs_setup(db: AsyncSession = None) -> bool:
+    """Check if any user exists."""
+    if db is None:
+        async with async_session() as session:
+            result = await session.execute(select(User).limit(1))
+            return result.scalar_one_or_none() is None
+    else:
+        result = await db.execute(select(User).limit(1))
+        return result.scalar_one_or_none() is None
+
+
+@router.get("/setup", response_class=HTMLResponse)
+async def setup_page(request: Request, db: AsyncSession = Depends(get_db)):
+    if request.session.get("user_id"):
+        return RedirectResponse(url="/", status_code=303)
+    if not await _needs_setup(db):
+        return RedirectResponse(url="/login", status_code=303)
+    return _jinja.TemplateResponse(request, "setup.html", template_context(request, error=""))
+
+
+@router.post("/setup")
+async def setup_admin(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    confirm: str = Form(...),
+    csrf_token: str = Form(default=""),
+    db: AsyncSession = Depends(get_db),
+):
+    csrf_guard(request, csrf_token)
+
+    if not await _needs_setup(db):
+        return RedirectResponse(url="/login", status_code=303)
+
+    errors = []
+    username = username.strip()
+    if len(username) < 2:
+        errors.append("Username must be at least 2 characters.")
+    if len(password) < 8:
+        errors.append("Password must be at least 8 characters.")
+    if password != confirm:
+        errors.append("Passwords do not match.")
+    if errors:
+        return _jinja.TemplateResponse(
+            request, "setup.html",
+            template_context(request, error=" | ".join(errors)),
+        )
+
+    pwhash = hash_password(password)
+    db.add(User(username=username, password_hash=pwhash))
+    await db.commit()
+
+    # Log them in immediately
+    result = await db.execute(select(User).where(User.username == username))
+    user = result.scalar_one_or_none()
+    if user:
+        request.session["user_id"] = user.id
+        request.session["username"] = user.username
+        request.session["theme"] = get_theme()
+
+    return RedirectResponse(url="/", status_code=303)
