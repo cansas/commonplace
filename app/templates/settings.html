@@ -33,6 +33,7 @@
     <div class="flex border-b border-card mb-6 gap-1">
         <button onclick="switchTab('data')" id="tab-data" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">💾 Data</button>
         <button onclick="switchTab('api-keys')" id="tab-api-keys" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">🔑 API Keys</button>
+        <button onclick="switchTab('email')" id="tab-email" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">📬 Email</button>
         <button onclick="switchTab('appearance')" id="tab-appearance" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">🎨 Appearance</button>
     </div>
 
@@ -277,6 +278,76 @@
         </section>
     </div>
 
+    <!-- ════════════ EMAIL TAB ════════════ -->
+    <div id="panel-email" class="tab-panel space-y-6">
+
+        <!-- Mailjet Config -->
+        <section class="bg-card rounded-xl border border-card shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-card">
+                <h2 class="text-base font-semibold text-primary">📬 Email Digest</h2>
+                <p class="text-xs text-muted mt-0.5">Send daily review highlights via email using Mailjet (free tier: 6k/mo).</p>
+            </div>
+            <div class="px-6 py-5 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="mj-api-key" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">Mailjet API Key</label>
+                        <input type="password" id="mj-api-key" value="{{ email_config.mailjet_api_key or '' }}" placeholder="Your Mailjet API Key"
+                               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent font-mono" />
+                    </div>
+                    <div>
+                        <label for="mj-secret-key" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">Mailjet Secret Key</label>
+                        <input type="password" id="mj-secret-key" value="{{ email_config.mailjet_secret_key or '' }}" placeholder="Your Mailjet Secret Key"
+                               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent font-mono" />
+                    </div>
+                </div>
+                <div>
+                    <label for="email-from-name" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">From Name</label>
+                    <input type="text" id="email-from-name" value="{{ email_config.email_from_name or 'Commonplace' }}" placeholder="Commonplace"
+                           class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="email-from-addr" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">From Email</label>
+                        <input type="email" id="email-from-addr" value="{{ email_config.email_from_addr or '' }}" placeholder="digest@yourdomain.com"
+                               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                    </div>
+                    <div>
+                        <label for="email-to-addr" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">To Email (you)</label>
+                        <input type="email" id="email-to-addr" value="{{ email_config.email_to_addr or '' }}" placeholder="you@example.com"
+                               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                    </div>
+                </div>
+                <div>
+                    <label for="base-url" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">Public Base URL</label>
+                    <input type="url" id="base-url" value="{{ email_config.base_url or '' }}" placeholder="https://commonplace.yourdomain.com"
+                           class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                    <p class="text-xs text-muted mt-1">Used for links in the email (Review, Unsubscribe). Set this to your public URL if you access Commonplace remotely.</p>
+                </div>
+                <div class="flex items-center gap-3 pt-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="email-digest-enabled" {% if email_config.email_digest_enabled %}checked{% endif %}
+                               class="w-4 h-4 rounded border-slate-300 text-accent focus:ring-accent/40" />
+                        <span class="text-sm font-medium text-primary">Enable daily digest</span>
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <label for="email-digest-time" class="text-xs text-muted">at</label>
+                        <input type="time" id="email-digest-time" value="{{ email_config.email_digest_time or '07:00' }}"
+                               class="px-2 py-1.5 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40" />
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 pt-1">
+                    <button onclick="saveEmailConfig()" class="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg btn-primary hover:bg-accent-hover transition shadow-sm">
+                        💾 Save Email Settings
+                    </button>
+                    <button onclick="sendTestEmail()" class="px-4 py-2 border border-card text-secondary text-sm font-medium rounded-lg hover:bg-page-alt transition">
+                        📤 Send Test Email
+                    </button>
+                    <span id="email-result" class="text-xs text-muted"></span>
+                </div>
+            </div>
+        </section>
+    </div>
+
     <!-- ════════════ APPEARANCE TAB ════════════ -->
     <div id="panel-appearance" class="tab-panel space-y-6">
 
@@ -347,7 +418,7 @@
 <script>
     // ── Tab switching ──
     var currentTab = location.hash.slice(1) || 'data';
-    if (!['data','api-keys','appearance'].includes(currentTab)) currentTab = 'data';
+    if (!['data','api-keys','email','appearance'].includes(currentTab)) currentTab = 'data';
 
     function switchTab(name) {
         currentTab = name;
@@ -474,6 +545,58 @@
                 document.body.appendChild(form);
                 form.submit();
             }
+        });
+    }
+
+    // ── Email ──
+    function saveEmailConfig() {
+        var result = document.getElementById('email-result');
+        result.textContent = 'Saving...';
+        var config = {
+            mailjet_api_key: document.getElementById('mj-api-key').value.trim(),
+            mailjet_secret_key: document.getElementById('mj-secret-key').value.trim(),
+            email_from_name: document.getElementById('email-from-name').value.trim(),
+            email_from_addr: document.getElementById('email-from-addr').value.trim(),
+            email_to_addr: document.getElementById('email-to-addr').value.trim(),
+            base_url: document.getElementById('base-url').value.trim(),
+            email_digest_enabled: document.getElementById('email-digest-enabled').checked,
+            email_digest_time: document.getElementById('email-digest-time').value,
+        };
+        fetch('/api/settings/email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config),
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            result.textContent = data.ok ? '✅ Saved' : 'Error: ' + (data.detail || 'unknown');
+        })
+        .catch(function(e) {
+            result.textContent = 'Network error';
+        });
+    }
+
+    function sendTestEmail() {
+        var result = document.getElementById('email-result');
+        result.textContent = 'Sending...';
+        var config = {
+            mailjet_api_key: document.getElementById('mj-api-key').value.trim(),
+            mailjet_secret_key: document.getElementById('mj-secret-key').value.trim(),
+            email_from_name: document.getElementById('email-from-name').value.trim(),
+            email_from_addr: document.getElementById('email-from-addr').value.trim(),
+            email_to_addr: document.getElementById('email-to-addr').value.trim(),
+        };
+        fetch('/api/settings/email/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config),
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            result.textContent = data.ok ? '✅ Test email sent!' : 'Error: ' + (data.detail || 'unknown');
+        })
+        .catch(function(e) {
+            result.textContent = 'Network error';
         });
     }
 </script>

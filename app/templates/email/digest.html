@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+<tr><td style="padding:24px 16px;">
+    <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+        <!-- Header -->
+        <div style="padding:28px 24px 16px;text-align:center;border-bottom:1px solid #e2e8f0;">
+            <h1 style="margin:0;font-size:20px;font-weight:700;color:#1e293b;">📖 Daily Review</h1>
+            <p style="margin:6px 0 0;font-size:14px;color:#64748b;">{{ subject or "Your highlights for today" }}</p>
+        </div>
+        <!-- Highlights -->
+        <div style="padding:20px 24px;">
+            {% for hl in highlights %}
+            <div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+                <p style="margin:0;font-size:14px;line-height:1.6;color:#1e293b;font-style:italic;">{{ hl.text }}</p>
+                <div style="margin-top:8px;font-size:12px;color:#64748b;">
+                    <span>📖 {{ hl.book_title }}</span>
+                    {% if hl.book_author %}<span style="margin:0 4px;">·</span><span>✍️ {{ hl.book_author }}</span>{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <!-- CTA -->
+        <div style="padding:0 24px 24px;text-align:center;">
+            <a href="{{ base_url }}/review" style="display:inline-block;padding:12px 28px;background:#6366f1;color:#ffffff;font-size:14px;font-weight:600;border-radius:8px;text-decoration:none;">
+                📝 Start Review Session
+            </a>
+        </div>
+        <!-- Footer -->
+        <div style="padding:16px 24px;text-align:center;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;">
+            <p style="margin:0 0 4px;">Commonplace — self-hosted highlights</p>
+            <p style="margin:0;">
+                <a href="{{ base_url }}/settings?tab=email" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a>
+                · or disable in Settings
+            </p>
+        </div>
+    </div>
+</td></tr>
+</table>
+</body>
+</html>

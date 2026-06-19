@@ -142,6 +142,16 @@ async def settings_page(
             new_token=new_token,
             username=request.session.get("username", ""),
             hardcover_key=get_hardcover_api_key(),
+            email_config={
+                "mailjet_api_key": _settings.get("mailjet_api_key", ""),
+                "mailjet_secret_key": _settings.get("mailjet_secret_key", ""),
+                "email_from_name": _settings.get("email_from_name", "Commonplace"),
+                "email_from_addr": _settings.get("email_from_addr", ""),
+                "email_to_addr": _settings.get("email_to_addr", ""),
+                "email_digest_enabled": _settings.get("email_digest_enabled", False),
+                "email_digest_time": _settings.get("email_digest_time", "07:00"),
+                "base_url": _settings.get("base_url", ""),
+            },
         ),
     )
 
@@ -432,3 +442,51 @@ async def reset_database(
     await db.execute(Source.__table__.delete())
     await db.commit()
     return RedirectResponse(url="/", status_code=303)
+
+
+# ── Email Settings ─────────────────────────────────────────────────────────
+
+
+@router.post("/api/settings/email")
+async def save_email_settings(
+    request: Request,
+    body: dict,
+):
+    """Save email/Mailjet configuration."""
+    from app.services.email_digest import save_email_config
+
+    allowed = {
+        "mailjet_api_key", "mailjet_secret_key", "email_from_name",
+        "email_from_addr", "email_to_addr", "email_digest_enabled",
+        "email_digest_time", "base_url",
+    }
+    config = {k: v for k, v in body.items() if k in allowed}
+    save_email_config(config)
+    return {"ok": True}
+
+
+@router.post("/api/settings/email/test")
+async def send_test_email(
+    request: Request,
+    body: dict,
+):
+    """Send a test email using current Mailjet config."""
+    from app.services.email_digest import send_test_email as _send_test
+
+    _ensure_fresh()
+    api_key = body.get("mailjet_api_key") or _settings.get("mailjet_api_key", "")
+    secret_key = body.get("mailjet_secret_key") or _settings.get("mailjet_secret_key", "")
+    from_name = body.get("email_from_name") or _settings.get("email_from_name", "Commonplace")
+    from_email = body.get("email_from_addr") or _settings.get("email_from_addr", "")
+    to_email = body.get("email_to_addr") or _settings.get("email_to_addr", "")
+
+    if not api_key or not secret_key:
+        raise HTTPException(status_code=400, detail="Mailjet API key and secret key are required")
+    if not from_email or not to_email:
+        raise HTTPException(status_code=400, detail="From and To email addresses are required")
+
+    try:
+        result = await _send_test(api_key, secret_key, from_name, from_email, to_email)
+        return {"ok": True, "message": "Test email sent successfully"}
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
