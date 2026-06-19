@@ -414,6 +414,16 @@ async def highlight_context(hl_id: int, request: Request, db: AsyncSession = Dep
 
 
 def _serialize_context_row(row) -> dict:
+    raw_date = row["highlighted_at"]
+    formatted_date = None
+    if raw_date is not None:
+        if isinstance(raw_date, str):
+            try:
+                formatted_date = datetime.fromisoformat(raw_date).strftime("%Y-%m-%d %H:%M")
+            except (ValueError, TypeError):
+                formatted_date = raw_date[:16] if len(raw_date) >= 16 else raw_date
+        else:
+            formatted_date = raw_date.strftime("%Y-%m-%d %H:%M")
     return {
         "id": row["id"],
         "text": row["text"],
@@ -424,7 +434,7 @@ def _serialize_context_row(row) -> dict:
         "chapter": row["chapter"],
         "favorite": bool(row["favorite"]),
         "share_token": row["share_token"],
-        "highlighted_at": row["highlighted_at"].strftime("%Y-%m-%d %H:%M") if row["highlighted_at"] else None,
+        "highlighted_at": formatted_date,
     }
 
 
