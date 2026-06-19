@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Tags — commonplace{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-primary">🏷️ Tags</h1>
+      <p class="text-sm text-muted mt-1">{{ tags|length }} tag{% if tags|length != 1 %}s{% endif %}</p>
+    </div>
+  </div>
+
+  {% if tags %}
+  <div class="space-y-2">
+    {% for tag in tags %}
+    <div class="flex items-center justify-between px-4 py-3 bg-card rounded-lg border border-card hover:border-accent/20 transition-colors group" data-tag-id="{{ tag.id }}" data-tag-name="{{ tag.name }}">
+      <a href="/tags/{{ tag.id }}" class="flex items-center gap-3 flex-1 min-w-0">
+        <span class="text-lg">🏷️</span>
+        <span class="font-medium text-primary">{{ tag.name }}</span>
+        <span class="text-xs text-muted bg-page-alt px-2 py-0.5 rounded-full">{{ tag.count }}</span>
+      </a>
+      <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onclick="renameTag(this)" class="text-xs text-muted hover:text-amber-500 px-2 py-1 rounded hover:bg-page-alt transition-colors" title="Rename">✏️</button>
+        <button onclick="mergeTag(this)" class="text-xs text-muted hover:text-indigo-500 px-2 py-1 rounded hover:bg-page-alt transition-colors" title="Merge into another tag">🔀</button>
+        <button onclick="deleteTag(this)" class="text-xs text-muted hover:text-red-500 px-2 py-1 rounded hover:bg-page-alt transition-colors" title="Delete">🗑️</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-16">
+    <p class="text-4xl mb-4">🏷️</p>
+    <p class="text-muted">No tags yet.</p>
+    <p class="text-sm text-muted mt-1">Tags appear here when you add them to highlights.</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Rename Modal -->
+<div id="rename-modal" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center">
+  <div class="bg-card rounded-xl shadow-xl max-w-sm w-full mx-4 overflow-hidden" onclick="event.stopPropagation()">
+    <div class="px-6 py-4 border-b border-card">
+      <h3 class="text-lg font-semibold text-primary">✏️ Rename Tag</h3>
+    </div>
+    <form class="p-6 space-y-4" onsubmit="return submitRename(event)">
+      <input type="hidden" id="rename-tag-id" name="tag_id" />
+      <div>
+        <label for="rename-tag-name" class="block text-sm font-medium text-primary mb-1">New name</label>
+        <input type="text" id="rename-tag-name" name="name" required maxlength="128"
+               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent bg-page text-primary" />
+      </div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" onclick="closeRenameModal()" class="px-4 py-2 text-sm font-medium text-muted bg-card border border-card rounded-lg hover:bg-page-alt">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg hover:bg-accent-hover">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Merge Modal -->
+<div id="merge-modal" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center">
+  <div class="bg-card rounded-xl shadow-xl max-w-sm w-full mx-4 overflow-hidden" onclick="event.stopPropagation()">
+    <div class="px-6 py-4 border-b border-card">
+      <h3 class="text-lg font-semibold text-primary">🔀 Merge Tag</h3>
+    </div>
+    <form class="p-6 space-y-4" onsubmit="return submitMerge(event)">
+      <input type="hidden" id="merge-source-id" name="source_id" />
+      <p class="text-sm text-muted" id="merge-description">Merge <strong id="merge-source-name"></strong> into:</p>
+      <div>
+        <label for="merge-target-id" class="block text-sm font-medium text-primary mb-1">Target tag</label>
+        <select id="merge-target-id" name="target_id" required
+                class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent bg-page text-primary">
+          <option value="">Select a tag…</option>
+          {% for tag in tags %}
+          <option value="{{ tag.id }}">{{ tag.name }} ({{ tag.count }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
+        Highlights will be reassigned to the target tag. The source tag will be deleted.
+      </div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" onclick="closeMergeModal()" class="px-4 py-2 text-sm font-medium text-muted bg-card border border-card rounded-lg hover:bg-page-alt">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg hover:bg-accent-hover">Merge</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  /* ── Rename ────────────────────────────────────────── */
+  var renameId = null;
+
+  function renameTag(btn) {
+    var row = btn.closest('[data-tag-id]');
+    if (!row) return;
+    renameId = row.dataset.tagId;
+    document.getElementById('rename-tag-id').value = renameId;
+    document.getElementById('rename-tag-name').value = row.dataset.tagName;
+    document.getElementById('rename-modal').classList.remove('hidden');
+    document.getElementById('rename-tag-name').focus();
+  }
+
+  function closeRenameModal() {
+    document.getElementById('rename-modal').classList.add('hidden');
+  }
+
+  function submitRename(event) {
+    event.preventDefault();
+    var id = document.getElementById('rename-tag-id').value;
+    var name = document.getElementById('rename-tag-name').value.trim();
+    if (!name) return;
+
+    var fd = new FormData();
+    fd.append('name', name);
+
+    fetch('/api/tags/' + id, { method: 'PUT', body: fd })
+      .then(function(r) {
+        if (!r.ok) return r.json().then(function(d) { throw new Error(d.detail || 'Error'); });
+        return r.json();
+      })
+      .then(function() { location.reload(); })
+      .catch(function(e) { showToast('Error: ' + e.message, 'error'); });
+    return false;
+  }
+
+  /* ── Merge ─────────────────────────────────────────── */
+  var mergeSourceId = null;
+
+  function mergeTag(btn) {
+    var row = btn.closest('[data-tag-id]');
+    if (!row) return;
+    mergeSourceId = row.dataset.tagId;
+    var name = row.dataset.tagName;
+    document.getElementById('merge-source-id').value = mergeSourceId;
+    document.getElementById('merge-source-name').textContent = name;
+    document.getElementById('merge-target-id').value = '';
+    document.getElementById('merge-modal').classList.remove('hidden');
+  }
+
+  function closeMergeModal() {
+    document.getElementById('merge-modal').classList.add('hidden');
+  }
+
+  function submitMerge(event) {
+    event.preventDefault();
+    var sourceId = document.getElementById('merge-source-id').value;
+    var targetId = document.getElementById('merge-target-id').value;
+    if (!targetId) { showToast('Select a target tag', 'error'); return; }
+
+    var fd = new FormData();
+    fd.append('source_id', sourceId);
+    fd.append('target_id', targetId);
+
+    fetch('/api/tags/merge', { method: 'POST', body: fd })
+      .then(function(r) {
+        if (!r.ok) return r.json().then(function(d) { throw new Error(d.detail || 'Error'); });
+        return r.json();
+      })
+      .then(function() { location.reload(); })
+      .catch(function(e) { showToast('Error: ' + e.message, 'error'); });
+    return false;
+  }
+
+  /* ── Delete ────────────────────────────────────────── */
+  function deleteTag(btn) {
+    var row = btn.closest('[data-tag-id]');
+    if (!row) return;
+    var id = row.dataset.tagId;
+    var name = row.dataset.tagName;
+
+    if (!confirm('Delete tag "' + name + '"? It will be removed from all highlights.')) return;
+
+    fetch('/api/tags/' + id, { method: 'DELETE' })
+      .then(function(r) {
+        if (!r.ok) return r.json().then(function(d) { throw new Error(d.detail || 'Error'); });
+        location.reload();
+      })
+      .catch(function(e) { showToast('Error: ' + e.message, 'error'); });
+  }
+
+  /* Close modals on background click */
+  document.getElementById('rename-modal')?.addEventListener('click', closeRenameModal);
+  document.getElementById('merge-modal')?.addEventListener('click', closeMergeModal);
+</script>
+{% endblock %}

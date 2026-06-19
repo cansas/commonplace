@@ -16,7 +16,7 @@ from app.database import init_db, get_db, async_session
 from app.models import Highlight, Source, BookCover
 from app.auth import AuthMiddleware, ensure_admin
 from app.csrf import CSRFMiddleware, generate_csrf_token, template_context, SecurityHeadersMiddleware
-from app.routes import highlights, review, import_routes, settings as settings_routes, books, auth as auth_routes, share as share_routes, backup as backup_routes
+from app.routes import highlights, review, import_routes, settings as settings_routes, books, auth as auth_routes, share as share_routes, backup as backup_routes, tags as tags_routes
 from app.services.resurface import get_dashboard_counts
 from app.services.book_covers import batch_search
 from app.services.streaks import calculate_streaks
@@ -87,6 +87,7 @@ settings_routes.init(templates)
 books.init(templates)
 share_routes.init(templates)
 backup_routes.init(templates)
+tags_routes.init(templates)
 
 # Include routers
 app.include_router(highlights.router)
@@ -97,6 +98,7 @@ app.include_router(books.router)
 app.include_router(auth_routes.router)
 app.include_router(share_routes.router)
 app.include_router(backup_routes.router)
+app.include_router(tags_routes.router)
 
 # Expose templates to auth routes
 auth_routes.init(templates)
