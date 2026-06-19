@@ -1,9 +1,10 @@
 """Daily resurface logic — selects highlights for today's review session."""
-from datetime import datetime, timedelta
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from app.models import Highlight, ReviewLog
 from app.routes.settings import _settings as review_settings
+from app.dates import today_start_utc
 
 
 async def get_random_highlights(db: AsyncSession, count: int = 10, exclude_ids: list = None):
@@ -44,7 +45,7 @@ async def get_dashboard_counts(db: AsyncSession):
     books = result.scalar() or 0
 
     # Reviews done today
-    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    today_start = today_start_utc()
     result = await db.execute(
         select(func.count(ReviewLog.id))
         .where(ReviewLog.reviewed_at >= today_start)

@@ -7,6 +7,7 @@ from app.models import Highlight, ReviewLog
 from app.services.resurface import get_random_highlights
 from app.routes.settings import _settings as review_settings
 from app.csrf import template_context, csrf_guard
+from app.dates import today_start_utc
 from datetime import datetime
 import time
 
@@ -21,8 +22,8 @@ def init(templates):
 
 
 def _today_start() -> datetime:
-    """Start of today (midnight UTC)."""
-    return datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    """Start of today in Central time (America/Chicago), returned as UTC-naive."""
+    return today_start_utc()
 
 
 async def _reviewed_today_count(db) -> int:
