@@ -3,6 +3,7 @@ name: Build and Push Docker Image
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
     branches: [main]
 
@@ -24,9 +25,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract version from tag
+        id: version
+        run: |
+          # On tag push: tag is "v0.7.0" → version tag "v0.7.0"
+          # On branch push: use "latest"
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "version_tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            echo "push_latest=true" >> $GITHUB_OUTPUT
+          else
+            echo "version_tag=latest" >> $GITHUB_OUTPUT
+            echo "push_latest=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version_tag }}
+            ${{ steps.version.outputs.push_latest == 'true' && format('ghcr.io/{0}:latest', github.repository) || '' }}
