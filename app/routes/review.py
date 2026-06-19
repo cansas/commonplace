@@ -507,6 +507,10 @@ async def review_heatmap_page(
 
     weeks = max(53, (cells[-1]["week"] + 1)) if cells else 53
     day_names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    total_reviews = sum(counts_by_date.values())
+    active_days = len(counts_by_date)
+    avg_per_day = round(total_reviews / max(1, active_days))
+    projected_year = round(total_reviews / max(1, (now - first_day).days + 1) * 365) if target_year == now.year else round(total_reviews / 365 * 365)
 
     return _jinja.TemplateResponse(
         request,
@@ -517,8 +521,10 @@ async def review_heatmap_page(
             cells=cells,
             weeks=weeks,
             year=target_year,
-            total_reviews=sum(counts_by_date.values()),
-            total_days=len(counts_by_date),
+            total_reviews=total_reviews,
+            total_days=active_days,
+            avg_per_day=avg_per_day,
+            projected_year=projected_year,
             day_names=day_names,
             prev_year=target_year - 1 if target_year > 2020 else None,
             next_year=target_year + 1 if target_year < now.year else None,

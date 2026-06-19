@@ -31,11 +31,11 @@
             <span class="text-xs text-muted">Active Days</span>
         </div>
         <div class="bg-card rounded-xl border border-card p-4 text-center">
-            <span class="block text-2xl font-bold text-primary">{{ "%.0f"|format(total_reviews / max(1, total_days)) }}</span>
+            <span class="block text-2xl font-bold text-primary">{{ avg_per_day }}</span>
             <span class="text-xs text-muted">Avg / Day</span>
         </div>
         <div class="bg-card rounded-xl border border-card p-4 text-center">
-            <span class="block text-2xl font-bold text-accent">{{ "%.0f"|format(total_reviews / max(1, 365) * 365) }}</span>
+            <span class="block text-2xl font-bold text-accent">{{ projected_year }}</span>
             <span class="text-xs text-muted">Projected Year</span>
         </div>
     </div>
