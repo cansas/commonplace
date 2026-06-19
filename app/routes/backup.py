@@ -116,8 +116,17 @@ async def restore_backup(
         shutil.copy2(_DB_PATH, bak_path)
 
     try:
-        # Extract to a temporary location first, then swap
+        # Validate each path stays within the target directory (zip slip prevention)
         db_dir = os.path.dirname(_DB_PATH)
+        for name in names:
+            resolved = os.path.realpath(os.path.join(db_dir, name))
+            if not resolved.startswith(os.path.realpath(db_dir) + os.sep) and resolved != os.path.realpath(db_dir):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"ZIP entry '{name}' attempts path traversal — rejected",
+                )
+
+        # Extract to a temporary location first, then swap
         zf.extractall(path=db_dir)
 
         # Rename extracted db if the zip contains it at root

@@ -59,7 +59,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
             response.set_cookie(
                 CSRF_COOKIE_NAME,
                 token,
-                httponly=False,
+                httponly=True,
                 samesite="lax",
                 max_age=86400,
                 path="/",
@@ -139,6 +139,16 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "DENY",
         "Referrer-Policy": "same-origin",
+        "Content-Security-Policy": (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' cdn.tailwindcss.com; "
+            "style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.tailwindcss.com; "
+            "font-src 'self' fonts.gstatic.com; "
+            "img-src 'self' data: https:; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none'; "
+            "form-action 'self'"
+        ),
     }
 
     async def dispatch(self, request: Request, call_next):

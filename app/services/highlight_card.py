@@ -20,7 +20,23 @@ COVERS_DIR = os.environ.get(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "covers"),
 )
 
-_COVER_CACHE: dict[str, str] = {}  # url -> data_uri (in-memory, per-process)
+import ipaddress
+import socket
+from urllib.parse import urlparse
+
+
+_COVER_CACHE: dict[str, str] = {}
+# Blocks private / loopback / link-local ranges
+_BLOCKED_NETS = [
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("169.254.0.0/16"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+    ipaddress.ip_network("fe80::/10"),
+]  # url -> data_uri (in-memory, per-process)
 
 
 def _data_uri_from_bytes(data: bytes, url: str) -> str:
@@ -40,6 +56,27 @@ def _resolve_cover_path(cover_url: str) -> Optional[str]:
         if os.path.isfile(fpath):
             return fpath
     return None
+
+
+def _safe_cover_url(url: str) -> bool:
+    """Return True if url is https and resolves to a public IP."""
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("https",):
+            return False
+        host = parsed.hostname
+        if not host:
+            return False
+        # Resolve hostname to IPs
+        ips = socket.getaddrinfo(host, 443, family=socket.AF_INET)
+        for family, _, _, _, sockaddr in ips:
+            addr = ipaddress.ip_address(sockaddr[0])
+            for net in _BLOCKED_NETS:
+                if addr in net:
+                    return False
+        return True
+    except Exception:
+        return False
 
 
 async def fetch_cover_data(cover_url: str) -> Optional[str]:
@@ -67,6 +104,9 @@ async def fetch_cover_data(cover_url: str) -> Optional[str]:
 
     # External HTTP(S) URL
     if cover_url.startswith(("http://", "https://")):
+        if not _safe_cover_url(cover_url):
+            print(f"  [covers] Blocked SSRF risk: {cover_url}")
+            return None
         try:
             async with httpx.AsyncClient(timeout=8.0, follow_redirects=True) as client:
                 resp = await client.get(cover_url)
