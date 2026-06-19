@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Review Stats — commonplace{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-primary">📊 Review Stats</h1>
+        {% if streaks %}
+        <div class="text-right">
+            <span class="block text-lg font-bold text-accent">{{ streaks.current }}</span>
+            <span class="text-xs text-muted">🔥 streak · Best: {{ streaks.best }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="bg-card rounded-xl border border-card p-4 text-center">
+            <span class="block text-2xl font-bold text-accent">{{ total_reviews }}</span>
+            <span class="text-xs text-muted">Reviews (30d)</span>
+        </div>
+        <div class="bg-card rounded-xl border border-card p-4 text-center">
+            <span class="block text-2xl font-bold text-emerald-500">{{ rating_dist.get(2, 0) + rating_dist.get(3, 0) }}</span>
+            <span class="text-xs text-muted">Good + Easy</span>
+        </div>
+        <div class="bg-card rounded-xl border border-card p-4 text-center">
+            <span class="block text-2xl font-bold text-amber-500">{{ rating_dist.get(1, 0) }}</span>
+            <span class="text-xs text-muted">Hard</span>
+        </div>
+        <div class="bg-card rounded-xl border border-card p-4 text-center">
+            <span class="block text-2xl font-bold text-red-500">{{ rating_dist.get(0, 0) }}</span>
+            <span class="text-xs text-muted">Forgot</span>
+        </div>
+    </div>
+
+    <!-- 30-Day Bar Chart -->
+    <div class="bg-card rounded-xl border border-card p-6">
+        <h2 class="text-sm font-semibold text-primary mb-4">Last 30 Days</h2>
+        <div class="flex items-end gap-1.5 h-32">
+            {% for i in range(day_labels|length) %}
+            <div class="flex-1 flex flex-col items-center justify-end h-full">
+                {% if day_counts[i] > 0 %}
+                <div class="w-full rounded-t relative group cursor-pointer"
+                     style="height: {{ (day_counts[i] / max_count * 100)|round }}%; min-height: 4px; background: linear-gradient(to top, var(--interactive-accent), var(--interactive-accent-hover));">
+                    <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-lg">
+                        {{ day_counts[i] }} review{% if day_counts[i] != 1 %}s{% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="w-full h-0.5 bg-page-alt rounded-t"></div>
+                {% endif %}
+                <span class="text-[10px] text-muted mt-1 {% if day_labels[i] in ['Sat', 'Sun'] %}text-accent{% endif %}">{{ day_labels[i] }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="flex justify-between text-xs text-muted mt-2">
+            <span>30 days ago</span>
+            <span>Today</span>
+        </div>
+    </div>
+
+    <!-- Rating Distribution -->
+    <div class="bg-card rounded-xl border border-card p-6">
+        <h2 class="text-sm font-semibold text-primary mb-4">Rating Distribution (All Time)</h2>
+        {% set total = rating_dist.get(0, 0) + rating_dist.get(1, 0) + rating_dist.get(2, 0) + rating_dist.get(3, 0) %}
+        {% if total > 0 %}
+        <div class="space-y-3">
+            {% set ratings = [
+                {'key': 0, 'label': '😵 Forgot', 'color': 'bg-red-500', 'count': rating_dist.get(0, 0)},
+                {'key': 1, 'label': '🤔 Hard', 'color': 'bg-amber-500', 'count': rating_dist.get(1, 0)},
+                {'key': 2, 'label': '😊 Good', 'color': 'bg-emerald-500', 'count': rating_dist.get(2, 0)},
+                {'key': 3, 'label': '😎 Easy', 'color': 'bg-sky-500', 'count': rating_dist.get(3, 0)},
+            ] %}
+            {% for r in ratings %}
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="text-primary">{{ r.label }}</span>
+                    <span class="text-muted">{{ r.count }} ({{ (r.count / total * 100)|round(1) }}%)</span>
+                </div>
+                <div class="w-full bg-page-alt rounded-full h-3">
+                    <div class="{{ r.color }} h-3 rounded-full transition-all duration-500" style="width: {{ (r.count / total * 100)|round }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-muted text-center py-4">No ratings yet. Start reviewing to see your distribution.</p>
+        {% endif %}
+    </div>
+
+    <div class="text-center">
+        <a href="/review" class="text-sm text-accent hover:text-accent-hover">← Back to review</a>
+    </div>
+</div>
+{% endblock %}

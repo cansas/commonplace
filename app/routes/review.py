@@ -12,7 +12,7 @@ from app.services.streaks import calculate_streaks
 from app.services.achievements import check_and_unlock
 from app.csrf import template_context, csrf_guard
 from app.dates import today_start_utc
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 import time
 
@@ -231,6 +231,79 @@ async def review_today_page(
             streaks=streaks,
             done_today=len(today_reviews),
             total_count=daily_limit,
+        ),
+    )
+
+
+@router.get("/review/stats", response_class=HTMLResponse)
+async def review_stats_page(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Review statistics dashboard."""
+    streaks = await calculate_streaks(db)
+
+    # Reviews per day for last 30 days
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    daily = await db.execute(
+        select(
+            func.date(ReviewLog.reviewed_at).label("day"),
+            func.count(ReviewLog.id).label("count"),
+            func.sum(func.CASE((ReviewLog.rating == 0, 1), else_=0)).label("forgot"),
+            func.sum(func.CASE((ReviewLog.rating == 1, 1), else_=0)).label("hard"),
+            func.sum(func.CASE((ReviewLog.rating == 2, 1), else_=0)).label("good"),
+            func.sum(func.CASE((ReviewLog.rating == 3, 1), else_=0)).label("easy"),
+        )
+        .where(ReviewLog.reviewed_at >= thirty_days_ago)
+        .group_by(func.date(ReviewLog.reviewed_at))
+        .order_by(func.date(ReviewLog.reviewed_at))
+    )
+    rows = daily.all()
+
+    # Build day-by-day for last 30 days, filling gaps
+    day_labels = []
+    day_counts = []
+    day_good = []
+    max_count = 1
+    for i in range(29, -1, -1):
+        d = (datetime.utcnow() - timedelta(days=i)).strftime("%Y-%m-%d")
+        day_labels.append((datetime.utcnow() - timedelta(days=i)).strftime("%a"))
+        match = [r for r in rows if r.day == d]
+        if match:
+            r = match[0]
+            day_counts.append(r.count)
+            day_good.append((r.good or 0) + (r.easy or 0))
+            if r.count > max_count:
+                max_count = r.count
+        else:
+            day_counts.append(0)
+            day_good.append(0)
+
+    # Rating distribution all-time
+    dist = await db.execute(
+        select(
+            ReviewLog.rating,
+            func.count(ReviewLog.id).label("count"),
+        )
+        .where(ReviewLog.rating.isnot(None))
+        .group_by(ReviewLog.rating)
+        .order_by(ReviewLog.rating)
+    )
+    rating_dist = {row.rating: row.count for row in dist.all()}
+
+    return _jinja.TemplateResponse(
+        request,
+        "review_stats.html",
+        template_context(
+            request,
+            active_page="review",
+            streaks=streaks,
+            day_labels=day_labels,
+            day_counts=day_counts,
+            day_good=day_good,
+            max_count=max_count,
+            rating_dist=rating_dist,
+            total_reviews=sum(day_counts),
         ),
     )
 

@@ -1,10 +1,11 @@
 """Achievements page routes."""
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
-from app.services.achievements import get_all_achievements
+from app.services.achievements import get_all_achievements, _get_achievement
+from app.services.achievement_card import generate_achievement_card
 from app.csrf import template_context
 
 router = APIRouter(tags=["achievements"])
@@ -43,4 +44,23 @@ async def achievements_page(request: Request, db: AsyncSession = Depends(get_db)
             total_count=len(achievements),
             new_achievements=new_achievements,
         ),
+    )
+
+
+@router.get("/api/achievements/{key}/card")
+async def achievement_card(key: str):
+    """Return an SVG share card for an achievement definition."""
+    achievement = _get_achievement(key)
+    if achievement is None:
+        return JSONResponse(status_code=404, content={"error": "Achievement not found"})
+
+    svg = generate_achievement_card(
+        label=achievement["label"],
+        message=achievement["message"],
+        icon=achievement["icon"],
+    )
+    return Response(
+        content=svg,
+        media_type="image/svg+xml",
+        headers={"Cache-Control": "public, max-age=86400"},
     )
