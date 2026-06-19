@@ -1,0 +1,10 @@
+# Gitleaks config — suppress known false positives
+
+[allowlist]
+description = "commonplace repo allowlist"
+paths = [
+    # Achievement key names look like secrets to entropy rules but aren't
+    '''app/services/achievements\.py''',
+    # Example/demo tokens in API documentation
+    '''API\.md''',
+]
