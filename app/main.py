@@ -73,7 +73,7 @@ app.add_middleware(CSRFMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
 # Session middleware (outer — runs first, populates session cookie)
-_session_https = os.environ.get("SESSION_HTTPS_ONLY", "true").lower() == "true"
+_session_https = os.environ.get("SESSION_HTTPS_ONLY", "false").lower() == "true"
 app.add_middleware(SessionMiddleware, secret_key=secret, max_age=86400 * 30, same_site="lax", https_only=_session_https)
 
 # Init route modules with templates
