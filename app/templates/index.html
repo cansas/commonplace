@@ -79,6 +79,11 @@
                             </div>
                             {% endif %}
                             <div class="flex items-center gap-3 mt-4">
+                                <button onclick="event.preventDefault(); toggleDashFav({{ random_highlight.id }}, this)" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg border transition-all shadow-sm
+                                    {% if random_highlight.favorite %}bg-amber-50 border-amber-200 text-amber-600 hover:bg-amber-100{% else %}border-card text-muted hover:text-amber-500 hover:border-amber-200{% endif %}">
+                                    <span class="mr-1">{% if random_highlight.favorite %}⭐{% else %}☆{% endif %}</span>
+                                    <span>{% if random_highlight.favorite %}Favorited{% else %}Favorite{% endif %}</span>
+                                </button>
                                 <a href="/review" class="inline-flex items-center px-4 py-1.5 bg-accent text-white text-xs font-medium rounded-lg btn-primary hover:bg-accent-hover transition shadow-sm">
                                     Start Review →
                                 </a>
@@ -128,4 +133,42 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleDashFav(hlId, btn) {
+        var wasFav = btn.classList.contains('text-amber-600');
+        if (wasFav) {
+            btn.classList.remove('bg-amber-50', 'border-amber-200', 'text-amber-600', 'hover:bg-amber-100');
+            btn.classList.add('border-card', 'text-muted', 'hover:text-amber-500', 'hover:border-amber-200');
+            btn.querySelector('span:first-child').textContent = '\u2606';
+            btn.querySelector('span:last-child').textContent = 'Favorite';
+        } else {
+            btn.classList.remove('border-card', 'text-muted', 'hover:text-amber-500', 'hover:border-amber-200');
+            btn.classList.add('bg-amber-50', 'border-amber-200', 'text-amber-600', 'hover:bg-amber-100');
+            btn.querySelector('span:first-child').textContent = '\u2B50';
+            btn.querySelector('span:last-child').textContent = 'Favorited';
+        }
+        fetch('/api/highlights/' + hlId + '/favorite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ csrf_token: '{{ csrf_token }}' })
+        }).then(function(r) {
+            if (!r.ok) throw new Error('Failed');
+            showToast(wasFav ? '\u2606 Unfavorited' : '\u2B50 Favorited', 'success');
+        }).catch(function() {
+            if (wasFav) {
+                btn.classList.add('bg-amber-50', 'border-amber-200', 'text-amber-600', 'hover:bg-amber-100');
+                btn.querySelector('span:first-child').textContent = '\u2B50';
+                btn.querySelector('span:last-child').textContent = 'Favorited';
+            } else {
+                btn.classList.add('border-card', 'text-muted', 'hover:text-amber-500', 'hover:border-amber-200');
+                btn.querySelector('span:first-child').textContent = '\u2606';
+                btn.querySelector('span:last-child').textContent = 'Favorite';
+            }
+            showToast('Failed to save', 'error');
+        });
+    }
+</script>
 {% endblock %}

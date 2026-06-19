@@ -22,7 +22,7 @@ from app.services.book_covers import batch_search
 from app.services.streaks import calculate_streaks
 from app.routes.settings import get_hardcover_api_key
 
-app = FastAPI(title="commonplace", version="0.7.2")
+app = FastAPI(title="commonplace", version="0.8.0")
 
 # Ensure covers directory exists on the mounted volume
 COVERS_DIR = os.environ.get("COVERS_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "covers"))
@@ -228,6 +228,7 @@ async def dashboard(
                 "book_title": random_hl.book_title,
                 "book_author": random_hl.book_author or "",
                 "note": random_hl.note,
+                "favorite": random_hl.favorite,
                 "share_token": random_hl.share_token,
             } if random_hl else None,
             imported=imported,
