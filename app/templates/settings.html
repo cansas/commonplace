@@ -284,7 +284,7 @@
         <section class="bg-card rounded-xl border border-card shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-card">
                 <h2 class="text-base font-semibold text-primary">🎨 Theme</h2>
-                <p class="text-xs text-muted mt-0.5">Choose between Modern and Reader appearances.</p>
+                <p class="text-xs text-muted mt-0.5">Choose your appearance.</p>
             </div>
             <div class="px-6 py-5">
                 <div class="flex items-center gap-6">
@@ -302,6 +302,13 @@
                         </div>
                         <p class="text-xs text-muted">Warm, cozy. Cream tones, Source Serif.</p>
                     </button>
+                    <button onclick="setTheme('dark')" class="theme-option flex-1 p-4 rounded-xl border-2 transition-all text-left {% if user_theme == 'dark' %}border-accent bg-accent-light{% else %}border-card hover:border-accent/40{% endif %}">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-6 h-6 rounded bg-black flex items-center justify-center"><span class="text-amber-400 text-xs">D</span></div>
+                            <span class="font-semibold text-primary">Dark</span>
+                        </div>
+                        <p class="text-xs text-muted">Deep charcoal, amber accent, easy on the eyes.</p>
+                    </button>
                 </div>
                 <p class="text-xs text-muted mt-3">Theme is saved to your browser and persisted server-side.</p>
             </div>
@@ -315,7 +322,7 @@
             <div class="px-6 py-5 space-y-2 text-sm">
                 <div class="flex items-center justify-between">
                     <span class="text-muted">Version</span>
-                    <span class="font-medium text-primary">{{ version or '0.6.3' }}</span>
+                    <span class="font-medium text-primary">{{ version or '0.6.4' }}</span>
                 </div>
                 <div class="flex items-center justify-between">
                     <span class="text-muted">Username</span>

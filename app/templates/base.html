@@ -153,9 +153,11 @@
             }
 
             function applyTheme(theme) {
-                body.classList.remove('theme-modern', 'theme-reader');
+                body.classList.remove('theme-modern', 'theme-reader', 'theme-dark');
                 if (theme === 'reader') {
                     body.classList.add('theme-reader');
+                } else if (theme === 'dark') {
+                    body.classList.add('theme-dark');
                 } else {
                     body.classList.add('theme-modern');
                 }
@@ -167,7 +169,10 @@
                 const label = document.getElementById('theme-toggle-label');
                 if (icon && label) {
                     if (theme === 'reader') {
-                        icon.textContent = '🎨';
+                        icon.textContent = '🌙';
+                        label.textContent = 'Switch to Dark';
+                    } else if (theme === 'dark') {
+                        icon.textContent = '☀️';
                         label.textContent = 'Switch to Modern';
                     } else {
                         icon.textContent = '📖';
@@ -182,7 +187,9 @@
             // Expose toggle function globally
             window.toggleTheme = function() {
                 const current = localStorage.getItem(THEME_STORAGE_KEY) || body.getAttribute('data-theme') || 'modern';
-                const next = current === 'reader' ? 'modern' : 'reader';
+                const order = ['modern', 'reader', 'dark'];
+                const idx = order.indexOf(current);
+                const next = order[(idx + 1) % order.length];
                 applyTheme(next);
 
                 // Persist to server if logged in

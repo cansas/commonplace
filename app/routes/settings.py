@@ -110,7 +110,7 @@ async def settings_page(
             total_books=books,
             review_mode=_settings.get("review_mode", "random"),
             review_count=_settings.get("review_count", 10),
-            version="0.6.3",
+            version="0.6.4",
             saved=saved,
             new_token=new_token,
             username=request.session.get("username", ""),
@@ -151,7 +151,7 @@ async def set_theme(
 ):
     csrf_guard(request, csrf_token)
     theme = theme.strip().lower()
-    if theme not in ("modern", "reader"):
+    if theme not in ("modern", "reader", "dark"):
         theme = "modern"
     _settings["theme"] = theme
     _save_settings()

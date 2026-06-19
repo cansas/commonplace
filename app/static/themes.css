@@ -213,3 +213,54 @@ input[type="range"]::-moz-range-thumb {
 .theme-reader .review-quote p {
   font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
 }
+
+/* ============================================================
+   Dark Theme — Amber accent on deep charcoal
+   ============================================================ */
+.theme-dark {
+  --bg-page: #07070e;
+  --bg-sidebar: #0a0a14;
+  --bg-card: #11111e;
+  --bg-page-alt: #141625;
+  --bg-sidebar-hover: #1a1c2e;
+  --bg-sidebar-active: #232538;
+
+  --text-primary: #e4e4ed;
+  --text-secondary: #9d9db0;
+  --text-muted: #71718a;
+  --text-muted-lighter: #55556b;
+
+  --text-sidebar: #7a7a94;
+  --text-sidebar-muted: #55556b;
+  --text-sidebar-active: #e4e4ed;
+
+  --border-subtle: #1e2030;
+  --border-card: #1e2030;
+  --border-sidebar: #232538;
+
+  --color-accent: #f59e0b;
+  --color-accent-hover: #d97706;
+  --color-accent-light: #1c1700;
+  --color-accent-lighter: #2a2400;
+  --color-accent-text: #fbbf24;
+
+  --color-link: #f59e0b;
+  --color-link-hover: #fbbf24;
+
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --selection-bg: #f59e0b;
+
+  --scrollbar-track: #11111e;
+  --scrollbar-thumb: #2e2e40;
+  --scrollbar-thumb-hover: #4f4f66;
+
+  --btn-primary-bg: #f59e0b;
+  --btn-primary-text: #07070e;
+  --btn-primary-hover: #d97706;
+}
+
+/* In dark theme, invert the logo so it shows white */
+.theme-dark .sidebar-logo {
+  filter: brightness(0) invert(1);
+}
