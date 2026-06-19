@@ -144,8 +144,31 @@ async def startup():
 
 
 @app.get("/health")
-async def health():
-    return {"status": "ok"}
+async def health(db: AsyncSession = Depends(get_db)):
+    """Healthcheck — verifies DB connectivity and returns app status.
+
+    Returns 200 with version and database status on success.
+    Returns 503 if the database is unreachable (triggers Docker restart).
+    """
+    db_ok = False
+    try:
+        from sqlalchemy import text as sqltext
+        await db.execute(sqltext("SELECT 1"))
+        db_ok = True
+    except Exception:
+        pass
+
+    result = {
+        "status": "ok" if db_ok else "degraded",
+        "version": "0.6.7",
+        "database": "connected" if db_ok else "unreachable",
+    }
+
+    if not db_ok:
+        from fastapi import HTTPException, status
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=result)
+
+    return result
 
 
 @app.get("/", response_class=HTMLResponse)
