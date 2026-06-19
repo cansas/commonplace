@@ -6,6 +6,8 @@
     <title>{% block title %}commonplace{% endblock %}</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/static/logo-32.png">
     <link rel="icon" type="image/png" sizes="128x128" href="/static/logo-128.png">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#1e293b">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/static/style.css" />
     <link rel="stylesheet" href="/static/themes.css" />
@@ -107,7 +109,7 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 min-h-screen">
+    <main class="flex-1 min-h-screen pb-16 md:pb-0">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
             {% block content %}{% endblock %}
         </div>
@@ -115,6 +117,37 @@
 
     <!-- Toast container -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Mobile Bottom Nav -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-sidebar border-t border-sidebar flex items-center justify-around px-1 safe-area-pb">
+        <a href="/" class="bottom-nav-item {% if active_page == 'dashboard' %}bottom-nav-active{% endif %}">
+            <span class="text-xl">📊</span>
+            <span class="text-[10px]">Home</span>
+        </a>
+        <a href="/highlights" class="bottom-nav-item {% if active_page == 'highlights' %}bottom-nav-active{% endif %}">
+            <span class="text-xl">📝</span>
+            <span class="text-[10px]">Highlights</span>
+        </a>
+        <a href="/review" class="bottom-nav-item {% if active_page == 'review' %}bottom-nav-active{% endif %}">
+            <span class="text-xl">📖</span>
+            <span class="text-[10px]">Review</span>
+        </a>
+        <a href="/tags" class="bottom-nav-item {% if active_page == 'tags' %}bottom-nav-active{% endif %}">
+            <span class="text-xl">🏷️</span>
+            <span class="text-[10px]">Tags</span>
+        </a>
+        <button onclick="document.getElementById('sidebar-toggle')?.click()" class="bottom-nav-item flex-col">
+            <span class="text-xl">☰</span>
+            <span class="text-[10px]">More</span>
+        </button>
+    </nav>
+
+    <!-- PWA service worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js').catch(function() {});
+        }
+    </script>
 
     <!-- Confirm dialog -->
     <div id="confirm-overlay" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center">

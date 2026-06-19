@@ -1,0 +1,22 @@
+{
+  "name": "commonplace",
+  "short_name": "commonplace",
+  "description": "Self-hosted highlights & spaced repetition",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1e293b",
+  "categories": ["productivity", "education"],
+  "icons": [
+    {
+      "src": "/static/logo-128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/logo-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    }
+  ]
+}

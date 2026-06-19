@@ -354,3 +354,29 @@ table {
 @keyframes btn-spin {
     to { transform: rotate(360deg); }
 }
+
+/* ── Bottom Navigation ─────────────────────────────────── */
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 6px 10px 4px;
+    border-radius: 8px;
+    color: var(--sidebar-muted);
+    text-decoration: none;
+    transition: color 0.15s, background 0.15s;
+    min-width: 0;
+    flex: 1;
+}
+.bottom-nav-item:hover,
+.bottom-nav-item:active {
+    color: var(--sidebar-active);
+    background: var(--sidebar-hover);
+}
+.bottom-nav-active {
+    color: var(--sidebar-active) !important;
+}
+.safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
