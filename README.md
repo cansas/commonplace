@@ -4,7 +4,7 @@ A self-hosted Readwise alternative — capture, browse, review, and resurface yo
 
 - **Capture**: Import from KOReader, Kindle, Obsidian, Readwise API, or manual entry
 - **Browse**: Full-text search, filter by source/tag/favorites, book view with covers
-- **Review**: Daily review with SM-2 spaced repetition — rate Forgot/Hard/Good/Easy
+- **Review**: Daily review with random or SM-2 spaced repetition — rate Forgot/Hard/Good/Easy
 - **Achievements**: Unlock witty milestones as you build your review streak
 - **Sync**: Push highlights from KOReader via custom plugin, sync to Obsidian via plugin
 - **Self-hosted**: Single Docker container, SQLite database, no external services required
