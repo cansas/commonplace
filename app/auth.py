@@ -8,9 +8,8 @@ import secrets
 from datetime import datetime
 
 import bcrypt
-from fastapi import Request, HTTPException, status
-from fastapi.responses import RedirectResponse
-from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import Request, status
+from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -89,9 +88,13 @@ def _path_parts(path: str) -> list[str]:
     return [p for p in path.split("/") if p]
 
 
-class AuthMiddleware(BaseHTTPMiddleware):
+class AuthMiddleware:
     """
-    Three-layer auth:
+    Three-layer auth as ASGI middleware (not BaseHTTPMiddleware) to ensure
+    session data set by route handlers propagates correctly through the
+    outer SessionMiddleware. BaseHTTPMiddleware has known scope-isolation
+    issues in Starlette 0.40+ that can silently drop session mutations.
+
       - Public paths (login, health, static) — always allowed.
       - API paths (/api/*) — verified via Authorization: Token <tok>
         against the ApiToken table. A few sub-paths (share cards,
@@ -99,17 +102,27 @@ class AuthMiddleware(BaseHTTPMiddleware):
       - Web paths — session must have 'user_id'.
     """
 
-    async def dispatch(self, request: Request, call_next):
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        request = Request(scope, receive=receive)
         path = request.url.path
         parts = _path_parts(path)
 
         # ── Public paths ──────────────────────────────────────────────
         if path in PUBLIC_PATHS or path.startswith("/static"):
-            return await call_next(request)
+            await self.app(scope, receive, send)
+            return
 
         # ── Share cards (public) ──────────────────────────────────────
         if len(parts) >= 2 and parts[0] == "share":
-            return await call_next(request)
+            await self.app(scope, receive, send)
+            return
 
         # ── API routes ────────────────────────────────────────────────
         if parts and parts[0] == "api":
@@ -119,27 +132,35 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 and parts[1] == "highlights"
                 and parts[2].isdigit()
             ):
-                return await call_next(request)
+                await self.app(scope, receive, send)
+                return
 
             # Allow API calls from logged-in web sessions (no token needed)
             if request.session.get("user_id"):
-                return await call_next(request)
+                await self.app(scope, receive, send)
+                return
 
             auth = request.headers.get("Authorization", "")
             if not auth.startswith("Token "):
-                raise HTTPException(
+                response = JSONResponse(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Missing or malformed Authorization header",
+                    content={"detail": "Missing or malformed Authorization header"},
+                    headers={"content-type": "application/json"},
                 )
+                await response(scope, receive, send)
+                return
 
             raw_token = auth[6:]
             async with async_session() as db:
                 tok = await verify_api_token(raw_token, db)
                 if tok is None:
-                    raise HTTPException(
+                    response = JSONResponse(
                         status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="Invalid token",
+                        content={"detail": "Invalid token"},
+                        headers={"content-type": "application/json"},
                     )
+                    await response(scope, receive, send)
+                    return
                 # Stamp last_used_at
                 await db.execute(
                     update(ApiToken)
@@ -148,10 +169,13 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 )
                 await db.commit()
 
-            return await call_next(request)
+            await self.app(scope, receive, send)
+            return
 
         # ── Web UI routes ─────────────────────────────────────────────
         if request.session.get("user_id"):
-            return await call_next(request)
+            await self.app(scope, receive, send)
+            return
 
-        return RedirectResponse(url="/login", status_code=303)
+        response = RedirectResponse(url="/login", status_code=303)
+        await response(scope, receive, send)
