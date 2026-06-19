@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Seed Marginalia from the Obsidian vault's Readwise exports.
+Seed commonplace from the Obsidian vault's Readwise exports.
 Usage: python3 seed_from_obsidian.py http://localhost:8765 my-api-token
 """
 
@@ -94,7 +94,7 @@ def _parse_content(content, filename):
 
 
 def send_highlights(highlights, api_url, api_token):
-    """Send highlights to Marginalia's Readwise-compatible API endpoint."""
+    """Send highlights to commonplace's Readwise-compatible API endpoint."""
     url = f"{api_url.rstrip('/')}/api/v2/highlights"
     headers = {
         "Authorization": f"Token {api_token}",
@@ -145,7 +145,7 @@ def main():
 
     print(f"\n📤 Sending {len(highlights)} highlights to {api_url}")
     total = send_highlights(highlights, api_url, api_token)
-    print(f"\n✅ Done! Imported {total} highlights into Marginalia")
+    print(f"\n✅ Done! Imported {total} highlights into commonplace")
 
 
 if __name__ == "__main__":
