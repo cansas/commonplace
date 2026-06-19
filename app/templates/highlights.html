@@ -49,9 +49,9 @@
         {% endif %}
     </form>
 
-    <!-- Highlights Table -->
+    <!-- Highlights Table (desktop) -->
     {% if highlights %}
-    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+    <div class="hl-table-wrapper bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200">
                 <thead class="bg-slate-50">
@@ -171,6 +171,104 @@
         </div>
     </div>
 
+    <!-- Mobile Highlight Cards -->
+    <div class="hl-cards-wrapper space-y-3">
+        {% for h in highlights %}
+        <div class="hl-card-swipe-container">
+            <div class="hl-card">
+                <div class="flex items-start gap-3">
+                    <input type="checkbox" class="hl-select mt-1 rounded border-slate-300 shrink-0" value="{{ h.id }}" onchange="updateBatchBar()" />
+                    <div class="min-w-0 flex-1" onclick="toggleMobileDetail({{ h.id }})">
+                        <div class="hl-card-text">{{ h.text[:150] }}{% if h.text|length > 150 %}…{% endif %}</div>
+                        <div class="hl-card-meta">
+                            <span class="font-medium text-slate-700 truncate max-w-[140px]">{{ h.book_title }}</span>
+                            {% if h.book_author %}<span class="text-slate-400">·</span><span class="truncate max-w-[100px]">{{ h.book_author }}</span>{% endif %}
+                            <span class="text-slate-400">·</span>
+                            <span class="source-badge source-{{ h.source_type | lower }}">{{ h.source_type }}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1 mt-1.5">
+                            {% for tag in h.tags[:3] %}
+                            <span class="tag-pill">{{ tag }}</span>
+                            {% endfor %}
+                            {% if h.tags|length > 3 %}
+                            <span class="text-xs text-slate-400">+{{ h.tags|length - 3 }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="hl-card-detail" id="card-detail-{{ h.id }}">
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-2">
+                                    <span class="text-lg text-indigo-500">❝</span>
+                                    <p class="text-sm text-slate-700 leading-relaxed italic font-serif">{{ h.text }}</p>
+                                </div>
+                                {% if h.note %}
+                                <div class="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600">
+                                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Note</span>
+                                    {{ h.note }}
+                                </div>
+                                {% endif %}
+                                <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                                    <span>📖 {{ h.book_title }}</span>
+                                    {% if h.book_author %}<span>✍️ {{ h.book_author }}</span>{% endif %}
+                                    <span>📅 {{ h.highlighted_at }}</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="event.stopPropagation(); toggleEdit({{ h.id }}); scrollToEdit({{ h.id }})" class="flex-1 px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-50">✏️ Edit</button>
+                                    {% if h.share_token %}
+                                    <a href="/share/{{ h.share_token }}" target="_blank" class="flex-1 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-medium hover:bg-indigo-100 text-center">📤 Share</a>
+                                    {% endif %}
+                                    <button onclick="event.stopPropagation(); deleteHighlight({{ h.id }})" class="flex-1 px-3 py-2 bg-red-50 border border-red-200 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100">🗑️ Delete</button>
+                                </div>
+                                <!-- Inline Edit Form -->
+                                <div id="edit-{{ h.id }}" class="hidden p-4 bg-white border border-slate-200 rounded-lg">
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="text-xs font-semibold text-slate-500 block mb-1">Highlight</label>
+                                            <textarea id="edit-text-{{ h.id }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-serif italic" rows="3">{{ h.text }}</textarea>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs font-semibold text-slate-500 block mb-1">Note</label>
+                                            <textarea id="edit-note-{{ h.id }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" rows="2">{{ h.note or '' }}</textarea>
+                                        </div>
+                                        <div class="flex gap-3">
+                                            <div class="flex-1">
+                                                <label class="text-xs font-semibold text-slate-500 block mb-1">Book</label>
+                                                <input id="edit-book-{{ h.id }}" type="text" value="{{ h.book_title }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="text-xs font-semibold text-slate-500 block mb-1">Author</label>
+                                                <input id="edit-author-{{ h.id }}" type="text" value="{{ h.book_author or '' }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs font-semibold text-slate-500 block mb-1">Tags (comma-separated)</label>
+                                            <input id="edit-tags-{{ h.id }}" type="text" value="{{ h.tags | join(', ') }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                        </div>
+                                        <div class="flex gap-2 justify-end">
+                                            <button onclick="event.stopPropagation(); cancelEdit({{ h.id }})" class="px-4 py-2 bg-white border border-slate-200 text-sm text-slate-600 rounded-lg hover:bg-slate-50">Cancel</button>
+                                            <button onclick="event.stopPropagation(); saveEdit({{ h.id }})" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">Save</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="event.stopPropagation(); toggleFav({{ h.id }}, this)" class="text-lg leading-none shrink-0 mt-0.5 hover:scale-110 transition-transform {% if h.favorite %}text-amber-400{% else %}text-slate-300 hover:text-amber-300{% endif %}">
+                        {% if h.favorite %}⭐{% else %}☆{% endif %}
+                    </button>
+                </div>
+            </div>
+            <!-- Swipe-to-reveal actions -->
+            <div class="hl-card-swipe-reveal" id="swipe-{{ h.id }}">
+                <button class="swipe-fav" onclick="toggleFav({{ h.id }}, this.parentElement.parentElement.querySelector('button:last-child'))">{% if h.favorite %}☆{% else %}⭐{% endif %}<br><span style="font-size:9px">{% if h.favorite %}Unfav{% else %}Fav{% endif %}</span></button>
+                <button class="swipe-delete" onclick="deleteHighlight({{ h.id }})">🗑️<br><span style="font-size:9px">Delete</span></button>
+                {% if h.share_token %}
+                <a href="/share/{{ h.share_token }}" class="swipe-share" target="_blank">📤<br><span style="font-size:9px">Share</span></a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
     <!-- Pagination -->
     <div class="flex items-center justify-between">
         <p class="text-sm text-slate-500">
@@ -252,6 +350,118 @@
                     detail.classList.toggle('hidden');
                 }
             });
+        });
+    })();
+
+    /* ── Mobile Card Toggle ─────────────────────────── */
+    function toggleMobileDetail(id) {
+        var el = document.getElementById('card-detail-' + id);
+        if (el) el.classList.toggle('open');
+    }
+
+    function scrollToEdit(id) {
+        setTimeout(function() {
+            var el = document.getElementById('edit-' + id);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+    }
+
+    /* ── Swipe to Reveal ────────────────────────────── */
+    (function() {
+        var containers = document.querySelectorAll('.hl-card-swipe-container');
+        var startX = 0, currentX = 0, isDragging = false, activeSwipe = null;
+
+        function getTranslateX(el) {
+            var reveal = el.querySelector('.hl-card-swipe-reveal');
+            if (!reveal) return 0;
+            var w = reveal.offsetWidth;
+            var tr = reveal.style.transform;
+            if (tr && tr !== 'translateX(100%)' && tr !== '') {
+                var m = tr.match(/translateX\((-?\d+)px\)/);
+                if (m) return parseInt(m[1]);
+            }
+            return reveal.classList.contains('open') ? -w : 0;
+        }
+
+        function setTranslateX(el, x) {
+            var reveal = el.querySelector('.hl-card-swipe-reveal');
+            if (!reveal) return;
+            reveal.style.transition = 'none';
+            reveal.style.transform = 'translateX(' + x + 'px)';
+        }
+
+        function closeAllSwipe() {
+            document.querySelectorAll('.hl-card-swipe-reveal.open').forEach(function(r) {
+                r.classList.remove('open');
+                r.style.transform = '';
+                r.style.transition = '';
+            });
+        }
+
+        containers.forEach(function(container) {
+            container.addEventListener('touchstart', function(e) {
+                var touch = e.changedTouches[0];
+                startX = touch.clientX;
+                isDragging = true;
+                activeSwipe = container;
+                // If another swipe is open, close it
+                var otherReveal = container.querySelector('.hl-card-swipe-reveal');
+                if (otherReveal && !otherReveal.classList.contains('open')) {
+                    closeAllSwipe();
+                }
+            }, { passive: true });
+
+            container.addEventListener('touchmove', function(e) {
+                if (!isDragging || activeSwipe !== container) return;
+                var touch = e.changedTouches[0];
+                currentX = touch.clientX;
+                var dx = startX - currentX;
+                var reveal = container.querySelector('.hl-card-swipe-reveal');
+                if (!reveal) return;
+                var w = reveal.offsetWidth || 128;
+                var isOpen = reveal.classList.contains('open');
+                if (isOpen) {
+                    // If open, allow pulling back (negative dx relative to open)
+                    var openOffset = -w;
+                    var newX = Math.min(0, openOffset + dx);
+                    setTranslateX(container, newX);
+                } else if (dx > 0) {
+                    // Pulling left to reveal
+                    var newX = Math.max(-w, -dx);
+                    setTranslateX(container, newX);
+                }
+            }, { passive: true });
+
+            container.addEventListener('touchend', function(e) {
+                if (!isDragging || activeSwipe !== container) return;
+                isDragging = false;
+                activeSwipe = null;
+                var reveal = container.querySelector('.hl-card-swipe-reveal');
+                if (!reveal) return;
+                var w = reveal.offsetWidth || 128;
+                var dx = startX - currentX;
+                var isOpen = reveal.classList.contains('open');
+
+                reveal.style.transition = '';
+                reveal.style.transform = '';
+
+                if (isOpen) {
+                    if (dx < -30) {
+                        reveal.classList.remove('open');
+                    } else {
+                        reveal.classList.add('open');
+                    }
+                } else if (dx > w * 0.35) {
+                    reveal.classList.add('open');
+                }
+            }, { passive: true });
+        });
+
+        // Close swipe on outside tap
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.hl-card-swipe-container')) {
+                closeAllSwipe();
+            }
         });
     })();
 

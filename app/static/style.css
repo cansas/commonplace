@@ -380,3 +380,222 @@ table {
 .safe-area-pb {
     padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* ── Mobile Highlight Cards ──────────────────────────── */
+@media (max-width: 767px) {
+    .hl-table-wrapper { display: none; }
+    .hl-cards-wrapper { display: block; }
+}
+
+@media (min-width: 768px) {
+    .hl-cards-wrapper { display: none; }
+}
+
+.hl-card {
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border-card, #e2e8f0);
+    border-radius: 12px;
+    padding: 14px 16px;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.hl-card:active {
+    transform: scale(0.99);
+}
+
+.hl-card-text {
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: var(--text-primary, #1e293b);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.hl-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--text-muted, #64748b);
+    margin-top: 8px;
+}
+
+.hl-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-card, #e2e8f0);
+}
+
+.hl-card-detail {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-card, #e2e8f0);
+    animation: fadeIn 0.2s ease-out;
+}
+
+.hl-card-detail.open { display: block; }
+
+/* ── Swipe Actions ──────────────────────────────────── */
+.hl-card-swipe-container {
+    position: relative;
+    overflow: hidden;
+    touch-action: pan-y;
+}
+
+.hl-card-swipe-reveal {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    display: flex;
+    align-items: stretch;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    z-index: 2;
+}
+
+.hl-card-swipe-reveal.open {
+    transform: translateX(0);
+}
+
+.hl-card-swipe-reveal button,
+.hl-card-swipe-reveal a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    gap: 2px;
+    border: none;
+    cursor: pointer;
+    transition: filter 0.15s;
+    color: #fff;
+}
+
+.hl-card-swipe-reveal button:active,
+.hl-card-swipe-reveal a:active {
+    filter: brightness(0.9);
+}
+
+.hl-card-swipe-reveal .swipe-fav {
+    background: #f59e0b;
+}
+.hl-card-swipe-reveal .swipe-delete {
+    background: #ef4444;
+}
+.hl-card-swipe-reveal .swipe-share {
+    background: #6366f1;
+}
+
+/* ── Full-screen Mobile Modals ───────────────────────── */
+@media (max-width: 767px) {
+    #confirm-dialog {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        border-radius: 16px 16px 0 0 !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-height: 85vh;
+        overflow-y: auto;
+        transform: translateY(0);
+        animation: slideUp 0.3s ease-out;
+    }
+    #confirm-overlay {
+        align-items: flex-end !important;
+    }
+    #confirm-dialog .modal-drag-handle {
+        display: block;
+    }
+}
+
+.modal-drag-handle {
+    display: none;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: #cbd5e1;
+    margin: 8px auto 4px;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+/* ── Review Mobile ──────────────────────────────────── */
+@media (max-width: 767px) {
+    .review-card {
+        border-radius: 16px;
+        padding: 1rem;
+    }
+    .review-card .grid.grid-cols-4 {
+        gap: 8px;
+    }
+    .review-card .grid.grid-cols-4 button {
+        padding: 14px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+    }
+    .review-card .grid.grid-cols-4 button .block.text-lg {
+        font-size: 1.5rem;
+    }
+    .review-card .review-quote p {
+        font-size: 1.05rem;
+    }
+    .review-secondary-actions {
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+    .review-secondary-actions button,
+    .review-secondary-actions a,
+    .review-secondary-actions form {
+        flex: 1;
+        min-width: 0;
+    }
+    .review-secondary-actions button,
+    .review-secondary-actions a {
+        padding: 10px 6px !important;
+        font-size: 0.7rem !important;
+        border-radius: 10px !important;
+        text-align: center;
+        justify-content: center;
+    }
+}
+
+/* ── Bottom Nav SVG Icons ────────────────────────────── */
+.bottom-nav-icon {
+    width: 22px;
+    height: 22px;
+    display: block;
+}
+.bottom-nav-icon path {
+    stroke: currentColor;
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.bottom-nav-active .bottom-nav-icon path {
+    stroke: var(--sidebar-active, #6366f1);
+}
+
+/* ── Safe area for bottom nav on notched phones ─────── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    nav.fixed.bottom-0 {
+        padding-bottom: env(safe-area-inset-bottom, 4px);
+    }
+}

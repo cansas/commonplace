@@ -121,23 +121,23 @@
     <!-- Mobile Bottom Nav -->
     <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-sidebar border-t border-sidebar flex items-center justify-around px-1 safe-area-pb">
         <a href="/" class="bottom-nav-item {% if active_page == 'dashboard' %}bottom-nav-active{% endif %}">
-            <span class="text-xl">📊</span>
+            <svg class="bottom-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" fill="none" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" fill="none" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" fill="none" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
             <span class="text-[10px]">Home</span>
         </a>
         <a href="/highlights" class="bottom-nav-item {% if active_page == 'highlights' %}bottom-nav-active{% endif %}">
-            <span class="text-xl">📝</span>
+            <svg class="bottom-nav-icon" viewBox="0 0 24 24"><path d="M4 20h16a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1z" stroke="currentColor" fill="none" stroke-width="1.8"/><path d="M8 8h8M8 12h6M8 16h4" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg>
             <span class="text-[10px]">Highlights</span>
         </a>
         <a href="/review" class="bottom-nav-item {% if active_page == 'review' %}bottom-nav-active{% endif %}">
-            <span class="text-xl">📖</span>
+            <svg class="bottom-nav-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 7h8M8 11h6" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg>
             <span class="text-[10px]">Review</span>
         </a>
         <a href="/tags" class="bottom-nav-item {% if active_page == 'tags' %}bottom-nav-active{% endif %}">
-            <span class="text-xl">🏷️</span>
+            <svg class="bottom-nav-icon" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linejoin="round"/><path d="M7 7h.01" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg>
             <span class="text-[10px]">Tags</span>
         </a>
         <button onclick="document.getElementById('sidebar-toggle')?.click()" class="bottom-nav-item flex-col">
-            <span class="text-xl">☰</span>
+            <svg class="bottom-nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/></svg>
             <span class="text-[10px]">More</span>
         </button>
     </nav>
@@ -152,6 +152,7 @@
     <!-- Confirm dialog -->
     <div id="confirm-overlay" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center">
         <div id="confirm-dialog" class="bg-card rounded-xl shadow-xl max-w-sm w-full mx-4 overflow-hidden pointer-events-auto">
+            <div class="modal-drag-handle"></div>
             <div class="px-6 py-5">
                 <p id="confirm-title" class="text-base font-semibold text-primary"></p>
                 <p id="confirm-message" class="text-sm text-secondary mt-1"></p>

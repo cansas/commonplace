@@ -118,7 +118,7 @@
         </div>
 
         <!-- Secondary actions -->
-        <div class="flex gap-2 justify-center mt-4 pt-3 border-t border-card">
+        <div class="review-secondary-actions flex gap-2 justify-center mt-4 pt-3 border-t border-card">
             <form method="POST" action="/review/delete" class="contents"
                   onsubmit="return confirm('Delete this highlight? This cannot be undone.')">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
