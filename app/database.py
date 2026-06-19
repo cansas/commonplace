@@ -82,6 +82,15 @@ async def init_db():
             ))
             print("  Migration: created user_achievements table")
 
+    # ── Tags color column ───────────────────────────────────────────────────
+    async with engine.begin() as conn:
+        from sqlalchemy import text as sqltext
+        pragma4 = await conn.execute(sqltext("PRAGMA table_info('tags')"))
+        tag_cols = {row[1] for row in pragma4.fetchall()}
+        if "color" not in tag_cols:
+            await conn.execute(sqltext("ALTER TABLE tags ADD COLUMN color VARCHAR(7)"))
+            print("  Migration: added color to tags")
+
     # Create dedup index (text + book_title + highlighted_at)
     async with engine.begin() as conn:
         from sqlalchemy import text as sqltext

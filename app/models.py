@@ -41,6 +41,7 @@ class Tag(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(128), unique=True, nullable=False)
+    color = Column(String(7), nullable=True)  # hex color like #3b82f6
 
 
 class Source(Base):

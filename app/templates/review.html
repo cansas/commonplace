@@ -134,6 +134,13 @@
                     {% if highlight.favorite %}⭐ Unfavorite{% else %}☆ Favorite{% endif %}
                 </button>
             </form>
+            <form method="POST" action="/review/next" class="contents">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <input type="hidden" name="hl_id" value="{{ highlight.id }}" />
+                <button type="submit" class="px-3 py-1.5 text-xs text-muted hover:text-indigo-500 hover:bg-page-alt rounded-md transition-colors">
+                    ⏰ Later
+                </button>
+            </form>
         </div>
     </div>
 

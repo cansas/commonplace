@@ -256,6 +256,22 @@ def _check_review_rate_limit(request: Request):
 _RATING_LABELS = {0: "Forgot", 1: "Hard", 2: "Good", 3: "Easy"}
 
 
+@router.get("/api/review/stats")
+async def review_stats(db: AsyncSession = Depends(get_db)):
+    """Return review statistics for today."""
+    streaks = await calculate_streaks(db)
+    done_today = await _reviewed_today_count(db)
+    daily_limit = review_settings.get("review_count", 10)
+    remaining = max(0, daily_limit - done_today)
+    return {
+        "streak": streaks["current"],
+        "best_streak": streaks["best"],
+        "reviewed_today": done_today,
+        "daily_limit": daily_limit,
+        "remaining": remaining,
+    }
+
+
 @router.post("/review/rate")
 async def review_rate(
     request: Request,

@@ -35,7 +35,7 @@ async def list_tags(db: AsyncSession = Depends(get_db)):
         .order_by(Tag.name)
     )
     return [
-        {"id": row.id, "name": row.name, "count": row.count}
+        {"id": row.id, "name": row.name, "color": row.color, "count": row.count}
         for row in result.all()
     ]
 
@@ -43,27 +43,35 @@ async def list_tags(db: AsyncSession = Depends(get_db)):
 @router.put("/api/tags/{tag_id}")
 async def rename_tag(
     tag_id: int,
-    name: str = Form(...),
+    name: str = Form(default=""),
+    color: str = Form(default=""),
     db: AsyncSession = Depends(get_db),
 ):
-    """Rename a tag."""
+    """Rename a tag and/or update its color."""
     tag = await db.get(Tag, tag_id)
     if not tag:
         raise HTTPException(status_code=404, detail="Tag not found")
-    name = name.strip()
-    if not name:
-        raise HTTPException(status_code=400, detail="Name is required")
-    if len(name) > 128:
-        raise HTTPException(status_code=400, detail="Name too long")
 
-    # Check for duplicate
-    existing = await db.execute(select(Tag).where(Tag.name == name))
-    if existing.scalar_one_or_none():
-        raise HTTPException(status_code=409, detail="A tag with that name already exists")
+    # Update name if provided
+    if name.strip():
+        name = name.strip()
+        if len(name) > 128:
+            raise HTTPException(status_code=400, detail="Name too long")
+        existing = await db.execute(select(Tag).where(Tag.name == name, Tag.id != tag_id))
+        if existing.scalar_one_or_none():
+            raise HTTPException(status_code=409, detail="A tag with that name already exists")
+        tag.name = name
 
-    tag.name = name
+    # Update color if provided
+    if color.strip():
+        if not color.startswith("#") or len(color) not in (4, 7):
+            raise HTTPException(status_code=400, detail="Color must be a hex value like #3b82f6")
+        tag.color = color
+    elif "color" in dict(color=color):  # explicit empty to clear
+        tag.color = None
+
     await db.commit()
-    return {"ok": True, "id": tag_id, "name": name}
+    return {"ok": True, "id": tag_id, "name": tag.name, "color": tag.color}
 
 
 @router.post("/api/tags/merge")
