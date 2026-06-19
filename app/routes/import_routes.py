@@ -111,21 +111,28 @@ async def _save_highlights(db, highlights_list, source_name, source_type):
 async def import_readwise(
     request: Request,
     csrf_token: str = Form(default=""),
-    files: List[UploadFile] = File(...),
+    file: UploadFile = File(...),
+    content: str = Form(default=""),
     db: AsyncSession = Depends(get_db),
 ):
     csrf_guard(request, csrf_token)
     all_highlights = []
-    source_names = []
-    for f in files:
-        content = (await f.read()).decode("utf-8", errors="replace")
-        parsed = parse_readwise_md(content, f.filename or "")
+
+    if content.strip():
+        # Pasted content mode
+        parsed = parse_readwise_md(content, "pasted-content")
         all_highlights.extend(parsed)
-        source_names.append(f.filename or "unknown")
+        source_name = "Pasted Readwise content"
+    else:
+        # File upload mode
+        raw = (await file.read()).decode("utf-8", errors="replace")
+        parsed = parse_readwise_md(raw, file.filename or "")
+        all_highlights.extend(parsed)
+        source_name = file.filename or "unknown"
 
     count = await _save_highlights(
         db, all_highlights,
-        source_name=", ".join(source_names),
+        source_name=source_name,
         source_type="readwise",
     )
 
