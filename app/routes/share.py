@@ -57,7 +57,8 @@ async def share_png(share_token: str, db: AsyncSession = Depends(get_db)):
     png = svg_to_png(svg.encode("utf-8"))
     if png is None:
         return Response(status_code=500, content="PNG conversion unavailable")
-    return Response(content=png, media_type="image/png")
+    return Response(content=png, media_type="image/png",
+                    headers={"Cache-Control": "public, max-age=86400"})
 
 
 @router.get("/share/{share_token}.svg")
@@ -76,7 +77,8 @@ async def share_svg(share_token: str, db: AsyncSession = Depends(get_db)):
         highlight_id=hl.id,
         cover_data_uri=cover_uri,
     )
-    return Response(content=svg, media_type="image/svg+xml")
+    return Response(content=svg, media_type="image/svg+xml",
+                    headers={"Cache-Control": "public, max-age=86400"})
 
 
 @router.get("/share/{share_token}", response_class=HTMLResponse)
@@ -90,7 +92,7 @@ async def share_page(share_token: str, request: Request, db: AsyncSession = Depe
     png_url = f"{base_url}/share/{hl.share_token}.png"
     page_url = f"{base_url}/share/{hl.share_token}"
 
-    return _jinja.TemplateResponse(
+    response = _jinja.TemplateResponse(
         request,
         "share.html",
         {
@@ -101,6 +103,8 @@ async def share_page(share_token: str, request: Request, db: AsyncSession = Depe
             "description": f"From {hl.book_title or 'Unknown Book'}{' by ' + hl.book_author if hl.book_author else ''}",
         },
     )
+    response.headers["Cache-Control"] = "public, max-age=86400"
+    return response
 
 
 # ── Helper used by other routes to generate tokens ────────────────────────

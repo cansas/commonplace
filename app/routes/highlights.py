@@ -365,4 +365,5 @@ async def highlight_card(hl_id: int, db: AsyncSession = Depends(get_db)):
         highlight_id=hl.id,
         cover_data_uri=cover_uri,
     )
-    return Response(content=svg, media_type="image/svg+xml")
+    return Response(content=svg, media_type="image/svg+xml",
+                    headers={"Cache-Control": "public, max-age=86400"})
