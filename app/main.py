@@ -176,7 +176,7 @@ async def health(db: AsyncSession = Depends(get_db)):
 
     result = {
         "status": "ok" if db_ok else "degraded",
-        "version": "0.6.7",
+        "version": app.version,
         "database": "connected" if db_ok else "unreachable",
     }
 
