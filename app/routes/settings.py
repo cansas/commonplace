@@ -135,7 +135,6 @@ async def settings_page(
             tokens=tokens,
             total_highlights=total,
             total_books=books,
-            review_mode=_settings.get("review_mode", "random"),
             review_count=_settings.get("review_count", 10),
             version="0.8.8",
             saved=saved,
@@ -154,18 +153,6 @@ async def settings_page(
             },
         ),
     )
-
-
-@router.post("/settings/review-mode")
-async def set_review_mode(
-    request: Request,
-    csrf_token: str = Form(default=""),
-    spaced_mode: str = Form(default=""),
-):
-    csrf_guard(request, csrf_token)
-    _settings["review_mode"] = "spaced" if spaced_mode == "1" else "random"
-    _save_settings()
-    return RedirectResponse(url="/settings?saved=1", status_code=303)
 
 
 @router.post("/settings/review-count")

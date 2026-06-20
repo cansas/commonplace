@@ -107,48 +107,16 @@ async def send_email_via_mailjet(
 
 
 async def build_digest_html(db) -> str:
-    """Query highlights due for review and build an HTML email body.
-
-    Falls back to random picks if no SM-2 scheduling data exists.
-    """
+    """Query random highlights and build an HTML email body."""
     from sqlalchemy import select, func, text as sqltext
-    from app.models import Highlight, ReviewLog
+    from app.models import Highlight
 
-    # Try SM-2: highlights with next_review_at <= now, order by oldest
-    now = datetime.utcnow()
     rows = await db.execute(
         select(Highlight)
-        .outerjoin(ReviewLog, ReviewLog.highlight_id == Highlight.id)
-        .where(
-            (ReviewLog.next_review_at <= now) | (ReviewLog.next_review_at.is_(None))
-        )
-        .order_by(ReviewLog.next_review_at.asc().nullsfirst())
-        .limit(5)
+        .order_by(func.random())
+        .limit(3)
     )
-    highlights = list(dict.fromkeys(r[0] for r in rows))  # deduplicate by id
-
-    # If fewer than 2 SM-2 due, supplement with random
-    if len(highlights) < 2:
-        needed = 3 - len(highlights)
-        existing_ids = [h.id for h in highlights]
-        extra = await db.execute(
-            sqltext(
-                "SELECT * FROM highlights ORDER BY RANDOM() LIMIT :lim"
-            ),
-            {"lim": needed},
-        )
-        cols = [m[0] for m in extra.cursor.description] if extra.cursor else []
-        for row in extra.fetchall():
-            # Try mapping to ORM or skip
-            pass
-        # Simpler: random ids we haven't seen
-        random_hls = await db.execute(
-            select(Highlight)
-            .where(Highlight.id.notin_(existing_ids) if existing_ids else True)
-            .order_by(func.random())
-            .limit(needed)
-        )
-        highlights.extend(random_hls.scalars().all())
+    highlights = rows.scalars().all()
 
     if not highlights:
         return "<p>No highlights to review today. Import some highlights to get started!</p>"

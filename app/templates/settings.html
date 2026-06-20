@@ -78,32 +78,6 @@
                 <p class="text-xs text-muted mt-0.5">Configure how your daily review works.</p>
             </div>
             <div class="px-6 py-5 space-y-5">
-                <form method="POST" action="/settings/review-mode">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-primary">Review Mode</p>
-                            <p class="text-xs text-muted mt-0.5">
-                                {% if review_mode == 'spaced' %}
-                                Spaced Repetition — rate each highlight and optimize recall.
-                                {% else %}
-                                Random — simple sequential review without ratings.
-                                {% endif %}
-                            </p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" name="spaced_mode" value="1"
-                                   data-auto-submit
-                                   {% if review_mode == 'spaced' %}checked{% endif %}
-                                   class="sr-only peer" />
-                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-accent/40 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-card after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
-                            <span class="ml-3 text-sm text-muted">
-                                {% if review_mode == 'spaced' %}Spaced{% else %}Random{% endif %}
-                            </span>
-                        </label>
-                    </div>
-                </form>
-
                 <form method="POST" action="/settings/review-count">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                     <div>

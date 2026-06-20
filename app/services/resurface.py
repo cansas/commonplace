@@ -1,5 +1,4 @@
 """Daily resurface logic — selects highlights for today's review session."""
-from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from app.models import Highlight, ReviewLog, Source
@@ -8,7 +7,7 @@ from app.dates import today_start_utc
 
 
 async def get_random_highlights(db: AsyncSession, count: int = 10, exclude_ids: list = None):
-    """Random selection for simple daily review mode."""
+    """Random selection for daily review."""
     # Count total matching, pick random offset
     total_q = select(func.count(Highlight.id))
     if exclude_ids:
@@ -22,40 +21,6 @@ async def get_random_highlights(db: AsyncSession, count: int = 10, exclude_ids: 
     if exclude_ids:
         query = query.where(Highlight.id.notin_(exclude_ids))
     query = query.offset(offset).limit(count)
-    result = await db.execute(query)
-    return result.scalars().all()
-
-
-async def get_due_highlights(db: AsyncSession, count: int = 10):
-    """SM-2 mode: highlights due for review today."""
-    now = datetime.utcnow()
-    # Count due highlights first via a subquery, then pick random offset
-    count_query = select(func.count()).select_from(
-        select(Highlight.id)
-        .outerjoin(ReviewLog)
-        .group_by(Highlight.id)
-        .having(
-            func.max(ReviewLog.next_review_at).is_(None) |
-            (func.max(ReviewLog.next_review_at) <= now)
-        )
-        .subquery()
-    )
-    count_result = await db.execute(count_query)
-    total = count_result.scalar() or 0
-    if total == 0:
-        return []
-    offset = random.randint(0, max(0, total - count))
-    query = (
-        select(Highlight)
-        .outerjoin(ReviewLog)
-        .group_by(Highlight.id)
-        .having(
-            func.max(ReviewLog.next_review_at).is_(None) |
-            (func.max(ReviewLog.next_review_at) <= now)
-        )
-        .offset(offset)
-        .limit(count)
-    )
     result = await db.execute(query)
     return result.scalars().all()
 

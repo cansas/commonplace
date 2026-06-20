@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, text as sqltext
 from app.database import get_db
 from app.models import Highlight, ReviewLog
-from app.services.spaced_repetition import sm2_calc, get_next_review_date
 from app.routes.settings import _settings as review_settings
 from app.services.streaks import calculate_streaks
 from app.services.achievements import check_and_unlock
@@ -74,41 +73,10 @@ async def _get_unreviewed_highlight(db):
 
 
 async def _log_review(db, hl_id: int, rating: int | None = None):
-    """Record a review with optional SM-2 rating.
-    Does NOT commit — caller is responsible for committing."""
-    # Calculate SM-2 values
-    ease = 2.5
-    interval = 0
-    reps = 0
-    next_review = None
-
-    if rating is not None:
-        # Get previous review for this highlight
-        prev = await db.execute(
-            select(ReviewLog)
-            .where(ReviewLog.highlight_id == hl_id)
-            .order_by(ReviewLog.reviewed_at.desc())
-            .limit(1)
-        )
-        prev_log = prev.scalar_one_or_none()
-        if prev_log:
-            ease, interval, reps = sm2_calc(
-                rating, prev_log.ease_factor,
-                prev_log.interval, prev_log.repetitions
-            )
-        else:
-            ease, interval, reps = sm2_calc(rating, 2.5, 0, 0)
-
-        if reps > 0 and interval > 0:
-            next_review = get_next_review_date(interval)
-
+    """Record a review. Does NOT commit — caller is responsible for committing."""
     log = ReviewLog(
         highlight_id=hl_id,
         rating=rating,
-        ease_factor=ease,
-        interval=interval,
-        repetitions=reps,
-        next_review_at=next_review,
         reviewed_at=datetime.utcnow(),
     )
     db.add(log)
