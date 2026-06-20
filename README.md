@@ -48,19 +48,6 @@ For full setup instructions, see [INSTALL.md](INSTALL.md).
 - **Auth** — session-based web auth + per-device API tokens (SHA256)
 - **Security** — CSRF, CSP headers, security headers, rate limiting
 
-## Tech Stack
-
-- **Backend**: Python, FastAPI, SQLAlchemy async, SQLite (aiosqlite)
-- **Frontend**: Jinja2 templates, Tailwind CSS, vanilla JS
-- **Auth**: bcrypt passwords, itsdangerous signed sessions
-- **Container**: Docker, multi-stage build (Python 3.11-slim)
-- **CI/CD**: GitHub Actions → GHCR (`ghcr.io/cansas/commonplace`)
-
-## Versioning
-
-`git tag vX.Y.Z` triggers an automated build that pushes both `:vX.Y.Z` and `:latest` to
-GHCR. Branch pushes to `main` build `:latest` only.
-
 ## Screenshots
 
 | | |
