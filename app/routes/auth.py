@@ -10,7 +10,7 @@ from app.database import get_db, async_session
 from app.models import User
 from app.auth import verify_password, hash_password, ensure_admin
 from app.csrf import template_context, csrf_guard, generate_csrf_token
-from app.routes.settings import get_theme
+from app.services.settings_service import get_theme
 
 router = APIRouter(tags=["auth"])
 

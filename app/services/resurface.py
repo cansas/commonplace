@@ -2,7 +2,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from app.models import Highlight, ReviewLog, Source
-from app.routes.settings import _settings as review_settings
+from app.services.settings_service import get_review_count
 from app.dates import today_start_utc
 
 
@@ -44,7 +44,7 @@ async def get_dashboard_counts(db: AsyncSession):
     done_today = result.scalar() or 0
 
     # Daily remaining = min(limit - done, total_unreviewed)
-    daily_limit = review_settings.get("review_count", 10)
+    daily_limit = get_review_count()
     remaining = max(0, daily_limit - done_today)
 
     return total, books, remaining

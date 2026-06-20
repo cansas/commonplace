@@ -14,6 +14,12 @@ os.environ.setdefault("SESSION_SECRET", "test-secret-not-for-production")
 os.environ.setdefault("SESSION_HTTPS_ONLY", "false")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite://")
 
+from app.services.settings_service import _use_in_memory
+
+# Replace file-backed settings with an in-memory dict so tests don't
+# read or write data/.settings.json and each test starts clean.
+_use_in_memory({"review_count": 10, "theme": "modern"})
+
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from app.database import Base, get_db

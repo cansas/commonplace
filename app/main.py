@@ -22,7 +22,7 @@ from app.routes import highlights, review, import_routes, settings as settings_r
 from app.services.resurface import get_dashboard_counts
 from app.services.book_covers import batch_search
 from app.services.streaks import calculate_streaks
-from app.routes.settings import get_hardcover_api_key
+from app.services.settings_service import get_hardcover_api_key
 
 
 @asynccontextmanager

@@ -7,7 +7,7 @@ from sqlalchemy import select, func
 from app.database import get_db
 from app.models import Highlight, Tag, UserAchievement
 from app.services.streaks import calculate_streaks
-from app.routes.settings import get_hardcover_api_key
+from app.services.settings_service import get_hardcover_api_key
 from app.csrf import template_context
 
 router = APIRouter(tags=["about"])

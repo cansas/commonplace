@@ -1,6 +1,9 @@
-"""Settings page routes + API token management."""
-import json
-import os
+"""Settings page routes + API token management.
+
+Settings storage has moved to app.services.settings_service.
+This module re-exports convenience functions for backward compat
+and provides the web routes that configure them.
+"""
 from fastapi import APIRouter, Depends, Request, Form, HTTPException, status, Header
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,87 +13,20 @@ from app.models import Highlight, Source, User, ApiToken
 from app.auth import generate_api_token, hash_password, verify_password
 from app.routes.share import get_share_token
 from app.csrf import template_context, csrf_guard
+from app.services.settings_service import (
+    get as _get,
+    set as _set,
+    get_all,
+    set_setting,
+    get_review_count,
+    get_theme,
+    set_theme as _set_theme,
+    get_hardcover_api_key,
+    set_hardcover_api_key,
+)
 
 router = APIRouter(tags=["settings"])
-
 _jinja = None
-
-_SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", ".settings.json")
-_settings = {"review_mode": "random", "review_count": 10, "theme": "modern"}
-_last_mtime: float = 0.0
-
-
-def _ensure_fresh():
-    """Reload _settings from disk if the file's mtime has changed.
-
-    Allows external edits to .settings.json to take effect without a
-    server restart. Checks are cheap (one stat() call) when the file
-    hasn't changed.
-    """
-    global _settings, _last_mtime
-    try:
-        current = os.path.getmtime(_SETTINGS_FILE)
-        if current > _last_mtime:
-            with open(_SETTINGS_FILE) as f:
-                _settings = json.load(f)
-            _last_mtime = current
-    except (FileNotFoundError, json.JSONDecodeError, OSError):
-        pass
-
-
-def get_theme() -> str:
-    """Return the persisted theme preference ('modern' or 'reader')."""
-    _ensure_fresh()
-    return _settings.get("theme", "modern")
-
-
-def get_hardcover_api_key() -> str:
-    """Return the persisted Hardcover API key, or empty string."""
-    _ensure_fresh()
-    return _settings.get("hardcover_api_key", "")
-
-
-def set_hardcover_api_key(value: str) -> None:
-    """Persist a Hardcover API key (empty string to clear)."""
-    _settings["hardcover_api_key"] = value
-    _save_settings()
-
-
-def get_settings() -> dict:
-    """Return the full settings dict (read-only snapshot)."""
-    _ensure_fresh()
-    return dict(_settings)
-
-
-def set_setting(key: str, value) -> None:
-    """Set a single setting key and persist."""
-    _settings[key] = value
-    _save_settings()
-
-
-def _load_settings():
-    global _settings, _last_mtime
-    try:
-        if os.path.isfile(_SETTINGS_FILE):
-            with open(_SETTINGS_FILE) as f:
-                _settings = json.load(f)
-            _last_mtime = os.path.getmtime(_SETTINGS_FILE)
-    except Exception:
-        pass
-
-
-def _save_settings():
-    global _last_mtime
-    try:
-        os.makedirs(os.path.dirname(_SETTINGS_FILE), exist_ok=True)
-        with open(_SETTINGS_FILE, "w") as f:
-            json.dump(_settings, f)
-        _last_mtime = os.path.getmtime(_SETTINGS_FILE)
-    except Exception:
-        pass
-
-
-_load_settings()
 
 
 def init(templates):
@@ -105,7 +41,6 @@ async def settings_page(
     saved: str = "",
     new_token: str = "",
 ):
-    _ensure_fresh()
     # Read new_token from session (more secure than URL param)
     if not new_token:
         new_token = request.session.pop("new_token", "")
@@ -135,21 +70,21 @@ async def settings_page(
             tokens=tokens,
             total_highlights=total,
             total_books=books,
-            review_count=_settings.get("review_count", 10),
-            version="0.8.14",
+            review_count=get_review_count(),
+            version="0.8.15",
             saved=saved,
             new_token=new_token,
             username=request.session.get("username", ""),
             hardcover_key=get_hardcover_api_key(),
             email_config={
-                "mailjet_api_key": _settings.get("mailjet_api_key", ""),
-                "mailjet_secret_key": _settings.get("mailjet_secret_key", ""),
-                "email_from_name": _settings.get("email_from_name", "Commonplace"),
-                "email_from_addr": _settings.get("email_from_addr", ""),
-                "email_to_addr": _settings.get("email_to_addr", ""),
-                "email_digest_enabled": _settings.get("email_digest_enabled", False),
-                "email_digest_time": _settings.get("email_digest_time", "07:00"),
-                "base_url": _settings.get("base_url", ""),
+                "mailjet_api_key": _get("mailjet_api_key", ""),
+                "mailjet_secret_key": _get("mailjet_secret_key", ""),
+                "email_from_name": _get("email_from_name", "Commonplace"),
+                "email_from_addr": _get("email_from_addr", ""),
+                "email_to_addr": _get("email_to_addr", ""),
+                "email_digest_enabled": _get("email_digest_enabled", False),
+                "email_digest_time": _get("email_digest_time", "07:00"),
+                "base_url": _get("base_url", ""),
             },
         ),
     )
@@ -162,8 +97,8 @@ async def set_review_count(
     count: int = Form(default=10),
 ):
     csrf_guard(request, csrf_token)
-    _settings["review_count"] = max(5, min(30, count))
-    _save_settings()
+    n = max(5, min(30, count))
+    _set("review_count", n)
     return RedirectResponse(url="/settings?saved=1", status_code=303)
 
 
@@ -174,11 +109,7 @@ async def set_theme(
     theme: str = Form(default="modern"),
 ):
     csrf_guard(request, csrf_token)
-    theme = theme.strip().lower()
-    if theme not in ("modern", "reader", "dark"):
-        theme = "modern"
-    _settings["theme"] = theme
-    _save_settings()
+    _set_theme(theme)
     request.session["theme"] = theme
     return {"ok": True, "theme": theme}
 
@@ -440,7 +371,8 @@ async def trigger_digest(
     x_digest_secret: str = Header(default=""),
 ):
     """Trigger a digest check on-demand (for external cron)."""
-    expected = os.environ.get("DIGEST_SECRET", "")
+    from os import environ as _environ
+    expected = _environ.get("DIGEST_SECRET", "")
     if expected and x_digest_secret != expected:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid digest secret")
 
@@ -474,13 +406,13 @@ async def send_test_email(
 ):
     """Send a test email using current Mailjet config."""
     from app.services.email_digest import send_test_email as _send_test
+    from os import environ
 
-    _ensure_fresh()
-    api_key = body.get("mailjet_api_key") or _settings.get("mailjet_api_key", "")
-    secret_key = body.get("mailjet_secret_key") or _settings.get("mailjet_secret_key", "")
-    from_name = body.get("email_from_name") or _settings.get("email_from_name", "Commonplace")
-    from_email = body.get("email_from_addr") or _settings.get("email_from_addr", "")
-    to_email = body.get("email_to_addr") or _settings.get("email_to_addr", "")
+    api_key = body.get("mailjet_api_key") or _get("mailjet_api_key", "")
+    secret_key = body.get("mailjet_secret_key") or _get("mailjet_secret_key", "")
+    from_name = body.get("email_from_name") or _get("email_from_name", "Commonplace")
+    from_email = body.get("email_from_addr") or _get("email_from_addr", "")
+    to_email = body.get("email_to_addr") or _get("email_to_addr", "")
 
     if not api_key or not secret_key:
         raise HTTPException(status_code=400, detail="Mailjet API key and secret key are required")

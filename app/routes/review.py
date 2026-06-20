@@ -1,4 +1,4 @@
-"""Daily review — SM-2 flash cards with daily lock and today's log."""
+"""Daily review — random highlights with daily lock and today's log."""
 
 from fastapi import APIRouter, Depends, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, text as sqltext
 from app.database import get_db
 from app.models import Highlight, ReviewLog
-from app.routes.settings import _settings as review_settings
+from app.services.settings_service import get_review_count
 from app.services.streaks import calculate_streaks
 from app.services.achievements import check_and_unlock
 from app.csrf import template_context, csrf_guard
@@ -111,7 +111,7 @@ async def review_page(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    daily_limit = review_settings.get("review_count", 10)
+    daily_limit = get_review_count()
     done_today = await _reviewed_today_count(db)
     streaks = await calculate_streaks(db)
 
@@ -188,7 +188,7 @@ async def review_today_page(
     """Display all reviews from today with their ratings."""
     streaks = await calculate_streaks(db)
     today_reviews = await _get_today_reviews(db)
-    daily_limit = review_settings.get("review_count", 10)
+    daily_limit = get_review_count()
 
     return _jinja.TemplateResponse(
         request,
@@ -303,7 +303,7 @@ async def review_stats(db: AsyncSession = Depends(get_db)):
     """Return review statistics for today."""
     streaks = await calculate_streaks(db)
     done_today = await _reviewed_today_count(db)
-    daily_limit = review_settings.get("review_count", 10)
+    daily_limit = get_review_count()
     remaining = max(0, daily_limit - done_today)
     return {
         "streak": streaks["current"],
@@ -331,7 +331,7 @@ async def review_rate(
 
     # Check for newly unlocked achievements
     streaks = await calculate_streaks(db)
-    daily_limit = review_settings.get("review_count", 10)
+    daily_limit = get_review_count()
     review_hour = datetime.utcnow().hour
     new_achievements = await check_and_unlock(db, streaks["current"], review_hour=review_hour, daily_limit=daily_limit)
     if new_achievements:

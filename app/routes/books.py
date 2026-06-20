@@ -8,7 +8,7 @@ from app.database import get_db
 from app.models import Highlight, BookCover
 from app.services.book_covers import search_cover
 from app.csrf import template_context
-from app.routes.settings import get_hardcover_api_key
+from app.services.settings_service import get_hardcover_api_key
 from typing import Optional
 import hashlib
 import math

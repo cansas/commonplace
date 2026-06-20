@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from app.models import ReviewLog
-from app.routes.settings import get_settings, set_setting
+from app.services.settings_service import get_all as get_settings, set as set_setting
 
 _CENTRAL = ZoneInfo("America/Chicago")
 
