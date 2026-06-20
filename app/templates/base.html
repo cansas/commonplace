@@ -96,7 +96,7 @@
 
         <!-- Theme Toggle + Footer -->
         <div class="px-3 py-3 border-t border-sidebar space-y-2">
-            <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()">
+            <button id="theme-toggle" class="theme-toggle-btn">
                 <span id="theme-toggle-icon" class="text-base">🎨</span>
                 <span id="theme-toggle-label">Switch to Reader</span>
             </button>
@@ -137,7 +137,7 @@
             <svg class="bottom-nav-icon" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linejoin="round"/><path d="M7 7h.01" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg>
             <span class="text-[10px]">Tags</span>
         </a>
-        <button onclick="document.getElementById('sidebar-toggle')?.click()" class="bottom-nav-item flex-col">
+        <button id="mobile-more-btn" class="bottom-nav-item flex-col">
             <svg class="bottom-nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/></svg>
             <span class="text-[10px]">More</span>
         </button>

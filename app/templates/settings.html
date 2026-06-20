@@ -30,11 +30,11 @@
     {% endif %}
 
     <!-- Tab Navigation -->
-    <div class="flex border-b border-card mb-6 gap-1">
-        <button onclick="switchTab('data')" id="tab-data" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">💾 Data</button>
-        <button onclick="switchTab('api-keys')" id="tab-api-keys" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">🔑 API Keys</button>
-        <button onclick="switchTab('email')" id="tab-email" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">📬 Email</button>
-        <button onclick="switchTab('appearance')" id="tab-appearance" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">🎨 Appearance</button>
+    <div class="tab-bar flex border-b border-card mb-6 gap-1">
+        <button data-tab="data" id="tab-data" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">💾 Data</button>
+        <button data-tab="api-keys" id="tab-api-keys" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">🔑 API Keys</button>
+        <button data-tab="email" id="tab-email" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">📬 Email</button>
+        <button data-tab="appearance" id="tab-appearance" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">🎨 Appearance</button>
     </div>
 
     <!-- ════════════ DATA TAB ════════════ -->
@@ -93,7 +93,7 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="spaced_mode" value="1"
-                                   onchange="this.form.submit()"
+                                   data-auto-submit
                                    {% if review_mode == 'spaced' %}checked{% endif %}
                                    class="sr-only peer" />
                             <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-accent/40 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-card after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
@@ -113,8 +113,7 @@
                         </div>
                         <input type="range" id="review-count" name="count" min="5" max="30" step="1"
                                value="{{ review_count or 10 }}"
-                               oninput="document.getElementById('review-count-value').textContent = this.value;"
-                               onchange="this.form.submit()"
+                               data-auto-submit
                                class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-accent" />
                         <div class="flex justify-between text-xs text-muted mt-1">
                             <span>5</span>
@@ -147,7 +146,7 @@
                     <button disabled class="px-4 py-2 bg-page-alt text-muted-lighter text-sm font-medium rounded-lg cursor-not-allowed" title="Coming soon">
                         📦 Export All Highlights
                     </button>
-                    <button onclick="confirmReset()" class="px-4 py-2 bg-red-50 border border-red-200 text-red-700 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">
+                    <button data-action="confirm-reset" class="px-4 py-2 bg-red-50 border border-red-200 text-red-700 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors">
                         🗑️ Reset Database
                     </button>
                 </div>
@@ -174,8 +173,7 @@
 
                 <div class="border-t border-card pt-4">
                     <p class="text-sm font-medium text-primary mb-2">Restore from Backup</p>
-                    <form id="restore-form" method="POST" action="/api/backup/restore" enctype="multipart/form-data"
-                          onsubmit="return confirmRestore(event)" class="space-y-3">
+                    <form id="restore-form" method="POST" action="/api/backup/restore" enctype="multipart/form-data" class="space-y-3">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                         <div>
                             <input type="file" name="file" accept=".zip" required
@@ -220,7 +218,7 @@
                                 {% if tok.last_used_at %} · Last used {{ tok.last_used_at.strftime('%Y-%m-%d %H:%M') }}{% endif %}
                             </p>
                         </div>
-                        <form method="POST" action="/settings/revoke-token/{{ tok.id }}" onsubmit="return confirm('Revoke token \'{{ tok.name }}\'? This will break the device until a new token is configured.')">
+                        <form method="POST" action="/settings/revoke-token/{{ tok.id }}" data-action="revoke-token" data-token-name="{{ tok.name }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                             <button type="submit" class="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">Revoke</button>
                         </form>
@@ -266,10 +264,10 @@
                     <p class="text-xs text-muted mt-1.5">Get a free API key at <a href="https://hardcover.app" target="_blank" class="link-accent">hardcover.app</a>. Saved to settings, no restart needed.</p>
                 </div>
                 <div class="flex items-center gap-3 pt-1">
-                    <button onclick="saveCoverKey()" class="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg btn-primary hover:bg-accent-hover transition shadow-sm">
+                    <button data-action="save-cover-key" class="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg btn-primary hover:bg-accent-hover transition shadow-sm">
                         💾 Save & Test
                     </button>
-                    <button onclick="clearCoverKey()" class="px-4 py-2 border border-card text-secondary text-sm font-medium rounded-lg hover:bg-page-alt transition">
+                    <button data-action="clear-cover-key" class="px-4 py-2 border border-card text-secondary text-sm font-medium rounded-lg hover:bg-page-alt transition">
                         Clear
                     </button>
                     <span id="hc-result" class="text-xs text-muted"></span>
@@ -336,10 +334,10 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3 pt-1">
-                    <button onclick="saveEmailConfig()" class="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg btn-primary hover:bg-accent-hover transition shadow-sm">
+                    <button data-action="save-email" class="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg btn-primary hover:bg-accent-hover transition shadow-sm">
                         💾 Save Email Settings
                     </button>
-                    <button onclick="sendTestEmail()" class="px-4 py-2 border border-card text-secondary text-sm font-medium rounded-lg hover:bg-page-alt transition">
+                    <button data-action="test-email" class="px-4 py-2 border border-card text-secondary text-sm font-medium rounded-lg hover:bg-page-alt transition">
                         📤 Send Test Email
                     </button>
                     <span id="email-result" class="text-xs text-muted"></span>
@@ -359,21 +357,21 @@
             </div>
             <div class="px-6 py-5">
                 <div class="flex items-center gap-6">
-                    <button onclick="setTheme('modern')" class="theme-option flex-1 p-4 rounded-xl border-2 transition-all text-left {% if user_theme == 'modern' %}border-accent bg-accent-light{% else %}border-card hover:border-accent/40{% endif %}">
+                    <button data-action="set-theme" data-theme="modern" class="theme-option flex-1 p-4 rounded-xl border-2 transition-all text-left {% if user_theme == 'modern' %}border-accent bg-accent-light{% else %}border-card hover:border-accent/40{% endif %}">
                         <div class="flex items-center gap-3 mb-2">
                             <div class="w-6 h-6 rounded bg-zinc-900 flex items-center justify-center"><span class="text-white text-xs">M</span></div>
                             <span class="font-semibold text-primary">Modern</span>
                         </div>
                         <p class="text-xs text-muted">Clean, Linear-inspired. Zinc grays, Inter font.</p>
                     </button>
-                    <button onclick="setTheme('reader')" class="theme-option flex-1 p-4 rounded-xl border-2 transition-all text-left {% if user_theme == 'reader' %}border-accent bg-accent-light{% else %}border-card hover:border-accent/40{% endif %}">
+                    <button data-action="set-theme" data-theme="reader" class="theme-option flex-1 p-4 rounded-xl border-2 transition-all text-left {% if user_theme == 'reader' %}border-accent bg-accent-light{% else %}border-card hover:border-accent/40{% endif %}">
                         <div class="flex items-center gap-3 mb-2">
                             <div class="w-6 h-6 rounded bg-ink-900 flex items-center justify-center"><span class="text-white text-xs">R</span></div>
                             <span class="font-semibold text-primary">Reader</span>
                         </div>
                         <p class="text-xs text-muted">Warm, cozy. Cream tones, Source Serif.</p>
                     </button>
-                    <button onclick="setTheme('dark')" class="theme-option flex-1 p-4 rounded-xl border-2 transition-all text-left {% if user_theme == 'dark' %}border-accent bg-accent-light{% else %}border-card hover:border-accent/40{% endif %}">
+                    <button data-action="set-theme" data-theme="dark" class="theme-option flex-1 p-4 rounded-xl border-2 transition-all text-left {% if user_theme == 'dark' %}border-accent bg-accent-light{% else %}border-card hover:border-accent/40{% endif %}">
                         <div class="flex items-center gap-3 mb-2">
                             <div class="w-6 h-6 rounded bg-black flex items-center justify-center"><span class="text-amber-400 text-xs">D</span></div>
                             <span class="font-semibold text-primary">Dark</span>

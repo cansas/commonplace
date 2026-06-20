@@ -817,7 +817,7 @@
             el.classList.remove('border-accent', 'bg-accent-light');
             el.classList.add('border-card');
         });
-        var selected = document.querySelector('[onclick*="setTheme(\'' + theme + '\')"]');
+        var selected = document.querySelector('[data-theme="' + theme + '"]');
         if (selected) {
             selected.classList.remove('border-card');
             selected.classList.add('border-accent', 'bg-accent-light');
@@ -1039,6 +1039,87 @@
             else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); document.querySelector('form[action="/review/favorite"]')?.submit(); }
             else if (e.key === 'd' || e.key === 'D') { e.preventDefault(); document.querySelector('form[action="/review/delete"]')?.submit(); }
         });
+    })();
+
+    /* ── Settings page (CSP-safe, no inline handlers) ── */
+
+    (function() {
+        // Theme toggle sidebar button
+        var themeBtn = document.getElementById('theme-toggle');
+        if (themeBtn) {
+            themeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (window.toggleTheme) window.toggleTheme();
+            });
+        }
+
+        // Mobile "More" button — triggers sidebar toggle
+        var mobileMore = document.getElementById('mobile-more-btn');
+        var sidebarToggle = document.getElementById('sidebar-toggle');
+        if (mobileMore && sidebarToggle) {
+            mobileMore.addEventListener('click', function(e) {
+                e.preventDefault();
+                sidebarToggle.click();
+            });
+        }
+
+        // Settings page tab buttons — click delegation on the tab bar
+        var tabBar = document.querySelector('.tab-bar');
+        if (tabBar) {
+            tabBar.addEventListener('click', function(e) {
+                var btn = e.target.closest('[data-tab]');
+                if (btn && window.switchTab) window.switchTab(btn.getAttribute('data-tab'));
+            });
+        }
+
+        // Theme selection buttons
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-action="set-theme"]');
+            if (btn && window.setTheme) window.setTheme(btn.getAttribute('data-theme'));
+        });
+
+        // Data-action buttons: confirm-reset, save-cover-key, clear-cover-key, save-email, test-email
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            var action = btn.getAttribute('data-action');
+            if (action === 'confirm-reset' && window.confirmReset) { e.preventDefault(); window.confirmReset(); }
+            else if (action === 'save-cover-key' && window.saveCoverKey) { e.preventDefault(); window.saveCoverKey(); }
+            else if (action === 'clear-cover-key' && window.clearCoverKey) { e.preventDefault(); window.clearCoverKey(); }
+            else if (action === 'save-email' && window.saveEmailConfig) { e.preventDefault(); window.saveEmailConfig(); }
+            else if (action === 'test-email' && window.sendTestEmail) { e.preventDefault(); window.sendTestEmail(); }
+            else if (action === 'revoke-token') {
+                var name = btn.getAttribute('data-token-name') || 'this token';
+                if (!confirm('Revoke token \'' + name + '\'? This will break the device until a new token is configured.')) {
+                    e.preventDefault();
+                }
+            }
+        });
+
+        // Auto-submit forms on change (review mode toggle, review count slider)
+        document.addEventListener('change', function(e) {
+            if (e.target.hasAttribute('data-auto-submit')) {
+                var form = e.target.closest('form');
+                if (form) form.submit();
+            }
+        });
+
+        // Confirm restore form submission
+        var restoreForm = document.getElementById('restore-form');
+        if (restoreForm) {
+            restoreForm.addEventListener('submit', function(e) {
+                if (window.confirmRestore) window.confirmRestore(e);
+            });
+        }
+
+        // Review count slider live value display
+        var reviewSlider = document.getElementById('review-count');
+        var reviewVal = document.getElementById('review-count-value');
+        if (reviewSlider && reviewVal) {
+            reviewSlider.addEventListener('input', function() {
+                reviewVal.textContent = this.value;
+            });
+        }
     })();
 
 })();
