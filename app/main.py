@@ -12,6 +12,8 @@ import asyncio
 import os
 import random
 
+from contextlib import asynccontextmanager
+
 from app.database import init_db, get_db, async_session
 from app.models import Highlight, Source, BookCover
 from app.auth import AuthMiddleware, ensure_admin
@@ -22,7 +24,80 @@ from app.services.book_covers import batch_search
 from app.services.streaks import calculate_streaks
 from app.routes.settings import get_hardcover_api_key
 
-app = FastAPI(title="commonplace", version="0.8.13")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan: startup init, graceful shutdown."""
+    # ── Startup ──────────────────────────────────────────────────────
+    await init_db()
+    async with async_session() as db:
+        await ensure_admin(db)
+
+    # Start the digest scheduler (checks every 5 min for email delivery)
+    if not os.environ.get("DISABLE_DIGEST_SCHEDULER", ""):
+        try:
+            from app.services.digest_scheduler import start_scheduler
+            start_scheduler()
+        except Exception as e:
+            print(f"  WARNING: Digest scheduler failed to start: {e}")
+
+    # Backfill book covers in the background (don't block startup)
+    async def _backfill_covers():
+        async with async_session() as db:
+            result = await db.execute(
+                select(Highlight.book_title, Highlight.book_author)
+                .distinct()
+            )
+            all_books = [(r.book_title, r.book_author or "") for r in result.all()]
+
+            existing_result = await db.execute(
+                select(BookCover.book_title, BookCover.book_author)
+            )
+            existing_covers = {
+                (r.book_title, r.book_author) for r in existing_result.all()
+            }
+
+            need_cover = [
+                (t, a) for t, a in all_books if (t, a) not in existing_covers
+            ]
+
+            if need_cover:
+                print(f"  Fetching covers for {len(need_cover)} books...")
+                hc_key = get_hardcover_api_key()
+                covers = await batch_search(need_cover, rate_limit=1.0, hardcover_key=hc_key)
+                for (title, author), (url, source) in covers.items():
+                    if url:
+                        db.add(BookCover(book_title=title, book_author=author, cover_url=url, cover_source=source))
+                await db.commit()
+                found = sum(1 for url, _ in covers.values() if url)
+                print(f"  Found covers for {found} of {len(need_cover)} books")
+
+    asyncio.create_task(_backfill_covers())
+
+    # Backfill achievements for existing streak data
+    async def _backfill_achievements():
+        async with async_session() as db:
+            from app.services.streaks import calculate_streaks
+            from app.services.achievements import backfill_achievements
+            streaks = await calculate_streaks(db)
+            count = await backfill_achievements(db, streaks["current"])
+            if count:
+                print(f"  Backfilled {count} achievements for {streaks['current']}-day streak")
+
+    asyncio.create_task(_backfill_achievements())
+
+    yield
+
+    # ── Shutdown ─────────────────────────────────────────────────────
+    if not os.environ.get("DISABLE_DIGEST_SCHEDULER", ""):
+        try:
+            from app.services.digest_scheduler import stop_scheduler
+            stop_scheduler()
+        except Exception:
+            pass
+
+
+app = FastAPI(title="commonplace", version="0.8.14", lifespan=lifespan)
 
 # Ensure covers directory exists on the mounted volume
 COVERS_DIR = os.environ.get("COVERS_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "covers"))
@@ -106,67 +181,6 @@ app.include_router(about_routes.router)
 
 # Expose templates to auth routes
 auth_routes.init(templates)
-
-
-@app.on_event("startup")
-async def startup():
-    await init_db()
-    async with async_session() as db:
-        await ensure_admin(db)
-
-    # Start the digest scheduler (checks every 5 min for email delivery)
-    if not os.environ.get("DISABLE_DIGEST_SCHEDULER", ""):
-        try:
-            from app.services.digest_scheduler import start_scheduler
-            start_scheduler()
-        except Exception as e:
-            print(f"  WARNING: Digest scheduler failed to start: {e}")
-
-    # Backfill book covers in the background (don't block startup)
-    async def _backfill_covers():
-        async with async_session() as db:
-            result = await db.execute(
-                select(Highlight.book_title, Highlight.book_author)
-                .distinct()
-            )
-            all_books = [(r.book_title, r.book_author or "") for r in result.all()]
-
-            # Bulk check existing covers — one query, not N
-            existing_result = await db.execute(
-                select(BookCover.book_title, BookCover.book_author)
-            )
-            existing_covers = {
-                (r.book_title, r.book_author) for r in existing_result.all()
-            }
-
-            need_cover = [
-                (t, a) for t, a in all_books if (t, a) not in existing_covers
-            ]
-
-            if need_cover:
-                print(f"  Fetching covers for {len(need_cover)} books...")
-                hc_key = get_hardcover_api_key()
-                covers = await batch_search(need_cover, rate_limit=1.0, hardcover_key=hc_key)
-                for (title, author), (url, source) in covers.items():
-                    if url:
-                        db.add(BookCover(book_title=title, book_author=author, cover_url=url, cover_source=source))
-                await db.commit()
-                found = sum(1 for url, _ in covers.values() if url)
-                print(f"  Found covers for {found} of {len(need_cover)} books")
-
-    asyncio.create_task(_backfill_covers())
-
-    # Backfill achievements for existing streak data
-    async def _backfill_achievements():
-        async with async_session() as db:
-            from app.services.streaks import calculate_streaks
-            from app.services.achievements import backfill_achievements
-            streaks = await calculate_streaks(db)
-            count = await backfill_achievements(db, streaks["current"])
-            if count:
-                print(f"  Backfilled {count} achievements for {streaks['current']}-day streak")
-
-    asyncio.create_task(_backfill_achievements())
 
 
 @app.get("/health")
