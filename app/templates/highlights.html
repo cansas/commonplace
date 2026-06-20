@@ -24,17 +24,17 @@
     <!-- Filters -->
     <form method="GET" action="/highlights" class="flex flex-wrap items-center gap-3">
         {% if search %}<input type="hidden" name="search" value="{{ search }}" />{% endif %}
-        <select name="source" onchange="this.form.submit()" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-shadow">
+        <select name="source" data-action="submit-form" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-shadow">
             <option value="all" {% if source_filter == 'all' or not source_filter %}selected{% endif %}>All Sources</option>
             <option value="koreader" {% if source_filter == 'koreader' %}selected{% endif %}>KOReader</option>
             <option value="readwise" {% if source_filter == 'readwise' %}selected{% endif %}>Readwise</option>
             <option value="manual" {% if source_filter == 'manual' %}selected{% endif %}>Manual</option>
         </select>
-        <select name="sort" onchange="this.form.submit()" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-shadow">
+        <select name="sort" data-action="submit-form" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-shadow">
             <option value="newest" {% if sort == 'newest' or not sort %}selected{% endif %}>Newest First</option>
             <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest First</option>
         </select>
-        <select name="favorites" onchange="this.form.submit()" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-shadow">
+        <select name="favorites" data-action="submit-form" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-shadow">
             <option value="" {% if not favorites_filter %}selected{% endif %}>All Highlights</option>
             <option value="1" {% if favorites_filter == '1' %}selected{% endif %}>⭐ Favorites</option>
         </select>
@@ -57,7 +57,7 @@
                 <thead class="bg-slate-50">
                     <tr>
                         <th class="px-2 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-10">
-                            <input type="checkbox" id="select-all" onchange="toggleSelectAll()" class="rounded border-slate-300" />
+                            <input type="checkbox" id="select-all" data-action="toggle-select-all" class="rounded border-slate-300" />
                         </th>
                         <th class="px-2 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-10">⭐</th>
                         <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Highlight</th>
@@ -72,10 +72,10 @@
                     {% for h in highlights %}
                     <tr class="highlight-row hover:bg-slate-50 transition-colors cursor-pointer" data-target="detail-{{ h.id }}" data-hl-id="{{ h.id }}">
                         <td class="px-2 py-3 text-center">
-                            <input type="checkbox" class="hl-select rounded border-slate-300" value="{{ h.id }}" onchange="updateBatchBar()" onclick="event.stopPropagation()" />
+                            <input type="checkbox" class="hl-select rounded border-slate-300" value="{{ h.id }}" data-action="update-batch-bar" />
                         </td>
                         <td class="px-2 py-3 text-center">
-                            <button onclick="event.stopPropagation(); toggleFav({{ h.id }}, this)" class="text-lg leading-none hover:scale-110 transition-transform {% if h.favorite %}text-amber-400{% else %}text-slate-300 hover:text-amber-300{% endif %}">
+                            <button data-action="toggle-fav" data-hl-id="{{ h.id }}" class="text-lg leading-none hover:scale-110 transition-transform {% if h.favorite %}text-amber-400{% else %}text-slate-300 hover:text-amber-300{% endif %}">
                                 {% if h.favorite %}⭐{% else %}☆{% endif %}
                             </button>
                         </td>
@@ -125,9 +125,9 @@
                                         {% endfor %}
                                     </span>
                                     {% endif %}
-                                    <button onclick="event.stopPropagation(); toggleEdit({{ h.id }}); scrollToEdit({{ h.id }})" class="px-3 py-1 bg-white border border-slate-200 text-slate-600 rounded text-xs font-medium hover:bg-slate-50 transition-colors">✏️ Edit</button>
-                                    <button onclick="event.stopPropagation(); loadContext({{ h.id }})" class="px-3 py-1 bg-white border border-slate-200 text-slate-600 rounded text-xs font-medium hover:bg-slate-50 transition-colors">📖 Context</button>
-                                    <button onclick="event.stopPropagation(); deleteHighlight({{ h.id }})" class="px-3 py-1 bg-red-50 border border-red-200 text-red-600 rounded text-xs font-medium hover:bg-red-100 transition-colors">🗑️ Delete</button>
+                                    <button data-action="toggle-edit" data-hl-id="{{ h.id }}" class="px-3 py-1 bg-white border border-slate-200 text-slate-600 rounded text-xs font-medium hover:bg-slate-50 transition-colors">✏️ Edit</button>
+                                    <button data-action="load-context" data-hl-id="{{ h.id }}" class="px-3 py-1 bg-white border border-slate-200 text-slate-600 rounded text-xs font-medium hover:bg-slate-50 transition-colors">📖 Context</button>
+                                    <button data-action="delete-hl" data-hl-id="{{ h.id }}" class="px-3 py-1 bg-red-50 border border-red-200 text-red-600 rounded text-xs font-medium hover:bg-red-100 transition-colors">🗑️ Delete</button>
                                     {% if h.share_token %}
                                     <a href="/share/{{ h.share_token }}" target="_blank" class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-medium hover:bg-indigo-100 transition-colors">📤 Share</a>
                                     {% endif %}
@@ -159,8 +159,8 @@
                                         <input id="edit-tags-{{ h.id }}" type="text" value="{{ h.tags | join(', ') }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
                                     </div>
                                     <div class="flex gap-2 justify-end">
-                                        <button onclick="event.stopPropagation(); cancelEdit({{ h.id }})" class="px-4 py-2 bg-white border border-slate-200 text-sm text-slate-600 rounded-lg hover:bg-slate-50">Cancel</button>
-                                        <button onclick="event.stopPropagation(); saveEdit({{ h.id }})" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">Save</button>
+                                        <button data-action="cancel-edit" data-hl-id="{{ h.id }}" class="px-4 py-2 bg-white border border-slate-200 text-sm text-slate-600 rounded-lg hover:bg-slate-50">Cancel</button>
+                                        <button data-action="save-edit" data-hl-id="{{ h.id }}" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">Save</button>
                                     </div>
                                 </div>
                             </div>
@@ -180,8 +180,8 @@
         <div class="hl-card-swipe-container">
             <div class="hl-card">
                 <div class="flex items-start gap-3">
-                    <input type="checkbox" class="hl-select mt-1 rounded border-slate-300 shrink-0" value="{{ h.id }}" onchange="updateBatchBar()" />
-                    <div class="min-w-0 flex-1" onclick="toggleMobileDetail({{ h.id }})">
+                    <input type="checkbox" class="hl-select mt-1 rounded border-slate-300 shrink-0" value="{{ h.id }}" data-action="update-batch-bar" />
+                    <div class="min-w-0 flex-1" data-action="toggle-mobile-detail" data-hl-id="{{ h.id }}">
                         <div class="hl-card-text">{{ h.text[:150] }}{% if h.text|length > 150 %}…{% endif %}</div>
                         <div class="hl-card-meta">
                             <span class="font-medium text-slate-700 truncate max-w-[140px]">{{ h.book_title }}</span>
@@ -215,12 +215,12 @@
                                     <span>📅 {{ h.highlighted_at }}</span>
                                 </div>
                                 <div class="flex gap-2">
-                                    <button onclick="event.stopPropagation(); toggleEdit({{ h.id }}); scrollToEdit({{ h.id }})" class="flex-1 px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-50">✏️ Edit</button>
-                                    <button onclick="event.stopPropagation(); loadContext({{ h.id }})" class="flex-1 px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-50">📖 Context</button>
+                                    <button data-action="toggle-edit" data-hl-id="{{ h.id }}" class="flex-1 px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-50">✏️ Edit</button>
+                                    <button data-action="load-context" data-hl-id="{{ h.id }}" class="flex-1 px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-50">📖 Context</button>
                                     {% if h.share_token %}
                                     <a href="/share/{{ h.share_token }}" target="_blank" class="flex-1 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-medium hover:bg-indigo-100 text-center">📤 Share</a>
                                     {% endif %}
-                                    <button onclick="event.stopPropagation(); deleteHighlight({{ h.id }})" class="flex-1 px-3 py-2 bg-red-50 border border-red-200 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100">🗑️ Delete</button>
+                                    <button data-action="delete-hl" data-hl-id="{{ h.id }}" class="flex-1 px-3 py-2 bg-red-50 border border-red-200 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100">🗑️ Delete</button>
                                 </div>
                                 <!-- Inline Edit Form -->
                                 <div id="edit-{{ h.id }}" class="hidden p-4 bg-white border border-slate-200 rounded-lg">
@@ -248,8 +248,8 @@
                                             <input id="edit-tags-{{ h.id }}" type="text" value="{{ h.tags | join(', ') }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
                                         </div>
                                         <div class="flex gap-2 justify-end">
-                                            <button onclick="event.stopPropagation(); cancelEdit({{ h.id }})" class="px-4 py-2 bg-white border border-slate-200 text-sm text-slate-600 rounded-lg hover:bg-slate-50">Cancel</button>
-                                            <button onclick="event.stopPropagation(); saveEdit({{ h.id }})" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">Save</button>
+                                            <button data-action="cancel-edit" data-hl-id="{{ h.id }}" class="px-4 py-2 bg-white border border-slate-200 text-sm text-slate-600 rounded-lg hover:bg-slate-50">Cancel</button>
+                                            <button data-action="save-edit" data-hl-id="{{ h.id }}" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">Save</button>
                                         </div>
                                     </div>
                                 </div>
@@ -258,15 +258,15 @@
                             </div>
                         </div>
                     </div>
-                    <button onclick="event.stopPropagation(); toggleFav({{ h.id }}, this)" class="text-lg leading-none shrink-0 mt-0.5 hover:scale-110 transition-transform {% if h.favorite %}text-amber-400{% else %}text-slate-300 hover:text-amber-300{% endif %}">
+                    <button data-action="toggle-fav" data-hl-id="{{ h.id }}" class="text-lg leading-none shrink-0 mt-0.5 hover:scale-110 transition-transform {% if h.favorite %}text-amber-400{% else %}text-slate-300 hover:text-amber-300{% endif %}">
                         {% if h.favorite %}⭐{% else %}☆{% endif %}
                     </button>
                 </div>
             </div>
             <!-- Swipe-to-reveal actions -->
             <div class="hl-card-swipe-reveal" id="swipe-{{ h.id }}">
-                <button class="swipe-fav" onclick="toggleFav({{ h.id }}, this.parentElement.parentElement.querySelector('button:last-child'))">{% if h.favorite %}☆{% else %}⭐{% endif %}<br><span style="font-size:9px">{% if h.favorite %}Unfav{% else %}Fav{% endif %}</span></button>
-                <button class="swipe-delete" onclick="deleteHighlight({{ h.id }})">🗑️<br><span style="font-size:9px">Delete</span></button>
+                <button class="swipe-fav" data-action="toggle-fav" data-hl-id="{{ h.id }}">{% if h.favorite %}☆{% else %}⭐{% endif %}<br><span style="font-size:9px">{% if h.favorite %}Unfav{% else %}Fav{% endif %}</span></button>
+                <button class="swipe-delete" data-action="delete-hl" data-hl-id="{{ h.id }}">🗑️<br><span style="font-size:9px">Delete</span></button>
                 {% if h.share_token %}
                 <a href="/share/{{ h.share_token }}" class="swipe-share" target="_blank">📤<br><span style="font-size:9px">Share</span></a>
                 {% endif %}
@@ -301,11 +301,11 @@
         <div class="bg-slate-900 text-white rounded-xl shadow-2xl px-5 py-3 flex items-center gap-4 text-sm">
             <span id="batch-count" class="font-medium whitespace-nowrap">0 selected</span>
             <span class="text-slate-400">|</span>
-            <button onclick="batchAddTag()" class="hover:text-emerald-400 transition-colors whitespace-nowrap">🏷️ Add Tag</button>
+            <button data-action="batch-add-tag" class="hover:text-emerald-400 transition-colors whitespace-nowrap">🏷️ Add Tag</button>
             <span class="text-slate-600">|</span>
-            <button onclick="batchDelete()" class="hover:text-red-400 transition-colors whitespace-nowrap">🗑️ Delete</button>
+            <button data-action="batch-delete" class="hover:text-red-400 transition-colors whitespace-nowrap">🗑️ Delete</button>
             <span class="text-slate-600">|</span>
-            <button onclick="clearSelection()" class="text-slate-400 hover:text-white transition-colors">Cancel</button>
+            <button data-action="clear-selection" class="text-slate-400 hover:text-white transition-colors">Cancel</button>
         </div>
     </div>
 

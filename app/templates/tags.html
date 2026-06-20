@@ -23,9 +23,9 @@
         <span class="text-xs text-muted bg-page-alt px-2 py-0.5 rounded-full">{{ tag.count }}</span>
       </a>
       <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button onclick="renameTag(this)" class="text-xs text-muted hover:text-amber-500 px-2 py-1 rounded hover:bg-page-alt transition-colors" title="Rename">✏️</button>
-        <button onclick="mergeTag(this)" class="text-xs text-muted hover:text-indigo-500 px-2 py-1 rounded hover:bg-page-alt transition-colors" title="Merge into another tag">🔀</button>
-        <button onclick="deleteTag(this)" class="text-xs text-muted hover:text-red-500 px-2 py-1 rounded hover:bg-page-alt transition-colors" title="Delete">🗑️</button>
+        <button data-action="rename-tag" class="text-xs text-muted hover:text-amber-500 px-2 py-1 rounded hover:bg-page-alt transition-colors" title="Rename">✏️</button>
+        <button data-action="merge-tag" class="text-xs text-muted hover:text-indigo-500 px-2 py-1 rounded hover:bg-page-alt transition-colors" title="Merge into another tag">🔀</button>
+        <button data-action="delete-tag" class="text-xs text-muted hover:text-red-500 px-2 py-1 rounded hover:bg-page-alt transition-colors" title="Delete">🗑️</button>
       </div>
     </div>
     {% endfor %}
@@ -45,7 +45,7 @@
     <div class="px-6 py-4 border-b border-card">
       <h3 class="text-lg font-semibold text-primary">✏️ Rename Tag</h3>
     </div>
-    <form class="p-6 space-y-4" onsubmit="return submitRename(event)">
+    <form class="p-6 space-y-4" data-action="submit-tag-rename">
       <input type="hidden" id="rename-tag-id" name="tag_id" />
       <div>
         <label for="rename-tag-name" class="block text-sm font-medium text-primary mb-1">New name</label>
@@ -61,7 +61,7 @@
         </div>
       </div>
       <div class="flex justify-end gap-3 pt-2">
-        <button type="button" onclick="closeRenameModal()" class="px-4 py-2 text-sm font-medium text-muted bg-card border border-card rounded-lg hover:bg-page-alt">Cancel</button>
+        <button type="button" data-action="close-tag-rename" class="px-4 py-2 text-sm font-medium text-muted bg-card border border-card rounded-lg hover:bg-page-alt">Cancel</button>
         <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg hover:bg-accent-hover">Save</button>
       </div>
     </form>
@@ -74,7 +74,7 @@
     <div class="px-6 py-4 border-b border-card">
       <h3 class="text-lg font-semibold text-primary">🔀 Merge Tag</h3>
     </div>
-    <form class="p-6 space-y-4" onsubmit="return submitMerge(event)">
+    <form class="p-6 space-y-4" data-action="submit-tag-merge">
       <input type="hidden" id="merge-source-id" name="source_id" />
       <p class="text-sm text-muted" id="merge-description">Merge <strong id="merge-source-name"></strong> into:</p>
       <div>
@@ -91,7 +91,7 @@
         Highlights will be reassigned to the target tag. The source tag will be deleted.
       </div>
       <div class="flex justify-end gap-3 pt-2">
-        <button type="button" onclick="closeMergeModal()" class="px-4 py-2 text-sm font-medium text-muted bg-card border border-card rounded-lg hover:bg-page-alt">Cancel</button>
+        <button type="button" data-action="close-merge-modal" class="px-4 py-2 text-sm font-medium text-muted bg-card border border-card rounded-lg hover:bg-page-alt">Cancel</button>
         <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg hover:bg-accent-hover">Merge</button>
       </div>
     </form>

@@ -8,7 +8,7 @@
       <p class="text-sm text-slate-500 mt-1">{{ total_books }} book{% if total_books != 1 %}s{% endif %} with highlights</p>
     </div>
     <div class="flex items-center gap-3">
-      <button onclick="backfillCovers()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+      <button data-action="backfill-covers" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
         🔄 Fetch Covers
       </button>
       <div class="flex gap-2">
@@ -56,10 +56,10 @@
         <div class="flex items-center justify-between mt-2">
           <span class="text-xs font-medium text-indigo-600">{{ book.highlight_count }} highlight{% if book.highlight_count != 1 %}s{% endif %}</span>
             <div class="flex gap-1">
-              <span onclick="event.preventDefault(); event.stopPropagation(); renameBook(this)" class="text-xs text-slate-400 hover:text-amber-500 cursor-pointer" title="Edit title">✏️</span>
-              <span onclick="event.preventDefault(); event.stopPropagation(); fetchCover(this)" class="text-xs text-slate-400 hover:text-indigo-500 cursor-pointer" title="Fetch cover from Goodreads">🔍</span>
-              <span onclick="event.preventDefault(); event.stopPropagation(); openMetadata(this)" class="text-xs text-slate-400 hover:text-purple-500 cursor-pointer" title="Edit HardCover ID / ISBN">🏷️</span>
-              <span onclick="event.preventDefault(); event.stopPropagation(); uploadCover(this)" class="text-xs text-slate-400 hover:text-emerald-500 cursor-pointer" title="Upload custom cover">📤</span>
+              <span data-action="rename-book" class="text-xs text-slate-400 hover:text-amber-500 cursor-pointer" title="Edit title">✏️</span>
+              <span data-action="fetch-cover" class="text-xs text-slate-400 hover:text-indigo-500 cursor-pointer" title="Fetch cover from Goodreads">🔍</span>
+              <span data-action="open-metadata" class="text-xs text-slate-400 hover:text-purple-500 cursor-pointer" title="Edit HardCover ID / ISBN">🏷️</span>
+              <span data-action="upload-cover" class="text-xs text-slate-400 hover:text-emerald-500 cursor-pointer" title="Upload custom cover">📤</span>
             </div>
         </div>
       </div>
@@ -96,7 +96,7 @@
     <div class="px-6 py-4 border-b border-slate-100">
       <h3 class="text-lg font-semibold text-slate-900">✏️ Rename Book</h3>
     </div>
-    <form id="rename-form" class="p-6 space-y-4" onsubmit="return submitRename(event)">
+    <form id="rename-form" class="p-6 space-y-4" data-action="submit-rename">
       <input type="hidden" id="rename-old-title" name="old_title" />
       <input type="hidden" id="rename-old-author" name="old_author" />
       <div>
@@ -115,8 +115,8 @@
         <p class="text-amber-700 text-xs mt-1">Future imports using the old title will create a <strong>separate book entry</strong>.</p>
       </div>
       <div class="flex justify-end gap-3 pt-2">
-        <button type="button" onclick="closeRenameModal()" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50">Cancel</button>
-        <button type="button" onclick="deleteBook()" id="rename-delete-btn" class="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100">🗑️ Delete book</button>
+        <button type="button" data-action="close-rename-modal" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50">Cancel</button>
+        <button type="button" data-action="delete-book" id="rename-delete-btn" class="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100">🗑️ Delete book</button>
         <button type="submit" id="rename-submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Save Changes</button>
       </div>
     </form>
@@ -129,7 +129,7 @@
     <div class="px-6 py-4 border-b border-slate-100">
       <h3 class="text-lg font-semibold text-slate-900">🏷️ Book Metadata</h3>
     </div>
-    <form id="metadata-form" class="p-6 space-y-4" onsubmit="return submitMetadata(event)">
+    <form id="metadata-form" class="p-6 space-y-4" data-action="submit-metadata">
       <input type="hidden" id="meta-title" name="title" />
       <input type="hidden" id="meta-author" name="author" />
       <div>
@@ -146,7 +146,7 @@
                placeholder="e.g. 9780140449242" />
       </div>
       <div class="flex justify-end gap-3 pt-2">
-        <button type="button" onclick="closeMetadataModal()" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50">Cancel</button>
+        <button type="button" data-action="close-metadata-modal" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50">Cancel</button>
         <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Save</button>
       </div>
     </form>

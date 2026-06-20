@@ -157,7 +157,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         "Referrer-Policy": "same-origin",
         "Content-Security-Policy": (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'; " 
+            "script-src 'self'; " 
             "style-src 'self' 'unsafe-inline' fonts.googleapis.com; "
             "font-src 'self' fonts.gstatic.com; "
             "img-src 'self' data: https:; "

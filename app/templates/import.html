@@ -80,7 +80,7 @@
                         <span class="text-3xl block mb-2">📄</span>
                         <span class="text-sm text-indigo-600 font-medium hover:text-indigo-800">Choose .md file</span>
                         <span class="block text-xs text-secondary mt-1">or drag and drop</span>
-                        <input type="file" id="readwise-file" name="file" accept=".md" class="hidden" onchange="updateFileName(this, 'readwise-file-name')" />
+                        <input type="file" id="readwise-file" name="file" accept=".md" class="hidden" data-action="update-filename" data-display="readwise-file-name" />
                     </label>
                     <p id="readwise-file-name" class="text-xs text-secondary mt-2"></p>
                 </div>
@@ -128,7 +128,7 @@
                         <span class="text-3xl block mb-2">📁</span>
                         <span class="text-sm text-emerald-600 font-medium hover:text-emerald-800">Choose .json file</span>
                         <span class="block text-xs text-secondary mt-1">or drag and drop</span>
-                        <input type="file" id="koreader-file" name="file" accept=".json" class="hidden" onchange="updateFileName(this, 'koreader-file-name')" />
+                        <input type="file" id="koreader-file" name="file" accept=".json" class="hidden" data-action="update-filename" data-display="koreader-file-name" />
                     </label>
                     <p id="koreader-file-name" class="text-xs text-secondary mt-2"></p>
                 </div>

@@ -512,7 +512,7 @@
     window.backfillCovers = function() {
         window.confirmModal('Fetch covers?', 'Fetch covers for all books from online sources? This may take a minute.').then(function(ok) {
             if (!ok) return;
-            var btn = document.querySelector('[onclick="backfillCovers()"]');
+            var btn = document.querySelector('[data-action="backfill-covers"]');
             window.setLoading(btn, true);
             fetch('/api/books/cover/backfill', { method: 'POST' })
                 .then(function(r) { return r.json(); })
@@ -1078,11 +1078,14 @@
             if (btn && window.setTheme) window.setTheme(btn.getAttribute('data-theme'));
         });
 
-        // Data-action buttons: confirm-reset, save-cover-key, clear-cover-key, save-email, test-email
+        // Universal data-action click delegation
         document.addEventListener('click', function(e) {
             var btn = e.target.closest('[data-action]');
             if (!btn) return;
             var action = btn.getAttribute('data-action');
+            var hlId = btn.getAttribute('data-hl-id');
+
+            // ── Settings page actions ──
             if (action === 'confirm-reset' && window.confirmReset) { e.preventDefault(); window.confirmReset(); }
             else if (action === 'save-cover-key' && window.saveCoverKey) { e.preventDefault(); window.saveCoverKey(); }
             else if (action === 'clear-cover-key' && window.clearCoverKey) { e.preventDefault(); window.clearCoverKey(); }
@@ -1094,13 +1097,70 @@
                     e.preventDefault();
                 }
             }
+            // ── Highlights page actions ──
+            else if (action === 'toggle-fav' && hlId && window.toggleFav) { e.preventDefault(); window.toggleFav(hlId, btn); }
+            else if (action === 'toggle-edit' && hlId && window.toggleEdit) { e.preventDefault(); window.toggleEdit(hlId); window.scrollToEdit(hlId); }
+            else if (action === 'save-edit' && hlId && window.saveEdit) { e.preventDefault(); window.saveEdit(hlId); }
+            else if (action === 'cancel-edit' && hlId && window.cancelEdit) { e.preventDefault(); window.cancelEdit(hlId); }
+            else if (action === 'load-context' && hlId && window.loadContext) { e.preventDefault(); window.loadContext(hlId); }
+            else if (action === 'delete-hl' && hlId && window.deleteHighlight) { e.preventDefault(); window.deleteHighlight(hlId); }
+            // ── Books page actions ──
+            else if (action === 'backfill-covers' && window.backfillCovers) { e.preventDefault(); window.backfillCovers(); }
+            else if (action === 'rename-book' && window.renameBook) { e.preventDefault(); window.renameBook(btn); }
+            else if (action === 'fetch-cover' && window.fetchCover) { e.preventDefault(); window.fetchCover(btn); }
+            else if (action === 'open-metadata' && window.openMetadata) { e.preventDefault(); window.openMetadata(btn); }
+            else if (action === 'upload-cover' && window.uploadCover) { e.preventDefault(); window.uploadCover(btn); }
+            else if (action === 'close-rename-modal' && window.closeRenameModal) { e.preventDefault(); window.closeRenameModal(); }
+            else if (action === 'close-metadata-modal' && window.closeMetadataModal) { e.preventDefault(); window.closeMetadataModal(); }
+            else if (action === 'delete-book' && window.deleteBook) { e.preventDefault(); window.deleteBook(); }
+            // ── Tags page actions ──
+            else if (action === 'rename-tag' && window.renameTag) { e.preventDefault(); window.renameTag(btn); }
+            else if (action === 'merge-tag' && window.mergeTag) { e.preventDefault(); window.mergeTag(btn); }
+            else if (action === 'delete-tag' && window.deleteTag) { e.preventDefault(); window.deleteTag(btn); }
+            else if (action === 'close-tag-rename' && window.closeTagRenameModal) { e.preventDefault(); window.closeTagRenameModal(); }
+            else if (action === 'close-merge-modal' && window.closeMergeModal) { e.preventDefault(); window.closeMergeModal(); }
+            // ── Dashboard actions ──
+            else if (action === 'dash-fav' && hlId && window.toggleDashFav) { e.preventDefault(); window.toggleDashFav(hlId, btn); }
+            // ── Review page actions ──
+            else if (action === 'review-context' && hlId && window.showReviewContext) { e.preventDefault(); window.showReviewContext(hlId); }
+            else if (action === 'close-review-context' && window.closeReviewContext) { window.closeReviewContext(e); }
+            // ── Theme selection ──
+            else if (action === 'set-theme' && window.setTheme) { e.preventDefault(); window.setTheme(btn.getAttribute('data-theme')); }
         });
 
-        // Auto-submit forms on change (review mode toggle, review count slider)
+        // Universal data-action change delegation
         document.addEventListener('change', function(e) {
-            if (e.target.hasAttribute('data-auto-submit')) {
-                var form = e.target.closest('form');
+            var el = e.target.closest('[data-action]');
+            if (!el) return;
+            var action = el.getAttribute('data-action');
+
+            if (action === 'toggle-select-all' && window.toggleSelectAll) { window.toggleSelectAll(); }
+            else if (action === 'update-batch-bar' && window.updateBatchBar) { window.updateBatchBar(); }
+            else if (action === 'submit-form') {
+                var form = el.closest('form');
                 if (form) form.submit();
+            }
+            else if (action === 'update-filename' && window.updateFileName) {
+                window.updateFileName(el, el.getAttribute('data-display'));
+            }
+            else if (el.hasAttribute('data-auto-submit')) {
+                var form = el.closest('form');
+                if (form) form.submit();
+            }
+        });
+
+        // Universal data-action submit delegation
+        document.addEventListener('submit', function(e) {
+            var form = e.target.closest('[data-action]');
+            if (!form) return;
+            var action = form.getAttribute('data-action');
+
+            if (action === 'submit-rename' && window.submitRename) { e.preventDefault(); window.submitRename(e); }
+            else if (action === 'submit-metadata' && window.submitMetadata) { e.preventDefault(); window.submitMetadata(e); }
+            else if (action === 'submit-tag-rename' && window.submitTagRename) { e.preventDefault(); window.submitTagRename(e); }
+            else if (action === 'submit-tag-merge' && window.submitMerge) { e.preventDefault(); window.submitMerge(e); }
+            else if (action === 'confirm-delete') {
+                if (!confirm('Delete this highlight? This cannot be undone.')) { e.preventDefault(); }
             }
         });
 

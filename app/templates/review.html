@@ -91,11 +91,10 @@
 
         <!-- Secondary actions -->
         <div class="review-secondary-actions flex gap-2 justify-center mt-4 pt-3 border-t border-card">
-            <button type="button" onclick="event.preventDefault(); showReviewContext({{ highlight.id }})" class="px-3 py-1.5 text-xs text-muted hover:text-indigo-500 hover:bg-page-alt rounded-md transition-colors">
+            <button type="button" data-action="review-context" data-hl-id="{{ highlight.id }}" class="px-3 py-1.5 text-xs text-muted hover:text-indigo-500 hover:bg-page-alt rounded-md transition-colors">
                 📖 Context
             </button>
-            <form method="POST" action="/review/delete" class="contents"
-                  onsubmit="return confirm('Delete this highlight? This cannot be undone.')">
+            <form method="POST" action="/review/delete" class="contents" data-action="confirm-delete">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                 <input type="hidden" name="hl_id" value="{{ highlight.id }}" />
                 <button type="submit" class="px-3 py-1.5 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors">
@@ -190,11 +189,11 @@
 </div>
 
 <!-- Context Modal -->
-<div id="review-context-modal" class="fixed inset-0 z-50 hidden bg-black/40 flex items-end md:items-center justify-center" onclick="closeReviewContext(event)">
+<div id="review-context-modal" class="fixed inset-0 z-50 hidden bg-black/40 flex items-end md:items-center justify-center" data-action="close-review-context">
     <div class="bg-card rounded-t-2xl md:rounded-2xl shadow-xl w-full md:max-w-lg mx-0 md:mx-4 max-h-[80vh] overflow-y-auto pointer-events-auto" onclick="event.stopPropagation()">
         <div class="sticky top-0 bg-card border-b border-card px-5 py-3 flex items-center justify-between rounded-t-2xl">
             <span class="text-sm font-semibold text-primary" id="review-context-title">📖 Context</span>
-            <button onclick="closeReviewContext()" class="text-muted hover:text-primary text-xl leading-none">&times;</button>
+            <button data-action="close-review-context" class="text-muted hover:text-primary text-xl leading-none">&times;</button>
         </div>
         <div id="review-context-body" class="p-4 space-y-2">
             <div class="text-sm text-muted text-center py-4">Loading...</div>

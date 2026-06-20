@@ -79,7 +79,7 @@
                             </div>
                             {% endif %}
                             <div class="flex items-center gap-3 mt-4">
-                                <button onclick="event.preventDefault(); toggleDashFav({{ random_highlight.id }}, this)" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg border transition-all shadow-sm
+                                <button data-action="dash-fav" data-hl-id="{{ random_highlight.id }}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg border transition-all shadow-sm
                                     {% if random_highlight.favorite %}bg-amber-50 border-amber-200 text-amber-600 hover:bg-amber-100{% else %}border-card text-muted hover:text-amber-500 hover:border-amber-200{% endif %}">
                                     <span class="mr-1">{% if random_highlight.favorite %}⭐{% else %}☆{% endif %}</span>
                                     <span>{% if random_highlight.favorite %}Favorited{% else %}Favorite{% endif %}</span>
