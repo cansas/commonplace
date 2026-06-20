@@ -43,7 +43,7 @@ def generate_csrf_token(session: dict) -> str:
 
 def verify_csrf_token(token: str, session: dict) -> bool:
     try:
-        data = _get_signer().loads(token, max_age=86400)
+        data = _get_signer().loads(token, max_age=604800)  # 7 days
         return str(session.get("user_id", "")) == data
     except (BadSignature, SignatureExpired):
         return False
@@ -67,7 +67,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
                 request.state.csrf_token,
                 httponly=True,
                 samesite="lax",
-                max_age=86400,
+                max_age=604800,  # 7 days
                 path="/",
             )
 
