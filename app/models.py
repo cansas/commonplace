@@ -31,6 +31,7 @@ class Highlight(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     favorite = Column(Integer, default=0)  # 0=no, 1=favorite
     share_token = Column(String(64), unique=True, nullable=True)
+    fingerprint = Column(String(64), nullable=True, index=True)  # SHA256 dedup hash
 
     tags = relationship("Tag", secondary=highlight_tags, lazy="selectin")
     reviews = relationship("ReviewLog", back_populates="highlight", lazy="selectin")

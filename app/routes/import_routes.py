@@ -1,15 +1,19 @@
-"""Import routes — Readwise Obsidian files, KOReader JSON, Readwise API format."""
+"""Import routes — Readwise Obsidian files, KOReader JSON, Readwise API format.
+
+All persist logic lives in app.services.import_service.ImportService.
+These routes handle parsing + rendering only.
+"""
 
 from fastapi import APIRouter, Depends, Request, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database import get_db
-from app.models import Highlight, Source
+from app.models import Source
 from app.services.obsidian import parse_readwise_md
 from app.services.koreader_json import parse_koreader_json
+from app.services.import_service import ImportService, ImportResult
 from app.schemas import ReadwiseBatchImport
-from app.routes.share import get_share_token
 from app.csrf import template_context, csrf_guard
 from datetime import datetime
 import json
@@ -59,67 +63,21 @@ async def import_page(
     return await _render_import(request, db)
 
 
-async def _save_highlights(db, highlights_list, source_name, source_type, dry_run=False):
-    """Bulk-save highlights and record source. Skips duplicates.
-
-    In dry_run mode, counts what would be imported/skipped without writing.
-    Returns (count, skipped).
-    """
-    # Pre-fetch existing highlights to avoid N+1 queries
-    existing_set = set()
-    if highlights_list:
-        result = await db.execute(
-            select(Highlight.text, Highlight.book_title, Highlight.highlighted_at)
-        )
-        for row in result.all():
-            existing_set.add((row.text, row.book_title, row.highlighted_at))
-
-    count = 0
-    skipped = 0
-    for item in highlights_list:
-        text = item["text"]
-        book_title = item.get("book_title", "Untitled")
-        highlighted_at = item.get("highlighted_at")
-
-        if (text, book_title, highlighted_at) in existing_set:
-            skipped += 1
-            continue
-
-        if dry_run:
-            count += 1
-            continue
-
-        hl = Highlight(
-            text=text,
-            note=item.get("note"),
-            page=item.get("page"),
-            chapter=item.get("chapter"),
-            source_type=source_type,
-            book_title=book_title,
-            book_author=item.get("book_author"),
-            category=item.get("category", "books"),
-            color=item.get("color"),
-            highlighted_at=highlighted_at or datetime.utcnow(),
-            share_token=get_share_token(),
-        )
-        db.add(hl)
-        existing_set.add((text, book_title, highlighted_at))
-        count += 1
-
-    if not dry_run and count > 0:
-        # Record the import source
-        src = Source(
-            name=source_name,
-            source_type=source_type,
-            last_import_at=datetime.utcnow(),
-            highlights_imported=count,
-        )
-        db.add(src)
-
-    if not dry_run:
-        await db.commit()
-
-    return count, skipped
+def _build_result(import_result, source_name: str, source_type: str, action: str, pasted_content: str = "") -> dict:
+    """Build the result dict the import template expects."""
+    r = {
+        "success": len(import_result.errors) == 0,
+        "imported": import_result.imported,
+        "skipped": import_result.skipped,
+        "errors": import_result.errors,
+        "dry_run": import_result.dry_run,
+        "source_name": source_name,
+        "source_type": source_type,
+        "action": action,
+    }
+    if import_result.dry_run and pasted_content:
+        r["pasted_content"] = pasted_content
+    return r
 
 
 @router.post("/import/readwise")
@@ -135,17 +93,17 @@ async def import_readwise(
     all_highlights = []
     errors = []
     is_dry_run = dry_run == "true"
+    pasted = ""
 
     if content.strip():
-        # Pasted content mode
         try:
             parsed = parse_readwise_md(content, "pasted-content")
             all_highlights.extend(parsed)
+            pasted = content
         except Exception as e:
             errors.append(f"Failed to parse pasted content: {e}")
         source_name = "Pasted Readwise content"
     else:
-        # File upload mode
         try:
             raw = (await file.read()).decode("utf-8", errors="replace")
         except Exception as e:
@@ -161,28 +119,18 @@ async def import_readwise(
 
         source_name = file.filename or "unknown"
 
-    count, skipped = await _save_highlights(
-        db, all_highlights,
-        source_name=source_name,
-        source_type="readwise",
-        dry_run=is_dry_run,
+    result = ImportResult(errors=errors) if errors else \
+        await ImportService.save_highlights(
+            db, all_highlights,
+            source_name=source_name,
+            source_type="readwise",
+            dry_run=is_dry_run,
+        )
+
+    return await _render_import(
+        request, db,
+        _build_result(result, source_name, "readwise", "/import/readwise", pasted),
     )
-
-    result = {
-        "success": len(errors) == 0,
-        "imported": count,
-        "skipped": skipped,
-        "errors": errors,
-        "dry_run": is_dry_run,
-        "source_name": source_name,
-        "source_type": "readwise",
-        "action": "/import/readwise",
-    }
-
-    if is_dry_run and content.strip():
-        result["pasted_content"] = content
-
-    return await _render_import(request, db, result)
 
 
 @router.post("/import/koreader-json")
@@ -199,39 +147,27 @@ async def import_koreader_json(
     try:
         content = json.loads(await file.read())
     except json.JSONDecodeError as e:
-        result = {
+        return await _render_import(request, db, {
             "success": False,
-            "imported": 0,
-            "skipped": 0,
+            "imported": 0, "skipped": 0,
             "errors": [f"Invalid JSON: {e}"],
-            "dry_run": False,
-            "source_name": file.filename or "unknown",
-            "source_type": "koreader",
-            "action": "/import/koreader-json",
-        }
-        return await _render_import(request, db, result)
+            "dry_run": False, "source_name": file.filename or "unknown",
+            "source_type": "koreader", "action": "/import/koreader-json",
+        })
 
     parsed = parse_koreader_json(content)
-
-    count, skipped = await _save_highlights(
+    result = await ImportService.save_highlights(
         db, parsed,
         source_name=file.filename or "koreader-export.json",
         source_type="koreader",
         dry_run=is_dry_run,
     )
 
-    result = {
-        "success": True,
-        "imported": count,
-        "skipped": skipped,
-        "errors": [],
-        "dry_run": is_dry_run,
-        "source_name": file.filename or "koreader-export.json",
-        "source_type": "koreader",
-        "action": "/import/koreader-json",
-    }
-
-    return await _render_import(request, db, result)
+    return await _render_import(
+        request, db,
+        _build_result(result, file.filename or "koreader-export.json",
+                       "koreader", "/import/koreader-json"),
+    )
 
 
 # Readwise-compatible API endpoint (what KOReader Readwise plugin sends)
@@ -240,51 +176,10 @@ async def readwise_api_import(
     data: ReadwiseBatchImport,
     db: AsyncSession = Depends(get_db),
 ):
-    # Pre-fetch existing highlights to avoid N+1 queries
-    existing_set = set()
-    result = await db.execute(
-        select(Highlight.text, Highlight.book_title, Highlight.highlighted_at)
-    )
-    for row in result.all():
-        existing_set.add((row.text, row.book_title, row.highlighted_at))
-
-    count = 0
-    skipped = 0
-    for item in data.highlights:
-        text = item.text
-        book_title = item.book_title or "Untitled"
-        highlighted_at = item.highlighted_at
-
-        if (text, book_title, highlighted_at) in existing_set:
-            skipped += 1
-            continue
-
-        hl = Highlight(
-            text=text,
-            note=item.note,
-            page=item.page,
-            chapter=item.chapter,
-            source_type=item.source_type or "koreader",
-            source_id=item.source_id,
-            book_title=book_title,
-            book_author=item.book_author,
-            book_url=item.book_url,
-            category=item.category or "books",
-            color=item.color,
-            highlighted_at=highlighted_at or datetime.utcnow(),
-            share_token=get_share_token(),
-        )
-        db.add(hl)
-        existing_set.add((text, book_title, highlighted_at))
-        count += 1
-
-    src = Source(
-        name=f"KOReader API ({datetime.utcnow().strftime('%Y-%m-%d %H:%M')})",
+    items = [item.model_dump() for item in data.highlights]
+    result = await ImportService.save_highlights(
+        db, items,
+        source_name=f"KOReader API ({datetime.utcnow().strftime('%Y-%m-%d %H:%M')})",
         source_type="koreader",
-        last_import_at=datetime.utcnow(),
-        highlights_imported=count,
     )
-    db.add(src)
-    await db.commit()
-
-    return {"imported": count, "skipped": skipped}
+    return {"imported": result.imported, "skipped": result.skipped}

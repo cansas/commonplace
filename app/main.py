@@ -97,7 +97,7 @@ async def lifespan(app: FastAPI):
             pass
 
 
-app = FastAPI(title="commonplace", version="0.8.14", lifespan=lifespan)
+app = FastAPI(title="commonplace", version="0.8.16", lifespan=lifespan)
 
 # Ensure covers directory exists on the mounted volume
 COVERS_DIR = os.environ.get("COVERS_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "covers"))
