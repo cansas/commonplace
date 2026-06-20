@@ -9,6 +9,7 @@ from app.models import Highlight, BookCover
 from app.services.book_covers import search_cover
 from app.csrf import template_context
 from app.services.settings_service import get_hardcover_api_key
+from app.template import render
 from typing import Optional
 import hashlib
 import math
@@ -25,14 +26,9 @@ def _safe_filename(name: str) -> str:
 
 
 router = APIRouter(tags=["books"])
-
-_jinja = None
 COVERS_DIR = os.environ.get("COVERS_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "covers"))
 
 
-def init(templates):
-    global _jinja
-    _jinja = templates
 
 
 @router.get("/books", response_class=HTMLResponse)
@@ -113,7 +109,7 @@ async def books_page(
             "highlight_id": row.sample_hl_id,
         })
 
-    return _jinja.TemplateResponse(
+    return render(
         request,
         "books.html",
         template_context(

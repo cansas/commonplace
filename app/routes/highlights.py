@@ -21,14 +21,6 @@ def _escape_ilike(s: str) -> str:
 
 router = APIRouter(tags=["highlights"])
 
-# Set by main.py at startup
-_jinja = None
-
-
-def init(templates):
-    global _jinja
-    _jinja = templates
-
 
 # ---- Web UI ----
 
@@ -92,7 +84,7 @@ async def highlights_page(
             "share_token": h.share_token,
         })
 
-    return _jinja.TemplateResponse(
+    return render(
         request,
         "highlights.html",
         template_context(

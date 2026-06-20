@@ -9,15 +9,11 @@ from app.models import Highlight, Tag, UserAchievement
 from app.services.streaks import calculate_streaks
 from app.services.settings_service import get_hardcover_api_key
 from app.csrf import template_context
+from app.template import render
 
 router = APIRouter(tags=["about"])
 
-_jinja = None
 
-
-def init(templates):
-    global _jinja
-    _jinja = templates
 
 
 @router.get("/about", response_class=HTMLResponse)
@@ -40,7 +36,7 @@ async def about_page(request: Request, db: AsyncSession = Depends(get_db)):
     streaks = await calculate_streaks(db)
     hc_key = get_hardcover_api_key()
 
-    return _jinja.TemplateResponse(
+    return render(
         request,
         "about.html",
         template_context(

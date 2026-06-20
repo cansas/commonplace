@@ -97,7 +97,7 @@ async def lifespan(app: FastAPI):
             pass
 
 
-app = FastAPI(title="commonplace", version="0.8.17", lifespan=lifespan)
+app = FastAPI(title="commonplace", version="0.8.18", lifespan=lifespan)
 
 # Ensure covers directory exists on the mounted volume
 COVERS_DIR = os.environ.get("COVERS_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "covers"))
@@ -154,19 +154,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 _session_https = os.environ.get("SESSION_HTTPS_ONLY", "false").lower() == "true"
 app.add_middleware(SessionMiddleware, secret_key=secret, max_age=86400 * 30, same_site="lax", https_only=_session_https)
 
-# Init route modules with templates
-highlights.init(templates)
-review.init(templates)
-import_routes.init(templates)
-settings_routes.init(templates)
-books.init(templates)
-share_routes.init(templates)
-backup_routes.init(templates)
-tags_routes.init(templates)
-achievements_routes.init(templates)
-about_routes.init(templates)
-
-# Include routers
+# Routers are included below; template init moved to app/template.py
 app.include_router(highlights.router)
 app.include_router(review.router)
 app.include_router(import_routes.router)
@@ -178,9 +166,6 @@ app.include_router(backup_routes.router)
 app.include_router(tags_routes.router)
 app.include_router(achievements_routes.router)
 app.include_router(about_routes.router)
-
-# Expose templates to auth routes
-auth_routes.init(templates)
 
 
 @app.get("/health")

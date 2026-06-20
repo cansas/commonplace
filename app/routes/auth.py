@@ -11,10 +11,9 @@ from app.models import User
 from app.auth import verify_password, hash_password, ensure_admin
 from app.csrf import template_context, csrf_guard, generate_csrf_token
 from app.services.settings_service import get_theme
+from app.template import render
 
 router = APIRouter(tags=["auth"])
-
-_jinja = None
 
 # Login rate limiting: 5 attempts per 5 minutes per IP
 LOGIN_MAX_ATTEMPTS = 5
@@ -23,9 +22,6 @@ _MAX_RATE_LIMIT_ENTRIES = 10000
 _login_attempts = defaultdict(list)
 
 
-def init(templates):
-    global _jinja
-    _jinja = templates
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -36,7 +32,7 @@ async def login_page(request: Request, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).limit(1))
     if result.scalar_one_or_none() is None:
         return RedirectResponse(url="/setup", status_code=303)
-    return _jinja.TemplateResponse(request, "login.html", template_context(request, error=""))
+    return render(request, "login.html", template_context(request, error=""))
 
 
 @router.post("/login")
@@ -56,7 +52,7 @@ async def login(
 
     _login_attempts[ip] = [t for t in _login_attempts[ip] if now - t < LOGIN_WINDOW]
     if len(_login_attempts[ip]) >= LOGIN_MAX_ATTEMPTS:
-        return _jinja.TemplateResponse(
+        return render(
             request, "login.html",
             template_context(request, error="Too many login attempts. Try again in 5 minutes."),
         )
@@ -73,7 +69,7 @@ async def login(
         return RedirectResponse(url="/", status_code=303)
 
     _login_attempts[ip].append(now)
-    return _jinja.TemplateResponse(
+    return render(
         request, "login.html",
         template_context(request, error="Invalid username or password."),
     )
@@ -113,7 +109,7 @@ async def setup_page(request: Request, db: AsyncSession = Depends(get_db)):
         return RedirectResponse(url="/", status_code=303)
     if not await _needs_setup(db):
         return RedirectResponse(url="/login", status_code=303)
-    return _jinja.TemplateResponse(request, "setup.html", template_context(request, error=""))
+    return render(request, "setup.html", template_context(request, error=""))
 
 
 @router.post("/setup")
@@ -139,7 +135,7 @@ async def setup_admin(
     if password != confirm:
         errors.append("Passwords do not match.")
     if errors:
-        return _jinja.TemplateResponse(
+        return render(
             request, "setup.html",
             template_context(request, error=" | ".join(errors)),
         )

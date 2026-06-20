@@ -24,14 +24,11 @@ from app.services.settings_service import (
     get_hardcover_api_key,
     set_hardcover_api_key,
 )
+from app.template import render
 
 router = APIRouter(tags=["settings"])
-_jinja = None
 
 
-def init(templates):
-    global _jinja
-    _jinja = templates
 
 
 @router.get("/settings", response_class=HTMLResponse)
@@ -61,7 +58,7 @@ async def settings_page(
         )
         tokens = result.scalars().all()
 
-    return _jinja.TemplateResponse(
+    return render(
         request,
         "settings.html",
         template_context(
@@ -71,7 +68,7 @@ async def settings_page(
             total_highlights=total,
             total_books=books,
             review_count=get_review_count(),
-            version="0.8.17",
+            version="0.8.18",
             saved=saved,
             new_token=new_token,
             username=request.session.get("username", ""),

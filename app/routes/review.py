@@ -11,6 +11,7 @@ from app.services.streaks import calculate_streaks
 from app.services.achievements import check_and_unlock
 from app.csrf import template_context, csrf_guard
 from app.dates import today_start_utc
+from app.template import render
 from datetime import datetime, timedelta
 import random
 import time
@@ -18,12 +19,7 @@ from typing import Optional
 
 router = APIRouter(tags=["review"])
 
-_jinja = None
 
-
-def init(templates):
-    global _jinja
-    _jinja = templates
 
 
 def _today_start() -> datetime:
@@ -118,7 +114,7 @@ async def review_page(
     # If at or over daily limit, you're done for the day
     if done_today >= daily_limit:
         today_reviews = await _get_today_reviews(db)
-        return _jinja.TemplateResponse(
+        return render(
             request,
             "review.html",
             template_context(
@@ -137,7 +133,7 @@ async def review_page(
 
     if not hl:
         today_reviews = await _get_today_reviews(db)
-        return _jinja.TemplateResponse(
+        return render(
             request,
             "review.html",
             template_context(
@@ -165,7 +161,7 @@ async def review_page(
         "favorite": hl.favorite,
     }
 
-    return _jinja.TemplateResponse(
+    return render(
         request,
         "review.html",
         template_context(
@@ -190,7 +186,7 @@ async def review_today_page(
     today_reviews = await _get_today_reviews(db)
     daily_limit = get_review_count()
 
-    return _jinja.TemplateResponse(
+    return render(
         request,
         "review_today.html",
         template_context(
@@ -260,7 +256,7 @@ async def review_stats_page(
     )
     rating_dist = {row.rating: row.count for row in dist.all()}
 
-    return _jinja.TemplateResponse(
+    return render(
         request,
         "review_stats.html",
         template_context(
@@ -480,7 +476,7 @@ async def review_heatmap_page(
     avg_per_day = round(total_reviews / max(1, active_days))
     projected_year = round(total_reviews / max(1, (now - first_day).days + 1) * 365) if target_year == now.year else round(total_reviews / 365 * 365)
 
-    return _jinja.TemplateResponse(
+    return render(
         request,
         "review_heatmap.html",
         template_context(

@@ -7,15 +7,11 @@ from app.database import get_db
 from app.services.achievements import get_all_achievements, _get_achievement
 from app.services.achievement_card import generate_achievement_card
 from app.csrf import template_context
+from app.template import render
 
 router = APIRouter(tags=["achievements"])
 
-_jinja = None
 
-
-def init(templates):
-    global _jinja
-    _jinja = templates
 
 
 @router.get("/api/achievements")
@@ -33,7 +29,7 @@ async def achievements_page(request: Request, db: AsyncSession = Depends(get_db)
     # Check for new achievements from session
     new_achievements = request.session.pop("new_achievements", [])
 
-    return _jinja.TemplateResponse(
+    return render(
         request,
         "achievements.html",
         template_context(

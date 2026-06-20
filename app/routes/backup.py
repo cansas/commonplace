@@ -12,10 +12,9 @@ from starlette.responses import Response
 
 from app.database import DATABASE_URL, async_session
 from app.csrf import template_context, csrf_guard
+from app.template import render
 
 router = APIRouter(tags=["backup"])
-
-_jinja = None
 
 # DB path from the DATABASE_URL
 # Format: sqlite+aiosqlite:////app/data/commonplace.db
@@ -33,9 +32,6 @@ _COVERS_DIR = os.environ.get(
 )
 
 
-def init(templates):
-    global _jinja
-    _jinja = templates
 
 
 def _backup_filename() -> str:

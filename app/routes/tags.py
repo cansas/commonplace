@@ -7,15 +7,11 @@ from sqlalchemy import select, func, delete as sa_delete, text as sqltext
 from app.database import get_db
 from app.models import Tag, Highlight, highlight_tags
 from app.csrf import template_context, csrf_guard
+from app.template import render
 
 router = APIRouter(tags=["tags"])
 
-_jinja = None
 
-
-def init(templates):
-    global _jinja
-    _jinja = templates
 
 
 # ── API endpoints ──────────────────────────────────────────────────────────
@@ -180,7 +176,7 @@ async def tags_page(request: Request, db: AsyncSession = Depends(get_db)):
         for row in result.all()
     ]
 
-    return _jinja.TemplateResponse(
+    return render(
         request,
         "tags.html",
         template_context(
@@ -210,7 +206,7 @@ async def tag_detail(
     )
     highlights = result.scalars().all()
 
-    return _jinja.TemplateResponse(
+    return render(
         request,
         "highlights.html",
         template_context(

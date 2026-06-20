@@ -15,17 +15,13 @@ from app.services.koreader_json import parse_koreader_json
 from app.services.import_service import ImportService, ImportResult
 from app.schemas import ReadwiseBatchImport
 from app.csrf import template_context, csrf_guard
+from app.template import render
 from datetime import datetime
 import json
 
 router = APIRouter(tags=["import"])
 
-_jinja = None
 
-
-def init(templates):
-    global _jinja
-    _jinja = templates
 
 
 async def _render_import(request, db, import_result=None):
@@ -35,7 +31,7 @@ async def _render_import(request, db, import_result=None):
     )
     sources = result.scalars().all()
 
-    return _jinja.TemplateResponse(
+    return render(
         request,
         "import.html",
         template_context(

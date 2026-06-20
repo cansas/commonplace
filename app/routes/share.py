@@ -8,15 +8,11 @@ from sqlalchemy import select
 from app.database import get_db
 from app.models import Highlight, BookCover
 from app.services.highlight_card import generate_card, svg_to_png, fetch_cover_data
+from app.template import render
 
 router = APIRouter(tags=["share"])
 
-_jinja = None
 
-
-def init(templates):
-    global _jinja
-    _jinja = templates
 
 
 def _generate_share_token() -> str:
@@ -86,13 +82,13 @@ async def share_page(share_token: str, request: Request, db: AsyncSession = Depe
     """HTML page with OpenGraph/Twitter card meta tags."""
     hl = await _get_highlight_by_token(share_token, db)
     if not hl:
-        return _jinja.TemplateResponse(request, "share.html", {"error": "Not found"}, status_code=404)
+        return render(request, "share.html", {"error": "Not found"}, status_code=404)
 
     base_url = str(request.base_url).rstrip("/")
     png_url = f"{base_url}/share/{hl.share_token}.png"
     page_url = f"{base_url}/share/{hl.share_token}"
 
-    response = _jinja.TemplateResponse(
+    response = render(
         request,
         "share.html",
         {
