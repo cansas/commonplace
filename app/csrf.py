@@ -30,8 +30,18 @@ def _get_signer():
             )
             if os.path.isfile(secret_file):
                 secret = open(secret_file).read().strip()
-            else:
-                secret = "fallback-csrf-secret"
+            if not secret:
+                # Ephemeral fallback — avoids crash with a hardcoded string.
+                # Without a stable secret, all sessions invalidate on restart.
+                # Set SESSION_SECRET env var in production.
+                secret = os.urandom(32).hex()
+                import warnings
+                warnings.warn(
+                    "CSRF secret unavailable from SESSION_SECRET env var or "
+                    "data/.session_secret file — generated ephemeral secret. "
+                    "All sessions will be invalidated on server restart. "
+                    "Set SESSION_SECRET in your .env file for production."
+                )
         _signer = URLSafeTimedSerializer(secret, salt="csrf-token")
     return _signer
 
