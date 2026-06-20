@@ -22,7 +22,7 @@ from app.services.book_covers import batch_search
 from app.services.streaks import calculate_streaks
 from app.routes.settings import get_hardcover_api_key
 
-app = FastAPI(title="commonplace", version="0.8.8")
+app = FastAPI(title="commonplace", version="0.8.13")
 
 # Ensure covers directory exists on the mounted volume
 COVERS_DIR = os.environ.get("COVERS_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "covers"))
