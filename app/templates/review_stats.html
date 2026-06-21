@@ -14,22 +14,10 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="bg-card rounded-xl border border-card p-4 text-center">
             <span class="block text-2xl font-bold text-accent">{{ total_reviews }}</span>
             <span class="text-xs text-muted">Reviews (30d)</span>
-        </div>
-        <div class="bg-card rounded-xl border border-card p-4 text-center">
-            <span class="block text-2xl font-bold text-emerald-500">{{ rating_dist.get(2, 0) + rating_dist.get(3, 0) }}</span>
-            <span class="text-xs text-muted">Good + Easy</span>
-        </div>
-        <div class="bg-card rounded-xl border border-card p-4 text-center">
-            <span class="block text-2xl font-bold text-amber-500">{{ rating_dist.get(1, 0) }}</span>
-            <span class="text-xs text-muted">Hard</span>
-        </div>
-        <div class="bg-card rounded-xl border border-card p-4 text-center">
-            <span class="block text-2xl font-bold text-red-500">{{ rating_dist.get(0, 0) }}</span>
-            <span class="text-xs text-muted">Forgot</span>
         </div>
     </div>
 
