@@ -106,6 +106,8 @@ async def books_page(
             "last_highlighted": row.last_highlighted.strftime("%Y-%m-%d") if row.last_highlighted else "",
             "cover_url": cover.cover_url if cover else None,
             "cover_source": cover.cover_source if cover else "none",
+            "hardcover_id": cover.hardcover_id if cover else None,
+            "isbn": cover.isbn if cover else None,
             "highlight_id": row.sample_hl_id,
         })
 
@@ -137,9 +139,10 @@ async def fetch_cover(title: str = Form(...), author: str = Form(default=""), so
         )
         existing_cover = existing.scalar_one_or_none()
         known_id = existing_cover.hardcover_id if existing_cover else None
+        existing_isbn = existing_cover.isbn if existing_cover else None
 
         hc_key = get_hardcover_api_key()
-        url, cover_source, hc_id, isbn = await search_cover(title, author, hardcover_key=hc_key, known_id=known_id)
+        url, cover_source, hc_id, isbn = await search_cover(title, author, hardcover_key=hc_key, known_id=known_id, isbn=existing_isbn)
         if not url:
             return {"ok": False, "error": "No cover found on Open Library, Hardcover, or Goodreads"}
 
@@ -290,12 +293,23 @@ async def set_book_metadata(
         db.add(cover)
     await db.commit()
 
-    # If a HardCover ID was set, do an immediate look-up
+    # If a HardCover ID or ISBN was set, do an immediate cover lookup
     url = cover.cover_url
     source = cover.cover_source
     if hc_id is not None:
         hc_key = get_hardcover_api_key()
-        result = await search_cover(title, author, hardcover_key=hc_key, known_id=hc_id)
+        result = await search_cover(title, author, hardcover_key=hc_key, known_id=hc_id, isbn=isbn_val)
+        new_url, new_source, _, _ = result
+        if new_url:
+            cover.cover_url = new_url
+            cover.cover_source = new_source
+            url = new_url
+            source = new_source
+            await db.commit()
+    elif isbn_val:
+        # ISBN without HardCover ID — do a direct ISBN lookup
+        hc_key = get_hardcover_api_key()
+        result = await search_cover(title, author, hardcover_key=hc_key, isbn=isbn_val)
         new_url, new_source, _, _ = result
         if new_url:
             cover.cover_url = new_url
@@ -554,9 +568,10 @@ async def backfill_covers(db: AsyncSession = Depends(get_db)):
             continue  # Already has a basic cover (no row in map edge case)
 
         known_id = cover_row.hardcover_id if cover_row else None
+        existing_isbn = cover_row.isbn if cover_row else None
         url, cover_source, hc_id, isbn = await search_cover(
             row.book_title, row.book_author or "",
-            hardcover_key=hc_key, known_id=known_id,
+            hardcover_key=hc_key, known_id=known_id, isbn=existing_isbn,
         )
         if url:
             if cover_row:

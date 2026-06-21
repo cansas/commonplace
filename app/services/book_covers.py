@@ -15,6 +15,29 @@ HARDCOVER_API_KEY = os.environ.get("HARDCOVER_API_KEY", "")
 REQUEST_TIMEOUT = 12.0
 
 
+async def _open_library_isbn_lookup(isbn: str, client: httpx.AsyncClient) -> Optional[str]:
+    """Look up a book cover by ISBN directly (most reliable method)."""
+    try:
+        resp = await client.get(
+            "https://openlibrary.org/api/books",
+            params={"bibkeys": f"ISBN:{isbn}", "format": "json", "jscmd": "data"},
+            timeout=REQUEST_TIMEOUT,
+        )
+        if resp.status_code != 200:
+            return None
+        data = resp.json()
+        key = f"ISBN:{isbn}"
+        book = data.get(key)
+        if not book:
+            return None
+        cover = book.get("cover")
+        if cover and isinstance(cover, dict):
+            return cover.get("large") or cover.get("medium") or cover.get("small")
+    except Exception as e:
+        print(f"  [covers] ISBN lookup error for {isbn}: {e}")
+    return None
+
+
 async def _open_library_search(title: str, author: str, client: httpx.AsyncClient) -> Optional[str]:
     """Search Open Library for a book and return the cover URL."""
     params = {
@@ -179,23 +202,33 @@ async def _hardcover_search(title: str, author: str, client: httpx.AsyncClient, 
     return None
 
 
-async def search_cover(title: str, author: str = "", client: httpx.AsyncClient = None, hardcover_key: str = "", known_id: int | None = None) -> tuple[str | None, str, int | None, str | None]:
+async def search_cover(title: str, author: str = "", client: httpx.AsyncClient = None, hardcover_key: str = "", known_id: int | None = None, isbn: str | None = None) -> tuple[str | None, str, int | None, str | None]:
     """Search for a book cover across multiple sources with fallback.
 
     Returns (cover_url, source_name, hardcover_id, isbn) or (None, "", None, None) if no source has a cover.
-    known_id skips the HardCover fuzzy search and queries by ID directly.
+    Priority:
+      1. ISBN lookup (most reliable — Open Library direct)
+      2. HardCover by known_id (skips fuzzy search)
+      3. HardCover title search (needs API key)
+      4. Open Library title search (free, largest catalog)
     """
     _owns_client = client is None
     if _owns_client:
         client = httpx.AsyncClient(timeout=REQUEST_TIMEOUT)
     try:
-        # 1. Hardcover.app (needs API key, best for newer/modern books)
+        # 1. ISBN-based lookup (most reliable)
+        if isbn:
+            url = await _open_library_isbn_lookup(isbn, client)
+            if url:
+                return url, "openlibrary", None, isbn
+
+        # 2. Hardcover.app (by known ID or title search)
         result = await _hardcover_search(title, author, client, api_key=hardcover_key, known_id=known_id)
         if result:
             url, hc_id, isbn = result
             return url, "hardcover", hc_id, isbn
 
-        # 2. Open Library (free, largest catalog)
+        # 3. Open Library (title search — largest catalog)
         url = await _open_library_search(title, author, client)
         if url:
             return url, "openlibrary", None, None

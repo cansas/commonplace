@@ -658,8 +658,8 @@
         if (!metaCard) { window.showToast('Could not find book data', 'error'); return; }
         document.getElementById('meta-title').value = metaCard.dataset.title || '';
         document.getElementById('meta-author').value = (metaCard.dataset.author === 'Unknown' ? '' : (metaCard.dataset.author || ''));
-        document.getElementById('meta-hardcover-id').value = '';
-        document.getElementById('meta-isbn').value = '';
+        document.getElementById('meta-hardcover-id').value = metaCard.dataset.hardcoverId || '';
+        document.getElementById('meta-isbn').value = metaCard.dataset.isbn || '';
         document.getElementById('metadata-modal').classList.remove('hidden');
     };
 
@@ -677,7 +677,11 @@
             .then(function(r) { return r.json(); })
             .then(function(d) {
                 if (d.ok) {
-                    if (d.cover_url && metaCard) updateCoverImage(metaCard, d.cover_url);
+                    if (d.cover_url && metaCard) {
+                        updateCoverImage(metaCard, d.cover_url);
+                        metaCard.dataset.hardcoverId = d.hardcover_id != null ? String(d.hardcover_id) : '';
+                        metaCard.dataset.isbn = d.isbn || '';
+                    }
                     window.showToast('Metadata saved', 'success');
                     window.closeMetadataModal();
                 } else {

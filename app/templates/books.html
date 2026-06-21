@@ -36,7 +36,7 @@
   {% if books %}
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
     {% for book in books %}
-    <a href="/highlights?book={{ book.title | urlencode }}" class="block bg-white rounded-lg border border-slate-200 overflow-hidden hover:border-indigo-300 hover:shadow-md transition-all group" data-hl-id="{{ book.highlight_id }}" data-title="{{ book.title | e }}" data-author="{{ book.author | e }}">
+    <a href="/highlights?book={{ book.title | urlencode }}" class="block bg-white rounded-lg border border-slate-200 overflow-hidden hover:border-indigo-300 hover:shadow-md transition-all group" data-hl-id="{{ book.highlight_id }}" data-title="{{ book.title | e }}" data-author="{{ book.author | e }}"{% if book.hardcover_id %} data-hardcover-id="{{ book.hardcover_id }}"{% endif %}{% if book.isbn %} data-isbn="{{ book.isbn }}"{% endif %}>
       <!-- Cover -->
       <div class="aspect-[2/3] bg-slate-100 flex items-center justify-center overflow-hidden">
         {% if book.cover_url %}
