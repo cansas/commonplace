@@ -583,7 +583,8 @@
         document.getElementById('rename-modal').classList.remove('hidden');
     };
 
-    window.closeRenameModal = function() {
+    window.closeRenameModal = function(e) {
+        if (e && e.target !== e.currentTarget) return;
         document.getElementById('rename-modal').classList.add('hidden');
         renameCard = null;
     };
@@ -663,7 +664,8 @@
         document.getElementById('metadata-modal').classList.remove('hidden');
     };
 
-    window.closeMetadataModal = function() {
+    window.closeMetadataModal = function(e) {
+        if (e && e.target !== e.currentTarget) return;
         document.getElementById('metadata-modal').classList.add('hidden');
         metaCard = null;
     };
