@@ -214,10 +214,6 @@ async def review_stats_page(
         select(
             func.date(ReviewLog.reviewed_at).label("day"),
             func.count(ReviewLog.id).label("count"),
-            func.sum(sqltext("CASE WHEN rating = 0 THEN 1 ELSE 0 END")).label("forgot"),
-            func.sum(sqltext("CASE WHEN rating = 1 THEN 1 ELSE 0 END")).label("hard"),
-            func.sum(sqltext("CASE WHEN rating = 2 THEN 1 ELSE 0 END")).label("good"),
-            func.sum(sqltext("CASE WHEN rating = 3 THEN 1 ELSE 0 END")).label("easy"),
         )
         .where(ReviewLog.reviewed_at >= thirty_days_ago)
         .group_by(func.date(ReviewLog.reviewed_at))
@@ -228,7 +224,6 @@ async def review_stats_page(
     # Build day-by-day for last 30 days, filling gaps
     day_labels = []
     day_counts = []
-    day_good = []
     max_count = 1
     for i in range(29, -1, -1):
         d = (datetime.utcnow() - timedelta(days=i)).strftime("%Y-%m-%d")
@@ -237,24 +232,10 @@ async def review_stats_page(
         if match:
             r = match[0]
             day_counts.append(r.count)
-            day_good.append((r.good or 0) + (r.easy or 0))
             if r.count > max_count:
                 max_count = r.count
         else:
             day_counts.append(0)
-            day_good.append(0)
-
-    # Rating distribution all-time
-    dist = await db.execute(
-        select(
-            ReviewLog.rating,
-            func.count(ReviewLog.id).label("count"),
-        )
-        .where(ReviewLog.rating.isnot(None))
-        .group_by(ReviewLog.rating)
-        .order_by(ReviewLog.rating)
-    )
-    rating_dist = {row.rating: row.count for row in dist.all()}
 
     return render(
         request,
@@ -265,9 +246,7 @@ async def review_stats_page(
             streaks=streaks,
             day_labels=day_labels,
             day_counts=day_counts,
-            day_good=day_good,
             max_count=max_count,
-            rating_dist=rating_dist,
             total_reviews=sum(day_counts),
         ),
     )
