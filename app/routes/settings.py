@@ -68,7 +68,7 @@ async def settings_page(
             total_highlights=total,
             total_books=books,
             review_count=get_review_count(),
-            version="0.8.18",
+            version="0.8.20",
             saved=saved,
             new_token=new_token,
             username=request.session.get("username", ""),

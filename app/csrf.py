@@ -67,7 +67,13 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         # (URLSafeTimedSerializer.dumps() produces a different output on
         # every call due to embedded timestamp, so we must generate once).
         if request.method in ("GET", "HEAD", "OPTIONS"):
-            request.state.csrf_token = generate_csrf_token(request.session)
+            # Reuse existing token if still valid — avoids invalidating forms
+            # the user has open in other tabs when they navigate between pages.
+            existing = request.cookies.get(CSRF_COOKIE_NAME)
+            if existing and verify_csrf_token(existing, request.session):
+                request.state.csrf_token = existing
+            else:
+                request.state.csrf_token = generate_csrf_token(request.session)
 
         response = await call_next(request)
 
