@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir --target /app/.venv -r requirements.txt
+RUN pip install --no-cache-dir --target /opt/venv -r requirements.txt
 
 FROM python:3.11-slim
 
@@ -19,13 +19,17 @@ RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
 WORKDIR /app
 
-COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /opt/venv /opt/venv
 
 COPY . .
 
 RUN mkdir -p /app/data/covers && chown -R appuser:appgroup /app
 
-ENV PYTHONPATH=/app/.venv
+# Symlink binaries so system PATH still finds them (Unraid compatibility)
+RUN ln -sf /opt/venv/bin/* /usr/local/bin/
+
+ENV PYTHONPATH=/opt/venv
+ENV PATH=/opt/venv/bin:$PATH
 
 USER appuser
 
