@@ -106,6 +106,10 @@
             window.showToast('Push notifications not supported in this browser', 'error');
             return Promise.resolve(false);
         }
+        if (!window.isSecureContext && location.hostname !== 'localhost') {
+            window.showToast('Push notifications require HTTPS (not available on HTTP connections)', 'error');
+            return Promise.resolve(false);
+        }
         if (Notification.permission === 'denied') {
             window.showToast('Notifications blocked in browser settings', 'error');
             return Promise.resolve(false);
@@ -190,7 +194,9 @@
 
     // PWA service worker
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/static/sw.js').catch(function() {});
+        navigator.serviceWorker.register('/static/sw.js').catch(function(e) {
+            console.warn('SW registration failed (push disabled):', e.message);
+        });
     }
 
     // Mobile sidebar toggle
