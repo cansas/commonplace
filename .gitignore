@@ -44,3 +44,6 @@ PLAN.md
 logo/              # design drafts — not in dist
 settings.reader.lua
 test.db
+
+# Hermes agent artifacts
+.hermes/
