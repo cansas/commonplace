@@ -330,6 +330,15 @@ async def review_next(
     _check_review_rate_limit(request)
     await _log_review(db, hl_id)
     await db.commit()
+
+    # Check for newly unlocked achievements
+    streaks = await calculate_streaks(db)
+    daily_limit = get_review_count()
+    review_hour = datetime.utcnow().hour
+    new_achievements = await check_and_unlock(db, streaks["current"], review_hour=review_hour, daily_limit=daily_limit)
+    if new_achievements:
+        request.session["new_achievements"] = new_achievements
+
     return RedirectResponse(url="/review", status_code=303)
 
 
@@ -347,6 +356,14 @@ async def review_favorite(
         hl.favorite = 0 if hl.favorite else 1
     await _log_review(db, hl_id)
     await db.commit()
+
+    streaks = await calculate_streaks(db)
+    daily_limit = get_review_count()
+    review_hour = datetime.utcnow().hour
+    new_achievements = await check_and_unlock(db, streaks["current"], review_hour=review_hour, daily_limit=daily_limit)
+    if new_achievements:
+        request.session["new_achievements"] = new_achievements
+
     return RedirectResponse(url="/review", status_code=303)
 
 
@@ -364,6 +381,14 @@ async def review_delete(
         await db.delete(hl)
     await _log_review(db, hl_id)
     await db.commit()
+
+    streaks = await calculate_streaks(db)
+    daily_limit = get_review_count()
+    review_hour = datetime.utcnow().hour
+    new_achievements = await check_and_unlock(db, streaks["current"], review_hour=review_hour, daily_limit=daily_limit)
+    if new_achievements:
+        request.session["new_achievements"] = new_achievements
+
     return RedirectResponse(url="/review", status_code=303)
 
 

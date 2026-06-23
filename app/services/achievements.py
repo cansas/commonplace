@@ -13,6 +13,14 @@ from app.models import UserAchievement, ReviewLog
 
 ACHIEVEMENTS = [
     {
+        "key": "first_review",
+        "label": "First Steps",
+        "icon": "🐣",
+        "check": "first_review",
+        "threshold": None,
+        "message": "You reviewed your first highlight! The highlight is so proud it told all its friends. They're all very impressed.",
+    },
+    {
         "key": "streak_7",
         "label": "Streak Starter",
         "icon": "🌱",
@@ -178,6 +186,10 @@ async def check_and_unlock(
                             unlocked = False
                             break
 
+        elif ach["check"] == "first_review":
+            result = await db.execute(select(func.count(ReviewLog.id)))
+            unlocked = (result.scalar() or 0) >= 1
+
         if unlocked:
             newly_unlocked.append(await _award(db, ach))
 
@@ -240,6 +252,9 @@ async def backfill_achievements(db: AsyncSession, current_streak: int) -> int:
                     if row.count < 1:  # Can't know daily_limit at startup, use 1
                         should_award = False
                         break
+        elif ach["check"] == "first_review":
+            result = await db.execute(select(func.count(ReviewLog.id)))
+            should_award = (result.scalar() or 0) >= 1
 
         if should_award:
             db.add(UserAchievement(
