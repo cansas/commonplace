@@ -56,4 +56,4 @@ For full setup instructions, see [INSTALL.md](INSTALL.md).
 
 ## License
 
-MIT
+MIT No Attribution
