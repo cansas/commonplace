@@ -31,11 +31,9 @@ For full setup instructions, see [INSTALL.md](INSTALL.md).
 
 ## Features
 
-- **Highlights CRUD** — add, edit, delete, search, filter by source/favorites/book
+- **Highlights** — add, edit, delete, search, filter by source/favorites/book
 - **Books view** — browse by book with covers (HardCover.app + Open Library), rename/merge/delete
 - **Book metadata** — set HardCover ID or ISBN for reliable cover lookups
-- **Daily Review** — SM-2 spaced repetition with 4 rating levels, daily session lock
-- **Today's log** — see everything you reviewed today with ratings
 - **Tag management** — create, rename, merge, delete tags with optional color coding
 - **Import** — Readwise Obsidian .md, KOReader JSON, Kindle My Clippings, Readwise-compatible API
 - **Export** — batch export all highlights as JSON
@@ -43,10 +41,7 @@ For full setup instructions, see [INSTALL.md](INSTALL.md).
 - **Share cards** — PNG/SVG share cards per highlight with OpenGraph meta tags
 - **Themes** — Modern, Reader, and Dark themes
 - **Streaks** — track daily review streaks with current and best counters
-- **Achievements** — 5 milestone achievements with witty unlock messages
 - **First-run wizard** — web-based admin creation, no env vars required
-- **Auth** — session-based web auth + per-device API tokens (SHA256)
-- **Security** — CSRF, CSP headers, security headers, rate limiting
 
 ## Screenshots
 
