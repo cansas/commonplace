@@ -27,8 +27,13 @@
                 <p class="text-sm text-primary">{{ r.text }}</p>
                 <p class="text-xs text-muted mt-0.5">{{ r.book_title }}</p>
             </div>
-            <span class="text-xs text-muted shrink-0">
-                {% if r.rating == 0 %}Forgot{% elif r.rating == 1 %}Hard{% elif r.rating == 2 %}Good{% elif r.rating == 3 %}Easy{% else %}Seen{% endif %}
+            <span class="flex items-center gap-2 shrink-0">
+                {% if r.share_token %}
+                <a href="/share/{{ r.share_token }}" target="_blank" class="text-indigo-500 hover:text-indigo-700 text-sm" title="Share">📤</a>
+                {% endif %}
+                <span class="text-xs text-muted">
+                    {% if r.rating == 0 %}Forgot{% elif r.rating == 1 %}Hard{% elif r.rating == 2 %}Good{% elif r.rating == 3 %}Easy{% else %}Seen{% endif %}
+                </span>
             </span>
         </div>
         {% endfor %}

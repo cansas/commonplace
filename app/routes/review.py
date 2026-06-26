@@ -95,6 +95,7 @@ async def _get_today_reviews(db):
             "book_title": hl.book_title,
             "rating": review.rating,
             "reviewed_at": review.reviewed_at,
+            "share_token": hl.share_token,
         })
     return rows
 

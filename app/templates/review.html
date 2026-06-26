@@ -178,10 +178,13 @@
                     <span class="shrink-0 mt-0.5">
                         {% if r.rating == 0 %}😵{% elif r.rating == 1 %}🤔{% elif r.rating == 2 %}😊{% elif r.rating == 3 %}😎{% else %}👁️{% endif %}
                     </span>
-                    <div class="min-w-0">
+                    <div class="min-w-0 flex-1">
                         <p class="text-secondary truncate">{{ r.text }}</p>
                         <p class="text-muted truncate">{{ r.book_title }}</p>
                     </div>
+                    {% if r.share_token %}
+                    <a href="/share/{{ r.share_token }}" target="_blank" class="shrink-0 text-indigo-500 hover:text-indigo-700 text-sm leading-none" title="Share">📤</a>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
