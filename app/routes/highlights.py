@@ -8,6 +8,7 @@ from app.database import get_db
 from app.models import Highlight, Tag, BookCover, ReviewLog, DailyReviewQueue
 from app.schemas import HighlightOut, HighlightCreate, HighlightUpdate
 from app.services.highlight_card import generate_card, fetch_cover_data
+from app.routes.share import get_share_token
 from app.csrf import template_context
 from app.template import render
 from typing import Optional, List
@@ -124,6 +125,7 @@ async def create_highlight(
         category=data.category,
         color=data.color,
         highlighted_at=data.highlighted_at or datetime.utcnow(),
+        share_token=get_share_token(),
     )
 
     if data.tags:
