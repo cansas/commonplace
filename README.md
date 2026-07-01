@@ -39,7 +39,7 @@ For full setup instructions, see [INSTALL.md](INSTALL.md).
 - **Export** — batch export all highlights as JSON
 - **Backup & Restore** — ZIP download with database + covers, restore from ZIP
 - **Share cards** — PNG/SVG share cards per highlight with OpenGraph meta tags
-- **Themes** — Modern, Reader, and Dark themes
+- **Themes** — Modern, Reader, Dark, plus unlimited **custom themes** — drop a `.css` file into `data/themes/` or upload via Settings → Appearance ([documentation](THEMES.md))
 - **Streaks** — track daily review streaks with current and best counters
 - **First-run wizard** — web-based admin creation, no env vars required
 
