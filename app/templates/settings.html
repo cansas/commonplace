@@ -403,31 +403,6 @@
                 </div>
             </div>
         </section>
-
-        <!-- About -->
-        <section class="bg-card rounded-xl border border-card shadow-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-card">
-                <h2 class="text-base font-semibold text-primary">ℹ️ About</h2>
-            </div>
-            <div class="px-6 py-5 space-y-2 text-sm">
-                <div class="flex items-center justify-between">
-                    <span class="text-muted">Version</span>
-                    <span class="font-medium text-primary">{{ version or '0.8.8' }}</span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-muted">Username</span>
-                    <span class="font-medium text-primary">{{ request.session.get('username', '—') }}</span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-muted">Framework</span>
-                    <span class="text-secondary">FastAPI + Jinja2 + Tailwind</span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-muted">License</span>
-                    <span class="font-medium text-primary">MIT</span>
-                </div>
-            </div>
-        </section>
     </div>
 </div>
 
