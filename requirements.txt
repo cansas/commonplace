@@ -13,5 +13,6 @@ bcrypt>=4.0.0
 cairosvg>=2.7.0
 apscheduler>=3.10.0
 pywebpush>=1.14.0
+qrcode[pil]>=7.4.0
 pytest>=8.0.0
 pytest-asyncio>=0.24.0

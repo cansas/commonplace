@@ -27,8 +27,25 @@ from app.services.settings_service import (
     save_email_config,
 )
 from app.template import render
+from io import BytesIO
+import base64
+import qrcode
 
 router = APIRouter(tags=["settings"])
+
+
+def generate_qr_data_url(base_url: str, token: str) -> str:
+    """Return a base64 data URI of a QR code PNG encoding the deep-link URL.
+
+    The QR encodes `commonplace://setup?server=<base_url>&token=<token>`
+    so the iOS Camera app can open it via the custom URL scheme.
+    """
+    qr_data = f"commonplace://setup?server={base_url}&token={token}"
+    img = qrcode.make(qr_data, box_size=10)
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    b64 = base64.b64encode(buf.getvalue()).decode()
+    return f"data:image/png;base64,{b64}"
 
 
 
@@ -43,6 +60,7 @@ async def settings_page(
     # Read new_token from session (more secure than URL param)
     if not new_token:
         new_token = request.session.pop("new_token", "")
+    new_token_qr = request.session.pop("new_token_qr", "")
     
     result = await db.execute(select(func.count(Highlight.id)))
     total = result.scalar() or 0
@@ -72,6 +90,7 @@ async def settings_page(
             review_count=get_review_count(),
             saved=saved,
             new_token=new_token,
+            new_token_qr=new_token_qr,
             username=request.session.get("username", ""),
             hardcover_key=get_hardcover_api_key(),
             email_config=get_email_config(),
@@ -242,7 +261,11 @@ async def create_token(
     db.add(tok)
     await db.commit()
 
-    return {"name": name, "prefix": token_prefix, "token": plaintext}
+    # Generate QR data URL for mobile setup
+    base_url = str(request.base_url).rstrip("/")
+    qr_data_url = generate_qr_data_url(base_url, plaintext)
+
+    return {"name": name, "prefix": token_prefix, "token": plaintext, "qr_data_url": qr_data_url}
 
 
 @router.delete("/api/tokens/{token_id}")
@@ -299,6 +322,11 @@ async def create_token_form(
     await db.commit()
 
     request.session["new_token"] = plaintext
+
+    # Generate QR data URL for mobile setup
+    base_url = str(request.base_url).rstrip("/")
+    request.session["new_token_qr"] = generate_qr_data_url(base_url, plaintext)
+
     return RedirectResponse(url="/settings?saved=1", status_code=303)
 
 
