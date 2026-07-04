@@ -594,25 +594,152 @@
         imgContainer.innerHTML = '<img src="' + busted + '" alt="Cover" class="w-full h-full object-cover" loading="lazy">';
     }
 
-    window.fetchCover = function(el) {
-        var hlId = window.cardData(el);
-        if (!hlId) return;
-        window.setLoading(el, true);
-        fetch('/api/books/cover/fetch/' + hlId, { method: 'POST' })
+    window.openCoverSelector = function(el) {
+        var card = el.closest('[data-hl-id]');
+        if (!card) return;
+        var title = card.dataset.title || '';
+        var author = card.dataset.author || '';
+        document.getElementById('cs-title').value = title;
+        document.getElementById('cs-author').value = author;
+        document.getElementById('cs-query').value = (title + ' ' + author).trim();
+        // Clear previous results
+        var resultsEl = document.getElementById('cs-results');
+        var emptyEl = document.getElementById('cs-empty');
+        if (emptyEl) emptyEl.style.display = '';
+        // Remove any result items but keep empty state
+        resultsEl.querySelectorAll('.cs-result-item').forEach(function(n) { n.remove(); });
+        // Show modal
+        document.getElementById('cover-selector-modal').classList.remove('hidden');
+        // Focus search input and add Enter handler
+        var input = document.getElementById('cs-query');
+        input.focus();
+        input.addEventListener('keydown', window._csKeydown);
+    };
+
+    window._csKeydown = function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            window.searchCoverSelector();
+        }
+    };
+
+    window.closeCoverSelector = function(e) {
+        if (e && e.target !== e.currentTarget) return;
+        document.getElementById('cover-selector-modal').classList.add('hidden');
+        // Clean up keydown listener
+        var input = document.getElementById('cs-query');
+        input.removeEventListener('keydown', window._csKeydown);
+    };
+
+    window.searchCoverSelector = function() {
+        var query = document.getElementById('cs-query').value.trim();
+        if (!query) { window.showToast('Enter a search term', 'error'); return; }
+        var resultsEl = document.getElementById('cs-results');
+        var emptyEl = document.getElementById('cs-empty');
+        if (emptyEl) emptyEl.style.display = 'none';
+        // Remove old results
+        resultsEl.querySelectorAll('.cs-result-item').forEach(function(n) { n.remove(); });
+        // Show loading
+        var loading = document.createElement('div');
+        loading.className = 'col-span-full text-center text-slate-400 py-12 text-sm cs-result-item';
+        loading.id = 'cs-loading';
+        loading.textContent = 'Searching...';
+        resultsEl.appendChild(loading);
+
+        var fd = new FormData();
+        fd.append('title', query);
+        fd.append('author', '');
+        fetch('/api/books/cover/search', { method: 'POST', body: fd })
             .then(function(r) { return r.json(); })
             .then(function(d) {
-                window.setLoading(el, false);
+                var loadingEl = document.getElementById('cs-loading');
+                if (loadingEl) loadingEl.remove();
+                if (!d.ok) {
+                    window.showToast(d.error || 'Search failed', 'error');
+                    if (emptyEl) emptyEl.style.display = '';
+                    return;
+                }
+                var options = d.options || [];
+                if (options.length === 0) {
+                    if (emptyEl) {
+                        emptyEl.style.display = '';
+                        emptyEl.innerHTML = '<p class="text-slate-400">No covers found for that search.</p>';
+                    }
+                    return;
+                }
+                options.forEach(function(opt) {
+                    var item = document.createElement('div');
+                    item.className = 'cs-result-item cursor-pointer group';
+                    item.setAttribute('data-cover-url', opt.cover_url || '');
+                    item.setAttribute('data-source', opt.source || '');
+                    if (opt.hardcover_id) item.setAttribute('data-hardcover-id', opt.hardcover_id);
+                    if (opt.isbn) item.setAttribute('data-isbn', opt.isbn);
+                    item.innerHTML =
+                        '<div class="aspect-[2/3] bg-slate-100 rounded-lg overflow-hidden border border-slate-200 group-hover:border-indigo-400 group-hover:shadow-md transition-all">' +
+                            '<img src="' + (opt.cover_url || '') + '" alt="Cover" class="w-full h-full object-cover" loading="lazy">' +
+                        '</div>' +
+                        '<div class="mt-1 text-center">' +
+                            '<span class="text-xs font-medium text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">Select</span>' +
+                            '<span class="text-xs text-slate-400 ml-1">(' + opt.source + ')</span>' +
+                        '</div>';
+                    // Handle image load errors
+                    var img = item.querySelector('img');
+                    if (img) {
+                        img.onerror = function() {
+                            this.outerHTML = '<div class="flex items-center justify-center h-full text-slate-300 text-xs p-2">No img</div>';
+                        };
+                    }
+                    item.addEventListener('click', function() {
+                        window.pickCover(this);
+                    });
+                    resultsEl.appendChild(item);
+                });
+            })
+            .catch(function(e) {
+                var loadingEl = document.getElementById('cs-loading');
+                if (loadingEl) loadingEl.remove();
+                window.showToast('Network error: ' + e.message, 'error');
+                if (emptyEl) emptyEl.style.display = '';
+            });
+    };
+
+    window.pickCover = function(el) {
+        var coverUrl = el.getAttribute('data-cover-url');
+        var source = el.getAttribute('data-source');
+        var title = document.getElementById('cs-title').value;
+        var author = document.getElementById('cs-author').value;
+        var hardcoverId = el.getAttribute('data-hardcover-id') || '';
+        var isbn = el.getAttribute('data-isbn') || '';
+        if (!coverUrl || !title) return;
+
+        // Save the cover
+        var fd = new FormData();
+        fd.append('title', title);
+        fd.append('author', author);
+        fd.append('cover_url', coverUrl);
+        fd.append('source', source);
+        if (hardcoverId) fd.append('hardcover_id', hardcoverId);
+        if (isbn) fd.append('isbn', isbn);
+
+        fetch('/api/books/cover/save', { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
                 if (d.ok) {
-                    var card = el.closest('[data-hl-id]');
-                    if (card && d.cover_url) updateCoverImage(card, d.cover_url);
+                    window.showToast('Cover saved', 'success');
+                    window.closeCoverSelector();
+                    location.reload();
                 } else {
-                    window.showToast(d.error || 'No cover found', 'error');
+                    window.showToast(d.error || 'Failed to save cover', 'error');
                 }
             })
             .catch(function(e) {
-                window.setLoading(el, false);
-                window.showToast('Network error: ' + e.message, 'error');
+                window.showToast('Error: ' + e.message, 'error');
             });
+    };
+
+    window.closeCoverSelector = function(e) {
+        if (e && e.target !== e.currentTarget) return;
+        document.getElementById('cover-selector-modal').classList.add('hidden');
     };
 
     window.backfillCovers = function() {
@@ -1290,7 +1417,9 @@
             // ── Books page actions ──
             else if (action === 'backfill-covers' && window.backfillCovers) { e.preventDefault(); window.backfillCovers(); }
             else if (action === 'rename-book' && window.renameBook) { e.preventDefault(); window.renameBook(btn); }
-            else if (action === 'fetch-cover' && window.fetchCover) { e.preventDefault(); window.fetchCover(btn); }
+            else if (action === 'open-cover-selector' && window.openCoverSelector) { e.preventDefault(); window.openCoverSelector(btn); }
+            else if (action === 'search-covers' && window.searchCoverSelector) { e.preventDefault(); window.searchCoverSelector(); }
+            else if (action === 'close-cover-selector' && window.closeCoverSelector) { e.preventDefault(); window.closeCoverSelector(); }
             else if (action === 'open-metadata' && window.openMetadata) { e.preventDefault(); window.openMetadata(btn); }
             else if (action === 'upload-cover' && window.uploadCover) { e.preventDefault(); window.uploadCover(btn); }
             else if (action === 'close-rename-modal' && window.closeRenameModal) { e.preventDefault(); window.closeRenameModal(); }

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func as sa_func, or_, text as sqltext
 from app.database import get_db
 from app.models import Highlight, BookCover
-from app.services.book_covers import search_cover
+from app.services.book_covers import search_cover, list_cover_options
 from app.csrf import template_context
 from app.services.settings_service import get_hardcover_api_key
 from app.template import render
@@ -124,8 +124,74 @@ async def books_page(
             page=page,
             total_pages=total_pages,
             total_books=total,
+            has_hardcover_key=bool(get_hardcover_api_key()),
         ),
     )
+
+
+@router.post("/api/books/cover/save")
+async def save_cover_selection(
+    title: str = Form(...), author: str = Form(default=""),
+    cover_url: str = Form(...), source: str = Form(default=""),
+    hardcover_id: str = Form(default=""), isbn: str = Form(default=""),
+    db: AsyncSession = Depends(get_db),
+):
+    """Save a cover selected from the cover picker modal."""
+    try:
+        hc_id: int | None = int(hardcover_id) if hardcover_id.strip() else None
+        isbn_val: str | None = isbn.strip() or None
+
+        result = await db.execute(
+            select(BookCover).where(
+                BookCover.book_title == title,
+                BookCover.book_author == author,
+            )
+        )
+        cover = result.scalar_one_or_none()
+        if cover:
+            cover.cover_url = cover_url
+            cover.cover_source = source
+            if hc_id is not None:
+                cover.hardcover_id = hc_id
+            if isbn_val is not None:
+                cover.isbn = isbn_val
+        else:
+            db.add(BookCover(
+                book_title=title, book_author=author,
+                cover_url=cover_url, cover_source=source,
+                hardcover_id=hc_id, isbn=isbn_val,
+            ))
+        await db.commit()
+        return {"ok": True, "cover_url": cover_url}
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:200]}
+
+
+@router.post("/api/books/cover/search")
+async def search_covers(
+    title: str = Form(...), author: str = Form(default=""),
+    db: AsyncSession = Depends(get_db),
+):
+    """Search all cover sources and return multiple options for the cover selector."""
+    try:
+        # Get known_id and isbn from existing BookCover if available
+        existing = await db.execute(
+            select(BookCover).where(
+                BookCover.book_title == title,
+                BookCover.book_author == author,
+            )
+        )
+        existing_cover = existing.scalar_one_or_none()
+        known_id: int | None = existing_cover.hardcover_id if existing_cover else None
+        hc_key = get_hardcover_api_key()
+
+        options = await list_cover_options(
+            title, author=author,
+            hardcover_key=hc_key, known_id=known_id,
+        )
+        return {"ok": True, "options": options}
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:200]}
 
 
 @router.post("/api/books/cover/fetch")

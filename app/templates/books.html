@@ -57,7 +57,7 @@
           <span class="text-xs font-medium text-indigo-600">{{ book.highlight_count }} highlight{% if book.highlight_count != 1 %}s{% endif %}</span>
             <div class="flex gap-1">
               <span data-action="rename-book" class="text-xs text-slate-400 hover:text-amber-500 cursor-pointer" title="Edit title">✏️</span>
-              <span data-action="fetch-cover" class="text-xs text-slate-400 hover:text-indigo-500 cursor-pointer" title="Fetch cover from Goodreads">🔍</span>
+              <span data-action="open-cover-selector" class="text-xs text-slate-400 hover:text-indigo-500 cursor-pointer" title="Search and pick a cover">🔍</span>
               <span data-action="open-metadata" class="text-xs text-slate-400 hover:text-purple-500 cursor-pointer" title="Edit HardCover ID / ISBN">🏷️</span>
               <span data-action="upload-cover" class="text-xs text-slate-400 hover:text-emerald-500 cursor-pointer" title="Upload custom cover">📤</span>
             </div>
@@ -150,6 +150,34 @@
         <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Save</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Cover Selector Modal -->
+<div id="cover-selector-modal" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center">
+  <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 overflow-hidden max-h-[80vh] flex flex-col">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-slate-900">📚 Select Cover</h3>
+      <button data-action="close-cover-selector" class="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
+    </div>
+    <div class="p-6 space-y-4 overflow-y-auto flex-1">
+      <input type="hidden" id="cs-title" />
+      <input type="hidden" id="cs-author" />
+      <div class="flex gap-3">
+        <input type="text" id="cs-query" placeholder="Search by title + author..."
+               class="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent" />
+        <button data-action="search-covers" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition shrink-0">Search</button>
+      </div>
+      <div id="cs-results" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 min-h-[120px]">
+        <div class="col-span-full text-center text-slate-400 py-12 text-sm" id="cs-empty">
+          <p>Enter a search term and click Search to find covers.</p>
+        </div>
+      </div>
+    </div>
+    <div class="px-6 py-3 border-t border-slate-100 flex justify-between items-center">
+      <span id="cs-source-note" class="text-xs text-slate-400">Covers from Open Library{% if has_hardcover_key %} and Hardcover{% endif %}</span>
+      <button data-action="close-cover-selector" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50">Close</button>
+    </div>
   </div>
 </div>
 {% endblock %}
