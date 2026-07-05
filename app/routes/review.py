@@ -540,4 +540,13 @@ async def api_review_rate(
     await db.commit()
     await mark_reviewed(hl_id)
 
-    return {"ok": True, "highlight_id": hl_id, "rating": rating}
+    # Check for newly unlocked achievements (reward regardless of client)
+    streaks = await calculate_streaks(db)
+    daily_limit = get_review_count()
+    review_hour = central_now().hour
+    new_achievements = await check_and_unlock(db, streaks["current"], review_hour=review_hour, daily_limit=daily_limit)
+
+    resp = {"ok": True, "highlight_id": hl_id, "rating": rating}
+    if new_achievements:
+        resp["new_achievements"] = new_achievements
+    return resp
