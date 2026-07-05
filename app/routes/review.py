@@ -435,22 +435,22 @@ async def review_heatmap_page(
     # Build the grid: 7 rows (Sun-Sat) × up to 53 weeks
     import calendar
 
-    first_day = datetime(target_year, 1, 1)
+    first_day = datetime(target_year, 1, 1, tzinfo=_CENTRAL)
     start_dow = first_day.weekday()
     start_offset = (start_dow + 1) % 7  # Shift so Sunday=0
 
     if target_year == now_ct.year:
         total_days = (now_ct - first_day).days + 1
     else:
-        total_days = (datetime(target_year + 1, 1, 1) - first_day).days
+        total_days = (datetime(target_year + 1, 1, 1, tzinfo=_CENTRAL) - first_day).days
 
     cells = []
     max_count = max(counts_by_date.values()) if counts_by_date else 1
 
     for day_offset in range(total_days):
         d = first_day + timedelta(days=day_offset)
-        # Convert naive datetime to Central date for lookup
-        d_ct = d.replace(tzinfo=_CENTRAL).date()
+        # Get Central date (d is already Central-aware)
+        d_ct = d.date()
         count = counts_by_date.get(d_ct, 0)
         week = (day_offset + start_offset) // 7
         dow = (day_offset + start_offset) % 7
