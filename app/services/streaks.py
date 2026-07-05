@@ -18,24 +18,24 @@ async def calculate_streaks(db: AsyncSession) -> dict:
     with today *or* yesterday (so you don't lose it if you miss a day
     but haven't broken the habit).
     """
-    # Fetch all distinct reviewed dates (UTC) from the log
+    # Fetch all raw reviewed_at datetimes (full precision, not func.date())
     result = await db.execute(
-        select(func.date(ReviewLog.reviewed_at))
-        .distinct()
-        .order_by(func.date(ReviewLog.reviewed_at).desc())
+        select(ReviewLog.reviewed_at,)
+        .order_by(ReviewLog.reviewed_at.desc())
     )
-    utc_date_strs = [row[0] for row in result.all()]
-
-    if not utc_date_strs:
+    rows = result.all()
+    if not rows:
         return {"current": 0, "best": _load_best_streak()}
 
-    # Convert UTC date strings to Central timezone dates
+    # Convert each UTC datetime to Central date in Python
     central_dates = set()
-    for d_str in utc_date_strs:
-        # Parse as UTC date, convert to Central
-        utc_dt = datetime.strptime(d_str, "%Y-%m-%d").replace(tzinfo=ZoneInfo("UTC"))
-        central_dt = utc_dt.astimezone(_CENTRAL)
-        central_dates.add(central_dt.date())
+    for row in rows:
+        dt = row[0]
+        if isinstance(dt, str):
+            dt = datetime.fromisoformat(dt)
+        central_dates.add(
+            dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(_CENTRAL).date()
+        )
 
     # Sort unique central dates descending
     sorted_dates = sorted(central_dates, reverse=True)

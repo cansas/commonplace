@@ -63,23 +63,25 @@ async def debug_streak(db: AsyncSession = Depends(get_db)):
 
     _CENTRAL = ZoneInfo("America/Chicago")
 
-    # What the streak calculator sees
+    # What the streak calculator sees (using full datetimes, not func.date())
     result = await db.execute(
-        select(func.date(ReviewLog.reviewed_at), ReviewLog.reviewed_at)
+        select(ReviewLog.reviewed_at)
         .order_by(ReviewLog.reviewed_at.desc())
         .limit(50)
     )
     rows_raw = result.all()
 
-    utc_date_strs = []
+    utc_preview = []
     central_dates = set()
+    central_with_time = []
     for row in rows_raw:
-        d_str = row[0]
-        dt_raw = row[1]
-        utc_date_strs.append(d_str)
-        utc_dt = datetime.strptime(d_str, "%Y-%m-%d").replace(tzinfo=ZoneInfo("UTC"))
-        central_dt = utc_dt.astimezone(_CENTRAL)
+        dt = row[0]
+        if isinstance(dt, str):
+            dt = datetime.fromisoformat(dt)
+        utc_preview.append(dt.isoformat())
+        central_dt = dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(_CENTRAL)
         central_dates.add(central_dt.date())
+        central_with_time.append(central_dt.isoformat())
 
     sorted_dates = sorted(central_dates, reverse=True)
     now_ct = datetime.now(_CENTRAL)
@@ -94,6 +96,7 @@ async def debug_streak(db: AsyncSession = Depends(get_db)):
         "most_recent_in_range": sorted_dates[0] in (today, yesterday) if sorted_dates else False,
         "server_now_utc": datetime.utcnow().isoformat(),
         "total_central_days": len(sorted_dates),
-        "utc_dates_preview": utc_date_strs[:30],
+        "utc_datetimes_preview": utc_preview[:30],
+        "central_datetimes_preview": central_with_time[:30],
         "central_dates_preview": [str(d) for d in sorted_dates[:30]],
     }
