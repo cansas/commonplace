@@ -8,9 +8,12 @@ streak-at-risk alert should be sent. Tracks last-sent dates in
 import json
 import logging
 import os
-from datetime import datetime, date
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+_CENTRAL = ZoneInfo("America/Chicago")
 
 logger = logging.getLogger(__name__)
 
@@ -45,12 +48,12 @@ async def _check_reminder():
     if not settings.get("push_enabled", False):
         return
 
-    today_str = date.today().isoformat()
+    today_str = datetime.now(_CENTRAL).date().isoformat()
     if settings.get("last_push_reminder_sent") == today_str:
         return  # Already sent today
 
     # Check if current time >= configured reminder time
-    now = datetime.now()
+    now = datetime.now(_CENTRAL)
     reminder_time = settings.get("push_reminder_time", "09:00")
     try:
         hour, minute = map(int, reminder_time.split(":"))
@@ -92,12 +95,12 @@ async def _check_streak_alert():
     if not settings.get("push_streak_alert_enabled", False):
         return
 
-    today_str = date.today().isoformat()
+    today_str = datetime.now(_CENTRAL).date().isoformat()
     if settings.get("last_push_streak_alert_sent") == today_str:
         return
 
     # Check if current time >= configured alert time (default 20:00)
-    now = datetime.now()
+    now = datetime.now(_CENTRAL)
     alert_time = settings.get("push_streak_alert_time", "20:00")
     try:
         hour, minute = map(int, alert_time.split(":"))

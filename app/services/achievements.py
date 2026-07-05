@@ -5,6 +5,7 @@ user_achievements table. Each has a key, label, and witty message.
 """
 
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from app.models import UserAchievement, ReviewLog
@@ -134,7 +135,7 @@ async def check_and_unlock(
 
     Args:
         current_streak: Current streak from calculate_streaks()
-        review_hour: Hour of the current review (UTC, 0-23)
+        review_hour: Hour of the current review in Central time (0-23)
         daily_limit: Review count limit from settings
     """
     newly_unlocked = []
@@ -149,40 +150,45 @@ async def check_and_unlock(
             unlocked = current_streak >= ach["threshold"]
 
         elif ach["check"] == "total_days":
-            # Count distinct dates with reviews
-            result = await db.execute(
-                select(func.count(func.distinct(func.date(ReviewLog.reviewed_at))))
-            )
-            total_days = result.scalar() or 0
+            # Count distinct Central-timezone dates with reviews
+            _CENTRAL = ZoneInfo("America/Chicago")
+            result = await db.execute(select(ReviewLog.reviewed_at).distinct())
+            dates = set()
+            for row in result.all():
+                dt = row[0]
+                if isinstance(dt, str):
+                    dt = datetime.fromisoformat(dt)
+                dates.add(dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(_CENTRAL).date())
+            total_days = len(dates)
             unlocked = total_days >= ach["threshold"]
 
         elif ach["check"] == "night_owl":
-            # Reviewed between midnight and 5am UTC
+            # Reviewed between midnight and 5am Central time
             unlocked = review_hour is not None and 0 <= review_hour < 5
 
         elif ach["check"] == "completionist":
-            # 7 consecutive days where reviews >= daily_limit
-            rows = await db.execute(
-                select(
-                    func.date(ReviewLog.reviewed_at).label("day"),
-                    func.count(ReviewLog.id).label("count"),
-                )
-                .group_by(func.date(ReviewLog.reviewed_at))
-                .order_by(func.date(ReviewLog.reviewed_at).desc())
-                .limit(ach["threshold"])
-            )
-            daily_counts = rows.all()
-            if len(daily_counts) >= ach["threshold"]:
-                # Check all 7 are complete and consecutive
+            # 7 consecutive Central-timezone days where reviews >= daily_limit
+            _CENTRAL = ZoneInfo("America/Chicago")
+            result = await db.execute(select(ReviewLog.reviewed_at))
+            # Group by Central date in Python
+            central_counts = {}
+            for row in result.all():
+                dt = row[0]
+                if isinstance(dt, str):
+                    dt = datetime.fromisoformat(dt)
+                d = dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(_CENTRAL).date()
+                central_counts[d] = central_counts.get(d, 0) + 1
+            # Sort descending by Central date
+            sorted_dates = sorted(central_counts.keys(), reverse=True)[:ach["threshold"]]
+            if len(sorted_dates) >= ach["threshold"]:
                 unlocked = True
-                for i, row in enumerate(daily_counts):
-                    if row.count < daily_limit:
+                for i, d in enumerate(sorted_dates):
+                    if central_counts[d] < daily_limit:
                         unlocked = False
                         break
                     if i > 0:
-                        prev_date = datetime.strptime(daily_counts[i - 1].day, "%Y-%m-%d").date()
-                        cur_date = datetime.strptime(row.day, "%Y-%m-%d").date()
-                        if (prev_date - cur_date).days != 1:
+                        prev = sorted_dates[i - 1]
+                        if (prev - d).days != 1:
                             unlocked = False
                             break
 
@@ -230,26 +236,33 @@ async def backfill_achievements(db: AsyncSession, current_streak: int) -> int:
         if ach["check"] == "streak":
             should_award = current_streak >= ach["threshold"]
         elif ach["check"] == "total_days":
-            result = await db.execute(
-                select(func.count(func.distinct(func.date(ReviewLog.reviewed_at))))
-            )
-            total_days = result.scalar() or 0
+            # Count distinct Central-timezone dates with reviews
+            _CENTRAL = ZoneInfo("America/Chicago")
+            result = await db.execute(select(ReviewLog.reviewed_at).distinct())
+            dates = set()
+            for row in result.all():
+                dt = row[0]
+                if isinstance(dt, str):
+                    dt = datetime.fromisoformat(dt)
+                dates.add(dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(_CENTRAL).date())
+            total_days = len(dates)
             should_award = total_days >= ach["threshold"]
         elif ach["check"] == "completionist":
-            rows = await db.execute(
-                select(
-                    func.date(ReviewLog.reviewed_at).label("day"),
-                    func.count(ReviewLog.id).label("count"),
-                )
-                .group_by(func.date(ReviewLog.reviewed_at))
-                .order_by(func.date(ReviewLog.reviewed_at).desc())
-                .limit(ach["threshold"])
-            )
-            daily_counts = rows.all()
-            if len(daily_counts) >= ach["threshold"]:
+            _CENTRAL = ZoneInfo("America/Chicago")
+            result = await db.execute(select(ReviewLog.reviewed_at))
+            # Group by Central date in Python
+            central_counts = {}
+            for row in result.all():
+                dt = row[0]
+                if isinstance(dt, str):
+                    dt = datetime.fromisoformat(dt)
+                d = dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(_CENTRAL).date()
+                central_counts[d] = central_counts.get(d, 0) + 1
+            sorted_dates = sorted(central_counts.keys(), reverse=True)[:ach["threshold"]]
+            if len(sorted_dates) >= ach["threshold"]:
                 should_award = True
-                for i, row in enumerate(daily_counts):
-                    if row.count < 1:  # Can't know daily_limit at startup, use 1
+                for i, d in enumerate(sorted_dates):
+                    if central_counts[d] < 1:  # Can't know daily_limit at startup, use 1
                         should_award = False
                         break
         elif ach["check"] == "first_review":

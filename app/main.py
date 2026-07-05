@@ -11,7 +11,7 @@ from sqlalchemy import select, func
 import asyncio
 import os
 import random
-
+from zoneinfo import ZoneInfo
 from contextlib import asynccontextmanager
 
 from app.database import init_db, get_db, async_session
@@ -239,7 +239,7 @@ async def dashboard(
         )
         random_hl = random_hl_result.scalar_one_or_none()
 
-    today_str = datetime.now().strftime("%A, %B %-d, %Y")
+    today_str = datetime.now(ZoneInfo("America/Chicago")).strftime("%A, %B %-d, %Y")
 
     # Streak tracking
     streak = await calculate_streaks(db)

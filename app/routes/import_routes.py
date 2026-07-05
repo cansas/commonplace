@@ -17,6 +17,7 @@ from app.schemas import ReadwiseBatchImport
 from app.csrf import template_context, csrf_guard
 from app.template import render
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import json
 
 router = APIRouter(tags=["import"])
@@ -214,7 +215,7 @@ async def readwise_api_import(
     items = [item.model_dump() for item in data.highlights]
     result = await ImportService.save_highlights(
         db, items,
-        source_name=f"KOReader API ({datetime.utcnow().strftime('%Y-%m-%d %H:%M')})",
+        source_name=f"KOReader API ({datetime.now(ZoneInfo('America/Chicago')).strftime('%Y-%m-%d %H:%M')})",
         source_type="koreader",
     )
     return {"imported": result.imported, "skipped": result.skipped}

@@ -5,6 +5,7 @@ import os
 import zipfile
 import shutil
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Request, UploadFile, File, Form, HTTPException
 from fastapi.responses import StreamingResponse, RedirectResponse
@@ -36,7 +37,7 @@ _COVERS_DIR = os.environ.get(
 
 def _backup_filename() -> str:
     """Generate a backup filename with today's date."""
-    date_str = datetime.now().strftime("%Y-%m-%d")
+    date_str = datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d")
     return f"commonplace-{date_str}.zip"
 
 

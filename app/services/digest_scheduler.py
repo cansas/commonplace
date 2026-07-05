@@ -5,7 +5,8 @@ Relies on ``app.services.settings_service`` as the single source of truth
 for all email/digest configuration.
 """
 import logging
-from datetime import datetime, date
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.services.settings_service import get, set as set_setting
@@ -25,12 +26,13 @@ async def check_and_send_digest():
         return
 
     # Check already-sent date
-    today_str = date.today().isoformat()
+    _CENTRAL = ZoneInfo("America/Chicago")
+    today_str = datetime.now(_CENTRAL).date().isoformat()
     if get("last_digest_sent_date") == today_str:
         return  # Already sent today
 
     # Check if current time >= configured send time
-    now = datetime.now()
+    now = datetime.now(_CENTRAL)
     send_time_str = get("email_digest_time", "07:00")
     try:
         send_hour, send_min = map(int, send_time_str.split(":"))

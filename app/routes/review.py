@@ -11,9 +11,10 @@ from app.services.streaks import calculate_streaks
 from app.services.achievements import check_and_unlock
 from app.services.review_queue import get_or_create_queue, mark_reviewed
 from app.csrf import template_context, csrf_guard
-from app.dates import today_start_utc
+from app.dates import central_now, today_start_utc
 from app.template import render
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import time
 from typing import Optional
 
@@ -155,34 +156,38 @@ async def review_stats_page(
     """Review statistics dashboard."""
     streaks = await calculate_streaks(db)
 
-    # Reviews per day for last 30 days
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    # Reviews per day for last 30 days (in Central time)
+    _CENTRAL = ZoneInfo("America/Chicago")
+    now_ct = central_now()
+    thirty_days_ago_ct = now_ct - timedelta(days=30)
+    thirty_days_ago_utc = thirty_days_ago_ct.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
+
     daily = await db.execute(
-        select(
-            func.date(ReviewLog.reviewed_at).label("day"),
-            func.count(ReviewLog.id).label("count"),
-        )
-        .where(ReviewLog.reviewed_at >= thirty_days_ago)
-        .group_by(func.date(ReviewLog.reviewed_at))
-        .order_by(func.date(ReviewLog.reviewed_at))
+        select(ReviewLog.reviewed_at)
+        .where(ReviewLog.reviewed_at >= thirty_days_ago_utc)
     )
     rows = daily.all()
 
-    # Build day-by-day for last 30 days, filling gaps
+    # Group by Central date
+    counts_by_date = {}
+    for row in rows:
+        dt = row[0]
+        if isinstance(dt, str):
+            dt = datetime.fromisoformat(dt)
+        central_date = dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(_CENTRAL).date()
+        counts_by_date[central_date] = counts_by_date.get(central_date, 0) + 1
+
+    # Build day-by-day for last 30 Central days, filling gaps
     day_labels = []
     day_counts = []
     max_count = 1
     for i in range(29, -1, -1):
-        d = (datetime.utcnow() - timedelta(days=i)).strftime("%Y-%m-%d")
-        day_labels.append((datetime.utcnow() - timedelta(days=i)).strftime("%a"))
-        match = [r for r in rows if r.day == d]
-        if match:
-            r = match[0]
-            day_counts.append(r.count)
-            if r.count > max_count:
-                max_count = r.count
-        else:
-            day_counts.append(0)
+        d = (now_ct - timedelta(days=i)).date()
+        day_labels.append(d.strftime("%a"))
+        count = counts_by_date.get(d, 0)
+        day_counts.append(count)
+        if count > max_count:
+            max_count = count
 
     return render(
         request,
@@ -268,7 +273,7 @@ async def review_rate(
     # Check for newly unlocked achievements
     streaks = await calculate_streaks(db)
     daily_limit = get_review_count()
-    review_hour = datetime.utcnow().hour
+    review_hour = central_now().hour
     new_achievements = await check_and_unlock(db, streaks["current"], review_hour=review_hour, daily_limit=daily_limit)
     if new_achievements:
         # Store in session so the redirect can show them
@@ -296,7 +301,7 @@ async def review_next(
     # Check for newly unlocked achievements
     streaks = await calculate_streaks(db)
     daily_limit = get_review_count()
-    review_hour = datetime.utcnow().hour
+    review_hour = central_now().hour
     new_achievements = await check_and_unlock(db, streaks["current"], review_hour=review_hour, daily_limit=daily_limit)
     if new_achievements:
         request.session["new_achievements"] = new_achievements
@@ -322,7 +327,7 @@ async def review_favorite(
 
     streaks = await calculate_streaks(db)
     daily_limit = get_review_count()
-    review_hour = datetime.utcnow().hour
+    review_hour = central_now().hour
     new_achievements = await check_and_unlock(db, streaks["current"], review_hour=review_hour, daily_limit=daily_limit)
     if new_achievements:
         request.session["new_achievements"] = new_achievements
@@ -348,7 +353,7 @@ async def review_delete(
 
     streaks = await calculate_streaks(db)
     daily_limit = get_review_count()
-    review_hour = datetime.utcnow().hour
+    review_hour = central_now().hour
     new_achievements = await check_and_unlock(db, streaks["current"], review_hour=review_hour, daily_limit=daily_limit)
     if new_achievements:
         request.session["new_achievements"] = new_achievements
@@ -363,24 +368,36 @@ async def review_delete(
 async def review_heatmap_data(
     year: Optional[int] = None,
     db: AsyncSession = Depends(get_db),
-):
-    """Return daily review counts for a given year (default: this year)."""
-    now = datetime.utcnow()
-    target_year = year or now.year
-    start = datetime(target_year, 1, 1)
-    end = datetime(target_year + 1, 1, 1) - timedelta(seconds=1)
+) -> dict:
+    """Return daily review counts for a given year (default: this year).
+    Counts are bucketed by Central timezone date.
+    """
+    _CENTRAL = ZoneInfo("America/Chicago")
+    now_ct = central_now()
+    target_year = year or now_ct.year
+    # Year boundaries in Central time, converted to UTC-naive for DB
+    year_start_ct = datetime(target_year, 1, 1, tzinfo=_CENTRAL)
+    year_end_ct = datetime(target_year + 1, 1, 1, tzinfo=_CENTRAL)
+    start_utc = year_start_ct.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
+    end_utc = year_end_ct.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
 
     rows = await db.execute(
         sqltext(
-            "SELECT DATE(reviewed_at) as day, COUNT(*) as cnt "
-            "FROM review_log "
+            "SELECT reviewed_at FROM review_log "
             "WHERE reviewed_at >= :start AND reviewed_at < :end "
-            "GROUP BY DATE(reviewed_at) "
-            "ORDER BY day"
         ),
-        {"start": start, "end": end},
+        {"start": start_utc, "end": end_utc},
     )
-    data = [{"date": r[0], "count": r[1]} for r in rows.fetchall()]
+    # Group by Central date in Python
+    counts_by_date = {}
+    for row in rows.fetchall():
+        dt = row[0]
+        if isinstance(dt, str):
+            dt = datetime.fromisoformat(dt)
+        central_date = dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(_CENTRAL).date()
+        counts_by_date[central_date] = counts_by_date.get(central_date, 0) + 1
+
+    data = [{"date": d.isoformat(), "count": c} for d, c in sorted(counts_by_date.items())]
     return {"data": data, "year": target_year, "total": sum(r["count"] for r in data)}
 
 
@@ -390,22 +407,30 @@ async def review_heatmap_page(
     year: Optional[int] = None,
     db: AsyncSession = Depends(get_db),
 ):
-    now = datetime.utcnow()
-    target_year = year or now.year
-    start = datetime(target_year, 1, 1)
-    end = datetime(target_year + 1, 1, 1) - timedelta(seconds=1)
+    """GitHub-style contribution heatmap, bucketed by Central timezone date."""
+    _CENTRAL = ZoneInfo("America/Chicago")
+    now_ct = central_now()
+    target_year = year or now_ct.year
+    year_start_ct = datetime(target_year, 1, 1, tzinfo=_CENTRAL)
+    year_end_ct = datetime(target_year + 1, 1, 1, tzinfo=_CENTRAL)
+    start_utc = year_start_ct.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
+    end_utc = year_end_ct.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
 
     rows = await db.execute(
         sqltext(
-            "SELECT DATE(reviewed_at) as day, COUNT(*) as cnt "
-            "FROM review_log "
+            "SELECT reviewed_at FROM review_log "
             "WHERE reviewed_at >= :start AND reviewed_at < :end "
-            "GROUP BY DATE(reviewed_at) "
-            "ORDER BY day"
         ),
-        {"start": start, "end": end},
+        {"start": start_utc, "end": end_utc},
     )
-    counts_by_date = {r[0]: r[1] for r in rows.fetchall()}
+    # Group by Central date
+    counts_by_date = {}
+    for row in rows.fetchall():
+        dt = row[0]
+        if isinstance(dt, str):
+            dt = datetime.fromisoformat(dt)
+        central_date = dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(_CENTRAL).date()
+        counts_by_date[central_date] = counts_by_date.get(central_date, 0) + 1
 
     # Build the grid: 7 rows (Sun-Sat) × up to 53 weeks
     import calendar
@@ -414,8 +439,8 @@ async def review_heatmap_page(
     start_dow = first_day.weekday()
     start_offset = (start_dow + 1) % 7  # Shift so Sunday=0
 
-    if target_year == now.year:
-        total_days = (now - first_day).days + 1
+    if target_year == now_ct.year:
+        total_days = (now_ct - first_day).days + 1
     else:
         total_days = (datetime(target_year + 1, 1, 1) - first_day).days
 
@@ -424,13 +449,14 @@ async def review_heatmap_page(
 
     for day_offset in range(total_days):
         d = first_day + timedelta(days=day_offset)
-        date_str = d.strftime("%Y-%m-%d")
-        count = counts_by_date.get(date_str, 0)
+        # Convert naive datetime to Central date for lookup
+        d_ct = d.replace(tzinfo=_CENTRAL).date()
+        count = counts_by_date.get(d_ct, 0)
         week = (day_offset + start_offset) // 7
         dow = (day_offset + start_offset) % 7
         level = min(4, int((count / max(1, max_count)) * 5)) if count > 0 else 0
         cells.append({
-            "date": date_str,
+            "date": d_ct.isoformat(),
             "count": count,
             "week": week,
             "dow": dow,
@@ -442,7 +468,7 @@ async def review_heatmap_page(
     total_reviews = sum(counts_by_date.values())
     active_days = len(counts_by_date)
     avg_per_day = round(total_reviews / max(1, active_days))
-    projected_year = round(total_reviews / max(1, (now - first_day).days + 1) * 365) if target_year == now.year else round(total_reviews / 365 * 365)
+    projected_year = round(total_reviews / max(1, (now_ct - first_day).days + 1) * 365) if target_year == now_ct.year else round(total_reviews / 365 * 365)
 
     return render(
         request,
@@ -459,7 +485,7 @@ async def review_heatmap_page(
             projected_year=projected_year,
             day_names=day_names,
             prev_year=target_year - 1 if target_year > 2020 else None,
-            next_year=target_year + 1 if target_year < now.year else None,
+            next_year=target_year + 1 if target_year < now_ct.year else None,
         ),
     )
 
