@@ -1276,15 +1276,18 @@
         window.confirmModal('Deduplicate highlights?', 'Merge highlights with identical text/book/author into one, preserving tags and review history.').then(function(ok) {
             if (!ok) return;
             fetch('/api/settings/dedup', {method: 'POST', headers: {'X-CSRF-Token': CSRF_TOKEN}})
-            .then(function(r) { return r.json(); })
+            .then(function(r) {
+                if (!r.ok) { return r.text().then(function(t) { throw new Error('HTTP ' + r.status + ': ' + t.slice(0, 200)); }); }
+                return r.json();
+            })
             .then(function(data) {
                 if (data.ok) {
                     window.showToast('Dedup complete: ' + data.groups_merged + ' groups merged, ' + data.duplicates_removed + ' duplicates removed.', 'success');
                 } else {
-                    window.showToast('Dedup failed: ' + (data.error || 'unknown'), 'error');
+                    window.showToast('Dedup failed: ' + (data.error || data.detail || 'unknown'), 'error');
                 }
             })
-            .catch(function(err) { window.showToast('Dedup error: ' + err, 'error'); });
+            .catch(function(err) { window.showToast('Dedup error: ' + err.message, 'error'); });
         });
     };
 
