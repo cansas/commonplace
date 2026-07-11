@@ -1272,6 +1272,22 @@
         });
     };
 
+    window.runDedup = function() {
+        window.confirmModal('Deduplicate highlights?', 'Merge highlights with identical text/book/author into one, preserving tags and review history.').then(function(ok) {
+            if (!ok) return;
+            fetch('/api/settings/dedup', {method: 'POST', headers: {'X-CSRF-Token': window.csrfToken}})
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.ok) {
+                    window.showToast('Dedup complete: ' + data.groups_merged + ' groups merged, ' + data.duplicates_removed + ' duplicates removed.', 'success');
+                } else {
+                    window.showToast('Dedup failed: ' + (data.error || 'unknown'), 'error');
+                }
+            })
+            .catch(function(err) { window.showToast('Dedup error: ' + err, 'error'); });
+        });
+    };
+
     window.saveEmailConfig = function() {
         var result = document.getElementById('email-result');
         result.textContent = 'Saving...';
@@ -1476,6 +1492,7 @@
 
             // ── Settings page actions ──
             if (action === 'confirm-reset' && window.confirmReset) { e.preventDefault(); window.confirmReset(); }
+            else if (action === 'dedup') { e.preventDefault(); window.runDedup(); }
             else if (action === 'save-cover-key' && window.saveCoverKey) { e.preventDefault(); window.saveCoverKey(); }
             else if (action === 'clear-cover-key' && window.clearCoverKey) { e.preventDefault(); window.clearCoverKey(); }
             else if (action === 'save-email' && window.saveEmailConfig) { e.preventDefault(); window.saveEmailConfig(); }
