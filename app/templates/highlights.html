@@ -285,13 +285,13 @@
         </p>
         <div class="flex gap-2">
             {% if page > 1 %}
-            <a href="?search={{ search or '' }}&source={{ source_filter or '' }}&sort={{ sort or 'newest' }}&favorites={{ favorites_filter }}&page={{ page - 1 }}"
+            <a href="?search={{ search or '' }}&source={{ source_filter or '' }}&sort={{ sort or 'newest' }}&favorites={{ favorites_filter }}&book={{ book or '' }}&page={{ page - 1 }}"
                class="px-4 py-2 bg-white border border-slate-200 text-sm text-slate-700 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
                 ← Previous
             </a>
             {% endif %}
             {% if page < total_pages %}
-            <a href="?search={{ search or '' }}&source={{ source_filter or '' }}&sort={{ sort or 'newest' }}&favorites={{ favorites_filter }}&page={{ page + 1 }}"
+            <a href="?search={{ search or '' }}&source={{ source_filter or '' }}&sort={{ sort or 'newest' }}&favorites={{ favorites_filter }}&book={{ book or '' }}&page={{ page + 1 }}"
                class="px-4 py-2 bg-white border border-slate-200 text-sm text-slate-700 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
                 Next →
             </a>

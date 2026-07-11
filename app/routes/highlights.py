@@ -113,6 +113,24 @@ async def create_highlight(
     data: HighlightCreate,
     db: AsyncSession = Depends(get_db),
 ):
+    # Check fingerprint dedup
+    text = (data.text or "").strip()
+    book_title = data.book_title or "Untitled"
+    book_author = data.book_author or ""
+    fp = hashlib.sha256(
+        f"{text}|{book_title}|{book_author}".encode("utf-8")
+    ).hexdigest()
+    result = await db.execute(
+        sqltext("SELECT id FROM highlights WHERE fingerprint = :fp"),
+        {"fp": fp},
+    )
+    existing = result.one_or_none()
+    if existing:
+        result = await db.execute(
+            select(Highlight).where(Highlight.id == existing[0])
+        )
+        return result.scalar_one()
+
     hl = Highlight(
         text=data.text,
         note=data.note,
@@ -127,6 +145,7 @@ async def create_highlight(
         color=data.color,
         highlighted_at=data.highlighted_at or datetime.utcnow(),
         share_token=get_share_token(),
+        fingerprint=fp,
     )
 
     if data.tags:
