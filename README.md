@@ -1,5 +1,7 @@
 # commonplace
 
+## I am working on a multi-user version of Commonplace cansas/commonplace-multi is the repo. It has a migration nuilt in (backup your current dbase!).
+
 A self-hosted Readwise alternative — capture, browse, review, and resurface your highlights.
 
 - **Capture**: Import from KOReader, Kindle, Obsidian, Readwise API, or manual entry
