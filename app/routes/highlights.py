@@ -10,11 +10,11 @@ from app.schemas import HighlightOut, HighlightCreate, HighlightUpdate, Readwise
 from app.services.highlight_card import generate_card, fetch_cover_data
 from app.routes.share import get_share_token
 from app.csrf import template_context
+from app.services.import_service import highlight_fingerprint
 from app.template import render
 from typing import Optional, List
 from datetime import datetime
 import math
-import hashlib
 import random
 import re
 import time
@@ -117,9 +117,7 @@ async def create_highlight(
     text = (data.text or "").strip()
     book_title = data.book_title or "Untitled"
     book_author = data.book_author or ""
-    fp = hashlib.sha256(
-        f"{text}|{book_title}|{book_author}".encode("utf-8")
-    ).hexdigest()
+    fp = highlight_fingerprint(text, book_title, book_author)
     result = await db.execute(
         sqltext("SELECT id FROM highlights WHERE fingerprint = :fp"),
         {"fp": fp},
@@ -619,9 +617,7 @@ async def batch_import(
             text = (hl_data.text or "").strip()
             book_title = hl_data.book_title or "Untitled"
             book_author = hl_data.book_author or ""
-            fp = hashlib.sha256(
-                f"{text}|{book_title}|{book_author}".encode("utf-8")
-            ).hexdigest()
+            fp = highlight_fingerprint(text, book_title, book_author)
 
             # Check fingerprint
             result = await db.execute(

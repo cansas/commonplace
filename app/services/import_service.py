@@ -27,14 +27,14 @@ class ImportResult:
     dry_run: bool = False
 
 
-def highlight_fingerprint(text: str, book_title: str) -> str:
+def highlight_fingerprint(text: str, book_title: str, book_author: str = "") -> str:
     """Deterministic hash for dedup.
 
-    Same (text, book_title) always produces the same hash regardless
-    of timestamp — so re-importing a highlight on a different day
-    correctly skips it.
+    Same (text, book_title, book_author) always produces the same hash
+    regardless of timestamp — so re-importing a highlight on a different
+    day correctly skips it.
     """
-    raw = f"{book_title}\x00{text}".encode("utf-8")
+    raw = f"{text}|{book_title}|{book_author}".encode("utf-8")
     return hashlib.sha256(raw).hexdigest()
 
 
@@ -58,7 +58,8 @@ class DedupService:
         for item in items:
             text = item.get("text", "")
             title = item.get("book_title", "Untitled")
-            self.fingerprints.append(highlight_fingerprint(text, title))
+            author = item.get("book_author", "") or ""
+            self.fingerprints.append(highlight_fingerprint(text, title, author))
 
     async def check(self, db: AsyncSession) -> None:
         """Batch-query which fingerprints already exist in the DB."""

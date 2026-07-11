@@ -6,13 +6,13 @@ into Commonplace's local database using SHA256 fingerprint dedup
 and watermark tracking.
 """
 
-import hashlib
 import logging
 from datetime import datetime
 from typing import Any
 
 import httpx
 
+from app.services.import_service import highlight_fingerprint
 from app.services.settings_service import get as _get, set as _set
 
 logger = logging.getLogger(__name__)
@@ -63,11 +63,6 @@ def save_sync_config(config: dict) -> None:
 
 
 # ── HTTP helpers ────────────────────────────────────────────────────────────
-
-def _fingerprint(text: str, book_title: str, book_author: str) -> str:
-    """SHA256 of content for dedup."""
-    raw = f"{text}|{book_title}|{book_author}"
-    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
 async def _json_request(
@@ -216,7 +211,7 @@ async def sync_from_bookorbit() -> dict:
 
             book_title = ann.get("bookTitle") or "Untitled"
             book_author = ann.get("author") or ""
-            fp = _fingerprint(text, book_title, book_author)
+            fp = highlight_fingerprint(text, book_title, book_author)
 
             # Check fingerprint
             if fp in existing_fingerprints:
