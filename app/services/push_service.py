@@ -29,6 +29,18 @@ VAPID_KEYS_FILE = os.path.join(
 )
 
 
+def _validate_vapid_key(public_key: str) -> bool:
+    """Check if a VAPID public key is a valid 65-byte uncompressed EC point in base64url."""
+    import base64
+    try:
+        padding = (4 - len(public_key) % 4) % 4
+        b64 = (public_key + "=" * padding).replace("-", "+").replace("_", "/")
+        decoded = base64.b64decode(b64)
+        return len(decoded) == 65 and decoded[0] == 4
+    except Exception:
+        return False
+
+
 def _ensure_vapid_keys():
     """Load or generate VAPID keys, cached in module globals."""
     global _VAPID_KEYS, _VAPID_CLAIMS
@@ -41,13 +53,16 @@ def _ensure_vapid_keys():
     private_key = os.environ.get("VAPID_PRIVATE_KEY", "").strip()
     claim_email = os.environ.get("VAPID_CLAIM_EMAIL", "").strip()
 
-    if public_key and private_key:
+    if public_key and private_key and _validate_vapid_key(public_key):
         _VAPID_KEYS = {"public_key": public_key, "private_key": private_key}
     else:
         # Try persisted file
         if os.path.isfile(VAPID_KEYS_FILE):
             with open(VAPID_KEYS_FILE) as f:
                 _VAPID_KEYS = json.load(f)
+            # Validate the persisted key — regenerate if invalid
+            if not _validate_vapid_key(_VAPID_KEYS.get("public_key", "")):
+                _VAPID_KEYS = None
 
     # Generate if still nothing
     if not _VAPID_KEYS:
