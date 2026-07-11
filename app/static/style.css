@@ -328,6 +328,25 @@ table {
     }
 }
 
+
+/* ---------- Stat Card Hover Effect (top-line gradient) ---------- */
+.stat-card {
+    position: relative;
+    overflow: hidden;
+}
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.stat-card:hover::before {
+    opacity: 1;
+}
+
 /* ---------- Toast Animations ---------- */
 #toast-container > div {
     will-change: transform, opacity;

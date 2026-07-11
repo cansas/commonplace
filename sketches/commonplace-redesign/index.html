@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Commonplace - Redesign Mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  /* ── Theme Tokens ── */
+  :root {
+    /* Modern (default) */
+    --bg-page: #0f172a;
+    --bg-sidebar: #1e1b32;
+    --bg-card: rgba(30, 27, 50, 0.6);
+    --bg-card-solid: #1e1b32;
+    --bg-page-alt: rgba(51, 48, 73, 0.4);
+    --bg-sidebar-hover: rgba(99, 102, 241, 0.15);
+    --bg-sidebar-active: rgba(99, 102, 241, 0.25);
+    
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --text-muted-lighter: #475569;
+    
+    --text-sidebar: #94a3b8;
+    --text-sidebar-muted: #475569;
+    --text-sidebar-active: #e2e8f0;
+    
+    --border-subtle: rgba(148, 163, 184, 0.1);
+    --border-card: rgba(148, 163, 184, 0.15);
+    --border-sidebar: rgba(148, 163, 184, 0.08);
+    
+    --color-accent: #6366f1;
+    --color-accent-hover: #818cf8;
+    --color-accent-light: rgba(99, 102, 241, 0.15);
+    --color-accent-glow: rgba(99, 102, 241, 0.4);
+    
+    --color-emerald: #10b981;
+    --color-amber: #f59e0b;
+    --color-rose: #f43f5e;
+    
+    --font-body: -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+    --font-serif: "Source Serif 4", Georgia, serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+    
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+    
+    --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    --shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --shadow-glow: 0 0 24px var(--color-accent-glow);
+  }
+  
+  body {
+    font-family: var(--font-body);
+    background: var(--bg-page);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    overflow-x: hidden;
+  }
+  
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 260px;
+    min-height: 100vh;
+    background: var(--bg-sidebar);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid var(--border-sidebar);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+  
+  .sidebar-logo {
+    padding: 24px 24px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border-sidebar);
+  }
+  
+  .sidebar-logo-mark {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--color-accent), #a855f7);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  }
+  
+  .sidebar-logo-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  
+  .sidebar-logo-sub {
+    font-size: 0.7rem;
+    color: var(--text-sidebar-muted);
+    margin-top: 1px;
+  }
+  
+  .sidebar-nav {
+    flex: 1;
+    padding: 16px 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-sidebar);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .nav-item:hover {
+    background: var(--bg-sidebar-hover);
+    color: var(--text-sidebar-active);
+    transform: translateX(2px);
+  }
+  
+  .nav-item.active {
+    background: var(--bg-sidebar-active);
+    color: var(--color-accent-hover);
+  }
+  
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 3px; height: 20px;
+    background: var(--color-accent);
+    border-radius: 0 4px 4px 0;
+    box-shadow: 0 0 8px var(--color-accent-glow);
+  }
+  
+  .nav-item svg {
+    width: 18px; height: 18px;
+    flex-shrink: 0;
+  }
+  
+  .nav-divider {
+    height: 1px;
+    background: var(--border-sidebar);
+    margin: 8px 12px;
+  }
+  
+  .sidebar-footer {
+    padding: 16px 16px 20px;
+    border-top: 1px solid var(--border-sidebar);
+  }
+  
+  .theme-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-sidebar-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+  }
+  
+  .theme-pill:hover {
+    background: var(--bg-sidebar-hover);
+    color: var(--text-sidebar-active);
+  }
+  
+  .streak-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    color: var(--color-amber);
+  }
+  
+  /* ── Main Content ── */
+  .main {
+    flex: 1;
+    padding: 32px 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  
+  /* ── Dashboard Header ── */
+  .dash-header {
+    margin-bottom: 32px;
+  }
+  
+  .dash-date {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  
+  .dash-title {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+  
+  .dash-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  
+  .dash-subtitle strong {
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+  
+  /* ── Stat Cards (glassmorphism) ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  
+  .stat-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px;
+    box-shadow: var(--shadow-glass);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--card-accent, var(--color-accent)), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+  
+  .stat-card:hover::before {
+    opacity: 1;
+  }
+  
+  .stat-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  
+  .stat-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  
+  .stat-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  
+  .stat-icon.indigo {
+    background: rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 16px rgba(99, 102, 241, 0.1);
+  }
+  .stat-icon.emerald {
+    background: rgba(16, 185, 129, 0.15);
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.1);
+  }
+  .stat-icon.amber {
+    background: rgba(245, 158, 11, 0.15);
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.1);
+  }
+  
+  .stat-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  
+  .stat-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  
+  .stat-sub .streak {
+    color: var(--color-emerald);
+    font-weight: 600;
+  }
+  
+  /* ── Two-column layout ── */
+  .content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+  }
+  
+  /* ── Highlight Card ── */
+  .highlight-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-glass);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .highlight-card:hover {
+    border-color: rgba(99, 102, 241, 0.2);
+  }
+  
+  .highlight-inner {
+    padding: 24px;
+    display: flex;
+    gap: 16px;
+  }
+  
+  .highlight-bar {
+    width: 3px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, var(--color-accent), #a855f7);
+    flex-shrink: 0;
+  }
+  
+  .highlight-text {
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+  
+  .highlight-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    font-size: 0.825rem;
+  }
+  
+  .highlight-book {
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  
+  .highlight-author {
+    color: var(--text-muted);
+  }
+  
+  .highlight-note {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: var(--bg-page-alt);
+    border-radius: var(--radius-sm);
+    font-size: 0.825rem;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+  }
+  
+  .highlight-note-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 4px;
+  }
+  
+  .highlight-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+  }
+  
+  .btn-accent {
+    background: var(--color-accent);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+  }
+  
+  .btn-accent:hover {
+    background: var(--color-accent-hover);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    transform: translateY(-1px);
+  }
+  
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-card);
+  }
+  
+  .btn-ghost:hover {
+    background: var(--bg-page-alt);
+    color: var(--text-primary);
+    border-color: var(--color-accent);
+  }
+  
+  .btn-fav {
+    background: transparent;
+    border: 1px solid var(--border-card);
+    color: var(--text-muted);
+  }
+  
+  .btn-fav:hover {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: var(--color-amber);
+    color: var(--color-amber);
+  }
+  
+  .btn-fav.active {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: var(--color-amber);
+  }
+  
+  /* ── Quick Actions ── */
+  .quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .section-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .action-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .action-card:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+    transform: translateX(3px);
+    background: rgba(99, 102, 241, 0.05);
+  }
+  
+  .action-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  
+  .action-text {
+    flex: 1;
+  }
+  
+  .action-title {
+    font-size: 0.825rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  
+  .action-sub {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+  
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .content-grid { grid-template-columns: 1fr; }
+    .main { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-mark">📚</div>
+    <div>
+      <div class="sidebar-logo-text">commonplace</div>
+      <div class="sidebar-logo-sub">Self-hosted highlights</div>
+    </div>
+  </div>
+  
+  <nav class="sidebar-nav">
+    <a class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Books
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h6M8 16h4" stroke-linecap="round"/></svg>
+      Highlights
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 6.5C10.5 3 4 3.5 4 9c0 3 3 5.5 8 9 5-3.5 8-6 8-9 0-5.5-6.5-6-8-2.5z"/></svg>
+      Daily Review
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/></svg>
+      Tags
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+      Achievements
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l2-2 4 4 8-8 4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Import
+    </a>
+    <div class="nav-divider"></div>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.5 2 1.5A7 7 0 0 0 5 12a7 7 0 0 0 .1 1.2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.5-2-1.5A7 7 0 0 0 19 12z"/></svg>
+      Settings
+    </a>
+    <div class="nav-divider"></div>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+      Logout
+    </a>
+  </nav>
+  
+  <div class="sidebar-footer">
+    <div class="theme-pill">
+      <span>🎨</span> Switch to Reader
+    </div>
+    <div class="streak-badge">
+      <span>🔥</span> 12-day streak
+    </div>
+  </div>
+</aside>
+
+<!-- ── Main ── -->
+<main class="main">
+  <div class="dash-header">
+    <div class="dash-date">Friday, July 10, 2026</div>
+    <h1 class="dash-title">Welcome back.</h1>
+    <p class="dash-subtitle">You have <strong>8 highlights</strong> waiting for review.</p>
+  </div>
+  
+  <!-- Stat Cards -->
+  <div class="stats-grid">
+    <a class="stat-card" style="--card-accent: var(--color-accent)">
+      <div class="stat-card-header">
+        <span class="stat-label">Total Highlights</span>
+        <div class="stat-icon indigo">📝</div>
+      </div>
+      <div class="stat-value">1,247</div>
+      <div class="stat-sub">from <strong style="color: var(--text-secondary)">23</strong> books</div>
+    </a>
+    
+    <a class="stat-card" style="--card-accent: var(--color-emerald)">
+      <div class="stat-card-header">
+        <span class="stat-label">Review Queue</span>
+        <div class="stat-icon emerald">📖</div>
+      </div>
+      <div class="stat-value">8</div>
+      <div class="stat-sub"><span class="streak">12-day streak</span> 🔥</div>
+    </a>
+    
+    <a class="stat-card" style="--card-accent: var(--color-amber)">
+      <div class="stat-card-header">
+        <span class="stat-label">Last Import</span>
+        <div class="stat-icon amber">📥</div>
+      </div>
+      <div class="stat-value">14</div>
+      <div class="stat-sub">New highlights added</div>
+    </a>
+  </div>
+  
+  <!-- Two-column: highlight + quick actions -->
+  <div class="content-grid">
+    <div>
+      <div class="section-title">🎲 Random Highlight</div>
+      <div class="highlight-card">
+        <div class="highlight-inner">
+          <div class="highlight-bar"></div>
+          <div>
+            <p class="highlight-text">"Baal and the gods of Canaan were not abstract theological concepts. They were felt realities - the rhythm of rain and drought, the threat of locusts, the terror of fever. To worship Yahweh alone was to stake everything on a God whose hand was not visible in the cycles of nature, but in the exodus from Egypt - in history, not myth."</p>
+            <div class="highlight-meta">
+              <span class="highlight-book">The Old Testament is the Problem</span>
+              <span class="highlight-author"> - Claus Westermann</span>
+            </div>
+            <div class="highlight-note">
+              <span class="highlight-note-label">Note</span>
+              Great framing for teaching HCN Explorers on the conquest narrative.
+            </div>
+            <div class="highlight-actions">
+              <button class="btn btn-fav">☆ Favorite</button>
+              <a class="btn btn-accent">Start Review →</a>
+              <a class="btn btn-ghost">View in Context</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="quick-actions">
+      <div class="section-title">⚡ Quick Actions</div>
+      
+      <a class="action-card">
+        <div class="action-icon" style="background: rgba(16, 185, 129, 0.15)">📖</div>
+        <div class="action-text">
+          <div class="action-title">Start Daily Review</div>
+          <div class="action-sub">8 highlights waiting</div>
+        </div>
+      </a>
+      
+      <a class="action-card">
+        <div class="action-icon" style="background: rgba(99, 102, 241, 0.15)">📚</div>
+        <div class="action-text">
+          <div class="action-title">Browse Books</div>
+          <div class="action-sub">23 books in your library</div>
+        </div>
+      </a>
+      
+      <a class="action-card">
+        <div class="action-icon" style="background: rgba(245, 158, 11, 0.15)">📥</div>
+        <div class="action-text">
+          <div class="action-title">Import Highlights</div>
+          <div class="action-sub">From Readwise, KOReader, BookOrbit</div>
+        </div>
+      </a>
+      
+      <a class="action-card">
+        <div class="action-icon" style="background: rgba(168, 85, 247, 0.15)">📝</div>
+        <div class="action-text">
+          <div class="action-title">Browse All</div>
+          <div class="action-sub">1,247 total highlights</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>
