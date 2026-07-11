@@ -50,6 +50,8 @@ BUILTIN_THEMES: list[ThemeInfo] = [
     {"name": "reader", "label": "Reader", "description": "Warm, cozy. Cream tones, Source Serif.", "builtin": True},
     {"name": "dark", "label": "Dark", "description": "Deep charcoal, amber accent, easy on the eyes.", "builtin": True},
     {"name": "glass", "label": "Glass", "description": "Deep navy, indigo glow, frosted glass cards.", "builtin": True},
+    {"name": "contemporary", "label": "Contemporary", "description": "Magenta accent, Jost font, bento-modern light.", "builtin": True},
+    {"name": "contemporary-dark", "label": "Contemporary Dark", "description": "Deep purple base, magenta glow, Jost font.", "builtin": True},
 ]
 
 

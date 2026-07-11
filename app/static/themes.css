@@ -264,6 +264,108 @@ input[type="range"]::-moz-range-thumb {
 .theme-dark .sidebar-logo {
   filter: brightness(0) invert(1);
 }
+/* ── Contemporary Theme (Magenta/pink, Jost font, bento-modern) ─── */
+.theme-contemporary {
+  --bg-page: #f8f7fc;
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+  --bg-page-alt: #f1eff7;
+  --bg-sidebar-hover: #f1eff7;
+  --bg-sidebar-active: #e8e5f2;
+
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --text-muted-lighter: #9ca3af;
+
+  --text-sidebar: #6b7280;
+  --text-sidebar-muted: #9ca3af;
+  --text-sidebar-active: #111827;
+
+  --border-subtle: #e5e7eb;
+  --border-card: #e5e7eb;
+  --border-sidebar: #e5e7eb;
+
+  --color-accent: #c800df;
+  --color-accent-hover: #a000c0;
+  --color-accent-light: #faf0ff;
+  --color-accent-lighter: #f5e0ff;
+  --color-accent-text: #a000c0;
+
+  --color-link: #c800df;
+  --color-link-hover: #a000c0;
+
+  --font-body: "Jost", system-ui, sans-serif;
+  --font-mono: "Overpass Mono", ui-monospace, monospace;
+  --selection-bg: #c800df;
+
+  --scrollbar-track: #f1eff7;
+  --scrollbar-thumb: #d1cce6;
+  --scrollbar-thumb-hover: #b7b0d6;
+
+  --btn-primary-bg: #c800df;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover: #a000c0;
+}
+
+.theme-contemporary .sidebar-logo {
+  filter: none;
+}
+
+@supports (font-variation-settings: normal) {
+  .theme-contemporary {
+    --font-body: "Jost", "Jost Variable", system-ui, sans-serif;
+  }
+}
+
+/* ── Contemporary Dark ─────────────────────────────────────── */
+.theme-contemporary-dark {
+  --bg-page: #0d0b15;
+  --bg-sidebar: #14111f;
+  --bg-card: #1c1928;
+  --bg-page-alt: #1c1928;
+  --bg-sidebar-hover: #232031;
+  --bg-sidebar-active: #2c293d;
+
+  --text-primary: #e8e4f0;
+  --text-secondary: #a8a3bf;
+  --text-muted: #787394;
+  --text-muted-lighter: #5c5774;
+
+  --text-sidebar: #a8a3bf;
+  --text-sidebar-muted: #5c5774;
+  --text-sidebar-active: #e8e4f0;
+
+  --border-subtle: #232031;
+  --border-card: #232031;
+  --border-sidebar: #2c293d;
+
+  --color-accent: #d946ef;
+  --color-accent-hover: #e879f9;
+  --color-accent-light: rgba(217, 70, 239, 0.12);
+  --color-accent-lighter: rgba(217, 70, 239, 0.06);
+  --color-accent-text: #e879f9;
+
+  --color-link: #d946ef;
+  --color-link-hover: #e879f9;
+
+  --font-body: "Jost", system-ui, sans-serif;
+  --font-mono: "Overpass Mono", ui-monospace, monospace;
+  --selection-bg: #d946ef;
+
+  --scrollbar-track: #1c1928;
+  --scrollbar-thumb: #2c293d;
+  --scrollbar-thumb-hover: #403d53;
+
+  --btn-primary-bg: #d946ef;
+  --btn-primary-text: #0d0b15;
+  --btn-primary-hover: #e879f9;
+}
+
+.theme-contemporary-dark .sidebar-logo {
+  filter: brightness(0) invert(1);
+}
+
 /* ── Glass Theme (Deep navy, indigo glow, frost) ──────────────────── */
 .theme-glass {
   --bg-page: #0f172a;
