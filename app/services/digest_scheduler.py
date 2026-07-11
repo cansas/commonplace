@@ -66,7 +66,7 @@ async def check_and_send_digest():
 
         if not html_content or "No highlights" in html_content:
             logger.info("No highlights to send in digest today")
-            # Still mark as sent so we don't keep trying
+            # Don't mark as sent — try again next check
         else:
             result = await send_email_via_mailjet(
                 api_key, secret_key, from_name, from_email, to_email,
@@ -74,9 +74,8 @@ async def check_and_send_digest():
                 html_content,
             )
             logger.info("Digest sent: %s", result.get("Messages", [{}])[0].get("Status", "?"))
-
-        # Mark as sent today
-        set_setting("last_digest_sent_date", today_str)
+            # Only mark as sent when an email was actually dispatched
+            set_setting("last_digest_sent_date", today_str)
 
     except Exception as e:
         logger.error("Failed to send digest: %s", e)
