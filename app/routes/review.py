@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, text as sqltext
 from app.database import get_db
-from app.models import Highlight, ReviewLog
+from app.models import Highlight, ReviewLog, DailyReviewQueue
 from app.services.settings_service import get_review_count
 from app.services.streaks import calculate_streaks
 from app.services.achievements import check_and_unlock
@@ -204,7 +204,7 @@ async def review_stats_page(
     )
 
 
-# ── Rate limiting ──────────────────────────────────────────────────────────
+# ── Rate limiting ──────────────────────────────────────────
 
 _REVIEW_LIMIT_ENTRIES: dict = {}
 _REVIEW_MAX_PER_MIN = 30
@@ -214,7 +214,9 @@ def _check_review_rate_limit(request: Request):
     ip = request.client.host if request.client else "unknown"
     now = time.time()
     window = 60
-    _REVIEW_LIMIT_ENTRIES[ip] = [t for t in _REVIEW_LIMIT_ENTRIES.get(ip, []) if now - t < window]
+    entries = _REVIEW_LIMIT_ENTRIES.get(ip, [])
+    # Prune expired entries
+    _REVIEW_LIMIT_ENTRIES[ip] = [t for t in entries if now - t < window]
     if len(_REVIEW_LIMIT_ENTRIES[ip]) >= _REVIEW_MAX_PER_MIN:
         raise HTTPException(status_code=429, detail="Too many review actions. Slow down.")
     _REVIEW_LIMIT_ENTRIES[ip].append(now)
@@ -346,7 +348,16 @@ async def review_delete(
     _check_review_rate_limit(request)
     hl = await db.get(Highlight, hl_id)
     if hl:
-        await db.delete(hl)
+        # Core deletes: children first, then parent — avoid NOT NULL FK crash
+        await db.execute(
+            ReviewLog.__table__.delete().where(ReviewLog.highlight_id == hl_id)
+        )
+        await db.execute(
+            DailyReviewQueue.__table__.delete().where(DailyReviewQueue.highlight_id == hl_id)
+        )
+        await db.execute(
+            Highlight.__table__.delete().where(Highlight.id == hl_id)
+        )
     await _log_review(db, hl_id)
     await db.commit()
     await mark_reviewed(hl_id)

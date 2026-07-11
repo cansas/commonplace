@@ -126,13 +126,6 @@ async def mark_reviewed(highlight_id: int) -> None:
     today = central_now().date()
     async with async_session() as db:
         await db.execute(
-            select(DailyReviewQueue)
-            .where(
-                DailyReviewQueue.queue_date == today,
-                DailyReviewQueue.highlight_id == highlight_id,
-            )
-        )
-        await db.execute(
             DailyReviewQueue.__table__.update()
             .where(
                 DailyReviewQueue.queue_date == today,

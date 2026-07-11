@@ -80,60 +80,7 @@ body {
     font-family: Georgia, "Times New Roman", Times, serif;
 }
 
-/* ---------- Review Buttons (Spaced Repetition) ---------- */
-.review-btn {
-    text-align: center;
-    cursor: pointer;
-    border: none;
-    font-family: inherit;
-    transition: all 0.15s ease;
-}
-
-.review-btn:active {
-    transform: scale(0.96);
-}
-
-.review-btn-forgot {
-    background: #fef2f2;  /* red-50 */
-    color: #b91c1c;       /* red-700 */
-    border: 1px solid #fecaca; /* red-200 */
-}
-.review-btn-forgot:hover {
-    background: #fee2e2;  /* red-100 */
-    box-shadow: 0 4px 12px rgba(185, 28, 28, 0.15);
-}
-
-.review-btn-hard {
-    background: #fff7ed;  /* orange-50 */
-    color: #c2410c;       /* orange-700 */
-    border: 1px solid #fed7aa; /* orange-200 */
-}
-.review-btn-hard:hover {
-    background: #ffedd5;  /* orange-100 */
-    box-shadow: 0 4px 12px rgba(194, 65, 12, 0.15);
-}
-
-.review-btn-good {
-    background: #f0fdf4;  /* green-50 */
-    color: #15803d;       /* green-700 */
-    border: 1px solid #bbf7d0; /* green-200 */
-}
-.review-btn-good:hover {
-    background: #dcfce7;  /* green-100 */
-    box-shadow: 0 4px 12px rgba(21, 128, 61, 0.15);
-}
-
-.review-btn-easy {
-    background: #eef2ff;  /* indigo-50 */
-    color: #4338ca;       /* indigo-700 */
-    border: 1px solid #c7d2fe; /* indigo-200 */
-}
-.review-btn-easy:hover {
-    background: #e0e7ff;  /* indigo-100 */
-    box-shadow: 0 4px 12px rgba(67, 56, 202, 0.15);
-}
-
-/* ---------- Source Badges ---------- */
+/* ── Mobile Highlight Cards ──────────────────────────── */
 .source-badge {
     display: inline-flex;
     align-items: center;
