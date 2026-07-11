@@ -90,7 +90,7 @@ def get_theme() -> str:
 
 def set_theme(t: str) -> None:
     t = t.strip().lower()
-    if t not in ("modern", "reader", "dark"):
+    if t not in ("modern", "reader", "dark", "glass", "contemporary", "contemporary-dark"):
         t = "modern"
     set("theme", t)
 
