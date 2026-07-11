@@ -459,57 +459,66 @@ async def dedup_highlights(
 ):
     """Find and merge duplicate highlights by (text, book_title, book_author)."""
     from sqlalchemy import text as sqltext
+    import logging
+    logger = logging.getLogger(__name__)
 
-    rows = await db.execute(sqltext(
-        "SELECT text, book_title, book_author, COUNT(*) as cnt "
-        "FROM highlights "
-        "GROUP BY text, book_title, book_author "
-        "HAVING COUNT(*) > 1 "
-        "ORDER BY cnt DESC"
-    ))
-    dup_groups = rows.mappings().all()
-
-    merged = 0
-    removed = 0
-    for group in dup_groups:
-        dup_rows = await db.execute(sqltext(
-            "SELECT id FROM highlights "
-            "WHERE text = :text AND book_title = :bt AND (book_author = :ba OR (book_author IS NULL AND :ba = '')) "
-            "ORDER BY id ASC",
-            {"text": group["text"], "bt": group["book_title"], "ba": group["book_author"] or ""},
+    try:
+        rows = await db.execute(sqltext(
+            "SELECT text, book_title, book_author, COUNT(*) as cnt "
+            "FROM highlights "
+            "GROUP BY text, book_title, book_author "
+            "HAVING COUNT(*) > 1 "
+            "ORDER BY cnt DESC"
         ))
-        ids = [r[0] for r in dup_rows.fetchall()]
-        keep_id = ids[0]
-        del_ids = ids[1:]
+        dup_groups = rows.mappings().all()
 
-        for did in del_ids:
-            await db.execute(sqltext(
-                "INSERT OR IGNORE INTO highlight_tags (highlight_id, tag_id) "
-                "SELECT :keep, tag_id FROM highlight_tags WHERE highlight_id = :del",
-                {"keep": keep_id, "del": did},
+        merged = 0
+        removed = 0
+        for group in dup_groups:
+            dup_rows = await db.execute(sqltext(
+                "SELECT id FROM highlights "
+                "WHERE text = :text AND book_title = :bt AND (book_author = :ba OR (book_author IS NULL AND :ba = '')) "
+                "ORDER BY id ASC",
+                {"text": group["text"], "bt": group["book_title"], "ba": group["book_author"] or ""},
             ))
-        # Reassign review_logs one at a time (avoids SQLite IN clause binding)
-        for did in del_ids:
+            ids = [r[0] for r in dup_rows.fetchall()]
+            keep_id = ids[0]
+            del_ids = ids[1:]
+
+            for did in del_ids:
+                await db.execute(sqltext(
+                    "INSERT OR IGNORE INTO highlight_tags (highlight_id, tag_id) "
+                    "SELECT :keep, tag_id FROM highlight_tags WHERE highlight_id = :del",
+                    {"keep": keep_id, "del": did},
+                ))
+            for did in del_ids:
+                await db.execute(sqltext(
+                    "UPDATE review_log SET highlight_id = :keep WHERE highlight_id = :del",
+                    {"keep": keep_id, "del": did},
+                ))
+            for did in del_ids:
+                await db.execute(sqltext("DELETE FROM highlight_tags WHERE highlight_id = :id", {"id": did}))
+                await db.execute(sqltext("DELETE FROM highlights WHERE id = :id", {"id": did}))
+
+            merged += 1
+            removed += len(del_ids)
+
+        await db.commit()
+
+        if removed > 0:
+            await db.execute(sqltext("DELETE FROM highlights_fts"))
             await db.execute(sqltext(
-                "UPDATE review_log SET highlight_id = :keep WHERE highlight_id = :del",
-                {"keep": keep_id, "del": did},
+                "INSERT INTO highlights_fts(rowid, text, note, book_title, book_author) "
+                "SELECT id, text, note, book_title, book_author FROM highlights"
             ))
-        for did in del_ids:
-            await db.execute(sqltext("DELETE FROM highlight_tags WHERE highlight_id = :id", {"id": did}))
-            await db.execute(sqltext("DELETE FROM highlights WHERE id = :id", {"id": did}))
+            await db.commit()
 
-        merged += 1
-        removed += len(del_ids)
+        return {"ok": True, "groups_merged": merged, "duplicates_removed": removed}
 
-    await db.commit()
-    await db.execute(sqltext("DELETE FROM highlights_fts"))
-    await db.execute(sqltext(
-        "INSERT INTO highlights_fts(rowid, text, note, book_title, book_author) "
-        "SELECT id, text, note, book_title, book_author FROM highlights"
-    ))
-    await db.commit()
-
-    return {"ok": True, "groups_merged": merged, "duplicates_removed": removed}
+    except Exception as e:
+        logger.exception("Dedup failed")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ── Email Settings ─────────────────────────────────────────────────────────
