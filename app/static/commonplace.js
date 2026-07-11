@@ -1061,10 +1061,17 @@
             selected.classList.remove('border-card');
             selected.classList.add('border-accent', 'bg-accent-light');
         }
-        if (window.toggleTheme) {
-            var current = localStorage.getItem('commonplace-theme') || document.body.getAttribute('data-theme') || 'modern';
-            if (current !== theme) window.toggleTheme();
-        }
+        // Direct apply — don't cycle via toggleTheme
+        var body = document.body;
+        body.className = body.className.replace(/\btheme-\S+/g, '').trim();
+        body.classList.add('theme-' + theme);
+        localStorage.setItem('commonplace-theme', theme);
+        body.setAttribute('data-theme', theme);
+        fetch('/settings/theme', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'theme=' + theme + '&csrf_token=' + CSRF_TOKEN,
+        }).catch(function() {});
     };
 
     window.uploadTheme = function() {
