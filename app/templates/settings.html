@@ -16,7 +16,7 @@
     {% if new_token %}
     <div class="bg-amber-50 border border-amber-200 text-amber-900 text-sm px-4 py-3 rounded-lg space-y-3 mb-4">
         <p class="font-semibold">⚠️ New token created — copy it now. You won't see it again.</p>
-        <code class="block px-3 py-2 bg-white border border-amber-300 rounded font-mono text-xs break-all select-all">{{ new_token }}</code>
+        <code class="block px-3 py-2 bg-card border border-amber-300 rounded font-mono text-xs break-all select-all">{{ new_token }}</code>
         {% if new_token_qr %}
         <div class="flex flex-col items-center pt-2">
             <img src="{{ new_token_qr }}" alt="QR code for mobile setup"
@@ -62,17 +62,17 @@
                     <div>
                         <label for="current_password" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">Current Password</label>
                         <input type="password" id="current_password" name="current_password" required autocomplete="current-password"
-                               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                               class="w-full px-3 py-2 bg-card border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
                     </div>
                     <div>
                         <label for="new_password" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">New Password</label>
                         <input type="password" id="new_password" name="new_password" required autocomplete="new-password" minlength="8"
-                               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                               class="w-full px-3 py-2 bg-card border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
                     </div>
                     <div>
                         <label for="confirm_password" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">Confirm New Password</label>
                         <input type="password" id="confirm_password" name="confirm_password" required autocomplete="new-password" minlength="8"
-                               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                               class="w-full px-3 py-2 bg-card border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
                     </div>
                     <button type="submit" class="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg btn-primary hover:bg-accent-hover transition shadow-sm">
                         Change Password
@@ -222,7 +222,7 @@
                         <label for="token_name" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">New Token</label>
                         <input type="text" id="token_name" name="token_name" required
                                placeholder="e.g. koreader, obsidian, ios-app"
-                               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                               class="w-full px-3 py-2 bg-card border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
                     </div>
                     <button type="submit" class="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg btn-primary hover:bg-accent-hover transition shadow-sm shrink-0">
                         + Create
@@ -294,12 +294,12 @@
                     <div>
                         <label for="email-from-addr" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">From Email</label>
                         <input type="email" id="email-from-addr" value="{{ email_config.email_from_addr or '' }}" placeholder="digest@yourdomain.com"
-                               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                               class="w-full px-3 py-2 bg-card border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
                     </div>
                     <div>
                         <label for="email-to-addr" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">To Email (you)</label>
                         <input type="email" id="email-to-addr" value="{{ email_config.email_to_addr or '' }}" placeholder="you@example.com"
-                               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                               class="w-full px-3 py-2 bg-card border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
                     </div>
                 </div>
                 <div>
@@ -311,7 +311,7 @@
                 <div class="flex items-center gap-3 pt-2">
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" id="email-digest-enabled" {% if email_config.email_digest_enabled %}checked{% endif %}
-                               class="w-4 h-4 rounded border-slate-300 text-accent focus:ring-accent/40" />
+                               class="w-4 h-4 rounded border-card text-accent focus:ring-accent/40" />
                         <span class="text-sm font-medium text-primary">Enable daily digest</span>
                     </label>
                     <div class="flex items-center gap-2">
@@ -435,7 +435,7 @@
                     <div>
                         <label for="bo-username" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">Username</label>
                         <input type="text" id="bo-username" value="{{ bookorbit_config.username or '' }}" placeholder="BookOrbit username"
-                               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
+                               class="w-full px-3 py-2 bg-card border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent" />
                     </div>
                     <div>
                         <label for="bo-password" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">Password</label>
@@ -493,7 +493,7 @@
                 <div class="flex items-center gap-3 pt-4">
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" id="bo-auto-sync" {% if bookorbit_config.enabled %}checked{% endif %}
-                               class="w-4 h-4 rounded border-slate-300 text-accent focus:ring-accent/40" />
+                               class="w-4 h-4 rounded border-card text-accent focus:ring-accent/40" />
                         <span class="text-sm font-medium text-primary">Enable automatic sync (every 15 minutes)</span>
                     </label>
                 </div>

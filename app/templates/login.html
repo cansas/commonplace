@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — commonplace</title>
     <script src="/static/tailwind.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css?v=2" />
+    <link rel="stylesheet" href="/static/themes.css?v=3" />
 </head>
 <body class="bg-slate-900 min-h-screen flex items-center justify-center">
     <div class="w-full max-w-sm mx-4">
-        <div class="bg-white rounded-xl shadow-2xl p-8">
+        <div class="bg-card rounded-xl shadow-2xl p-8">
             <div class="text-center mb-8">
-                <h1 class="text-2xl font-bold text-slate-900"><img src="/static/logo-white-bg.png" class="inline-block w-10 h-auto mr-2 align-text-bottom" alt="">commonplace</h1>
-                <p class="text-sm text-slate-500 mt-1">Sign in with your username</p>
+                <h1 class="text-2xl font-bold text-primary"><img src="/static/logo-white-bg.png" class="inline-block w-10 h-auto mr-2 align-text-bottom" alt="">commonplace</h1>
+                <p class="text-sm text-muted mt-1">Sign in with your username</p>
             </div>
 
             {% if error %}
@@ -21,24 +23,24 @@
             <form method="POST" action="/login" class="space-y-4">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                 <div>
-                    <label for="username" class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                    <label for="username" class="block text-sm font-medium text-secondary mb-1">Username</label>
                     <input type="text" id="username" name="username" required autocomplete="username"
                            placeholder="Enter your username"
-                           class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent" />
+                           class="w-full px-4 py-2.5 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-transparent" />
                 </div>
                 <div>
-                    <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                    <label for="password" class="block text-sm font-medium text-secondary mb-1">Password</label>
                     <input type="password" id="password" name="password" required autocomplete="current-password"
                            placeholder="Enter your password"
-                           class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent" />
+                           class="w-full px-4 py-2.5 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-transparent" />
                 </div>
                 <button type="submit"
-                        class="w-full px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                        class="w-full px-4 py-2.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-hover transition-colors shadow-sm">
                     Sign In
                 </button>
             </form>
 
-            <p class="text-xs text-slate-400 text-center mt-6">
+            <p class="text-xs text-muted text-center mt-6">
                 Managed by your server administrator.
             </p>
         </div>

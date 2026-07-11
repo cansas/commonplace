@@ -29,7 +29,7 @@
             </div>
             <span class="flex items-center gap-2 shrink-0">
                 {% if r.share_token %}
-                <a href="/share/{{ r.share_token }}" target="_blank" class="text-indigo-500 hover:text-indigo-700 text-sm" title="Share">📤</a>
+                <a href="/share/{{ r.share_token }}" target="_blank" class="text-accent hover:text-accent text-sm" title="Share">📤</a>
                 {% endif %}
                 <span class="text-xs text-muted">
                     {% if r.rating == 0 %}Forgot{% elif r.rating == 1 %}Hard{% elif r.rating == 2 %}Good{% elif r.rating == 3 %}Easy{% else %}Seen{% endif %}

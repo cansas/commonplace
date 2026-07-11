@@ -91,10 +91,10 @@
 
         <!-- Secondary actions -->
         <div class="review-secondary-actions flex gap-2 justify-center mt-4 pt-3 border-t border-card">
-            <button type="button" data-action="copy-text" data-text="{{ highlight.text }}" data-label="Highlight" class="px-3 py-1.5 text-xs text-muted hover:text-indigo-500 hover:bg-page-alt rounded-md transition-colors">
+            <button type="button" data-action="copy-text" data-text="{{ highlight.text }}" data-label="Highlight" class="px-3 py-1.5 text-xs text-muted hover:text-accent hover:bg-page-alt rounded-md transition-colors">
                 📋 Copy
             </button>
-            <button type="button" data-action="review-context" data-hl-id="{{ highlight.id }}" class="px-3 py-1.5 text-xs text-muted hover:text-indigo-500 hover:bg-page-alt rounded-md transition-colors">
+            <button type="button" data-action="review-context" data-hl-id="{{ highlight.id }}" class="px-3 py-1.5 text-xs text-muted hover:text-accent hover:bg-page-alt rounded-md transition-colors">
                 📖 Context
             </button>
             <form method="POST" action="/review/delete" class="contents" data-action="confirm-delete">
@@ -114,7 +114,7 @@
             <form method="POST" action="/review/next" class="contents">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                 <input type="hidden" name="hl_id" value="{{ highlight.id }}" />
-                <button type="submit" class="px-3 py-1.5 text-xs text-muted hover:text-indigo-500 hover:bg-page-alt rounded-md transition-colors">
+                <button type="submit" class="px-3 py-1.5 text-xs text-muted hover:text-accent hover:bg-page-alt rounded-md transition-colors">
                     ⏰ Later
                 </button>
             </form>
@@ -183,7 +183,7 @@
                         <p class="text-muted truncate">{{ r.book_title }}</p>
                     </div>
                     {% if r.share_token %}
-                    <a href="/share/{{ r.share_token }}" target="_blank" class="shrink-0 text-indigo-500 hover:text-indigo-700 text-sm leading-none" title="Share">📤</a>
+                    <a href="/share/{{ r.share_token }}" target="_blank" class="shrink-0 text-accent hover:text-accent text-sm leading-none" title="Share">📤</a>
                     {% endif %}
                 </div>
                 {% endfor %}

@@ -4,19 +4,19 @@
 <div class="max-w-7xl mx-auto">
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
     <div>
-      <h1 class="text-2xl font-bold text-slate-900">Books</h1>
-      <p class="text-sm text-slate-500 mt-1">{{ total_books }} book{% if total_books != 1 %}s{% endif %} with highlights</p>
+      <h1 class="text-2xl font-bold text-primary">Books</h1>
+      <p class="text-sm text-muted mt-1">{{ total_books }} book{% if total_books != 1 %}s{% endif %} with highlights</p>
     </div>
     <div class="flex items-center gap-3">
-      <button data-action="backfill-covers" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+      <button data-action="backfill-covers" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-card border border-card text-secondary hover:bg-page-alt transition-colors">
         🔄 Fetch Covers
       </button>
       <div class="flex gap-2">
-        <span class="text-xs text-slate-400 self-center">Sort:</span>
-        <a href="/books?sort=highlights{% if search %}&search={{ search }}{% endif %}" class="px-3 py-1.5 text-xs rounded-md font-medium {% if sort == 'highlights' %}bg-indigo-100 text-indigo-700{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">Most Highlights</a>
-        <a href="/books?sort=recent{% if search %}&search={{ search }}{% endif %}" class="px-3 py-1.5 text-xs rounded-md font-medium {% if sort == 'recent' %}bg-indigo-100 text-indigo-700{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">Recent</a>
-        <a href="/books?sort=title{% if search %}&search={{ search }}{% endif %}" class="px-3 py-1.5 text-xs rounded-md font-medium {% if sort == 'title' %}bg-indigo-100 text-indigo-700{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">Title</a>
-        <a href="/books?sort=author{% if search %}&search={{ search }}{% endif %}" class="px-3 py-1.5 text-xs rounded-md font-medium {% if sort == 'author' %}bg-indigo-100 text-indigo-700{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">Author</a>
+        <span class="text-xs text-muted self-center">Sort:</span>
+        <a href="/books?sort=highlights{% if search %}&search={{ search }}{% endif %}" class="px-3 py-1.5 text-xs rounded-md font-medium {% if sort == 'highlights' %}bg-indigo-100 text-accent{% else %}bg-page-alt text-secondary hover:bg-slate-200{% endif %}">Most Highlights</a>
+        <a href="/books?sort=recent{% if search %}&search={{ search }}{% endif %}" class="px-3 py-1.5 text-xs rounded-md font-medium {% if sort == 'recent' %}bg-indigo-100 text-accent{% else %}bg-page-alt text-secondary hover:bg-slate-200{% endif %}">Recent</a>
+        <a href="/books?sort=title{% if search %}&search={{ search }}{% endif %}" class="px-3 py-1.5 text-xs rounded-md font-medium {% if sort == 'title' %}bg-indigo-100 text-accent{% else %}bg-page-alt text-secondary hover:bg-slate-200{% endif %}">Title</a>
+        <a href="/books?sort=author{% if search %}&search={{ search }}{% endif %}" class="px-3 py-1.5 text-xs rounded-md font-medium {% if sort == 'author' %}bg-indigo-100 text-accent{% else %}bg-page-alt text-secondary hover:bg-slate-200{% endif %}">Author</a>
       </div>
     </div>
   </div>
@@ -24,10 +24,10 @@
   <!-- Search -->
   <form method="get" action="/books" class="mb-6">
     <div class="relative">
-      <input type="text" name="search" value="{{ search }}" placeholder="Search books by title or author..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent">
-      <svg class="absolute left-3 top-3 h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" name="search" value="{{ search }}" placeholder="Search books by title or author..." class="w-full pl-10 pr-4 py-2.5 bg-card border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-transparent">
+      <svg class="absolute left-3 top-3 h-4 w-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
       {% if search %}
-      <a href="/books" class="absolute right-3 top-2.5 text-sm text-slate-400 hover:text-slate-600">Clear</a>
+      <a href="/books" class="absolute right-3 top-2.5 text-sm text-muted hover:text-secondary">Clear</a>
       {% endif %}
     </div>
   </form>
@@ -36,9 +36,9 @@
   {% if books %}
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
     {% for book in books %}
-    <a href="/highlights?book={{ book.title | urlencode }}" class="block bg-white rounded-lg border border-slate-200 overflow-hidden hover:border-indigo-300 hover:shadow-md transition-all group" data-hl-id="{{ book.highlight_id }}" data-title="{{ book.title | e }}" data-author="{{ book.author | e }}"{% if book.hardcover_id %} data-hardcover-id="{{ book.hardcover_id }}"{% endif %}{% if book.isbn %} data-isbn="{{ book.isbn }}"{% endif %}>
+    <a href="/highlights?book={{ book.title | urlencode }}" class="block bg-card rounded-lg border border-card overflow-hidden hover:border-accent hover:shadow-md transition-all group" data-hl-id="{{ book.highlight_id }}" data-title="{{ book.title | e }}" data-author="{{ book.author | e }}"{% if book.hardcover_id %} data-hardcover-id="{{ book.hardcover_id }}"{% endif %}{% if book.isbn %} data-isbn="{{ book.isbn }}"{% endif %}>
       <!-- Cover -->
-      <div class="aspect-[2/3] bg-slate-100 flex items-center justify-center overflow-hidden">
+      <div class="aspect-[2/3] bg-page-alt flex items-center justify-center overflow-hidden">
         {% if book.cover_url %}
         <img src="{{ book.cover_url }}" alt="{{ book.title }}" class="w-full h-full object-cover" loading="lazy">
         {% else %}
@@ -49,17 +49,17 @@
         {% endif %}
       </div>
       <div class="p-3">
-        <h3 class="text-sm font-semibold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">{{ book.title }}</h3>
+        <h3 class="text-sm font-semibold text-primary truncate group-hover:text-accent transition-colors">{{ book.title }}</h3>
         {% if book.author %}
-        <p class="text-xs text-slate-500 mt-0.5 truncate">{{ book.author }}</p>
+        <p class="text-xs text-muted mt-0.5 truncate">{{ book.author }}</p>
         {% endif %}
         <div class="flex items-center justify-between mt-2">
-          <span class="text-xs font-medium text-indigo-600">{{ book.highlight_count }} highlight{% if book.highlight_count != 1 %}s{% endif %}</span>
+          <span class="text-xs font-medium text-accent">{{ book.highlight_count }} highlight{% if book.highlight_count != 1 %}s{% endif %}</span>
             <div class="flex gap-1">
-              <span data-action="rename-book" class="text-xs text-slate-400 hover:text-amber-500 cursor-pointer" title="Edit title">✏️</span>
-              <span data-action="open-cover-selector" class="text-xs text-slate-400 hover:text-indigo-500 cursor-pointer" title="Search and pick a cover">🔍</span>
-              <span data-action="open-metadata" class="text-xs text-slate-400 hover:text-purple-500 cursor-pointer" title="Edit HardCover ID / ISBN">🏷️</span>
-              <span data-action="upload-cover" class="text-xs text-slate-400 hover:text-emerald-500 cursor-pointer" title="Upload custom cover">📤</span>
+              <span data-action="rename-book" class="text-xs text-muted hover:text-amber-500 cursor-pointer" title="Edit title">✏️</span>
+              <span data-action="open-cover-selector" class="text-xs text-muted hover:text-accent cursor-pointer" title="Search and pick a cover">🔍</span>
+              <span data-action="open-metadata" class="text-xs text-muted hover:text-purple-500 cursor-pointer" title="Edit HardCover ID / ISBN">🏷️</span>
+              <span data-action="upload-cover" class="text-xs text-muted hover:text-emerald-500 cursor-pointer" title="Upload custom cover">📤</span>
             </div>
         </div>
       </div>
@@ -71,20 +71,20 @@
   {% if total_pages > 1 %}
   <div class="flex justify-center gap-2 mt-8">
     {% if page > 1 %}
-    <a href="/books?page={{ page - 1 }}&sort={{ sort }}{% if search %}&search={{ search }}{% endif %}" class="px-4 py-2 text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">← Prev</a>
+    <a href="/books?page={{ page - 1 }}&sort={{ sort }}{% if search %}&search={{ search }}{% endif %}" class="px-4 py-2 text-sm rounded-lg border border-card text-secondary hover:bg-page-alt">← Prev</a>
     {% endif %}
-    <span class="px-4 py-2 text-sm text-slate-500">Page {{ page }} of {{ total_pages }}</span>
+    <span class="px-4 py-2 text-sm text-muted">Page {{ page }} of {{ total_pages }}</span>
     {% if page < total_pages %}
-    <a href="/books?page={{ page + 1 }}&sort={{ sort }}{% if search %}&search={{ search }}{% endif %}" class="px-4 py-2 text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">Next →</a>
+    <a href="/books?page={{ page + 1 }}&sort={{ sort }}{% if search %}&search={{ search }}{% endif %}" class="px-4 py-2 text-sm rounded-lg border border-card text-secondary hover:bg-page-alt">Next →</a>
     {% endif %}
   </div>
   {% endif %}
 
   {% else %}
   <div class="text-center py-16">
-    <p class="text-slate-400 text-lg">No books found</p>
+    <p class="text-muted text-lg">No books found</p>
     {% if search %}
-    <p class="text-slate-400 mt-1">Try a different search term</p>
+    <p class="text-muted mt-1">Try a different search term</p>
     {% endif %}
   </div>
   {% endif %}
@@ -92,22 +92,22 @@
 
 <!-- Rename Modal (inside content block so Jinja2 renders it) -->
 <div id="rename-modal" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center">
-  <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden">
+  <div class="bg-card rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden">
     <div class="px-6 py-4 border-b border-slate-100">
-      <h3 class="text-lg font-semibold text-slate-900">✏️ Rename Book</h3>
+      <h3 class="text-lg font-semibold text-primary">✏️ Rename Book</h3>
     </div>
     <form id="rename-form" class="p-6 space-y-4" data-action="submit-rename">
       <input type="hidden" id="rename-old-title" name="old_title" />
       <input type="hidden" id="rename-old-author" name="old_author" />
       <div>
-        <label for="rename-new-title" class="block text-sm font-medium text-slate-700 mb-1">Title</label>
+        <label for="rename-new-title" class="block text-sm font-medium text-secondary mb-1">Title</label>
         <input type="text" id="rename-new-title" name="new_title" required
-               class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent" />
+               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-transparent" />
       </div>
       <div>
-        <label for="rename-new-author" class="block text-sm font-medium text-slate-700 mb-1">Author</label>
+        <label for="rename-new-author" class="block text-sm font-medium text-secondary mb-1">Author</label>
         <input type="text" id="rename-new-author" name="new_author"
-               class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent" />
+               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-transparent" />
       </div>
       <div class="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
         <p class="font-medium mb-1">⚠️ Affects all highlights for this book</p>
@@ -115,9 +115,9 @@
         <p class="text-amber-700 text-xs mt-1">Future imports using the old title will create a <strong>separate book entry</strong>.</p>
       </div>
       <div class="flex justify-end gap-3 pt-2">
-        <button type="button" data-action="close-rename-modal" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50">Cancel</button>
+        <button type="button" data-action="close-rename-modal" class="px-4 py-2 text-sm font-medium text-secondary bg-card border border-card rounded-lg hover:bg-page-alt">Cancel</button>
         <button type="button" data-action="delete-book" id="rename-delete-btn" class="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100">🗑️ Delete book</button>
-        <button type="submit" id="rename-submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Save Changes</button>
+        <button type="submit" id="rename-submit" class="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg hover:bg-accent-hover">Save Changes</button>
       </div>
     </form>
   </div>
@@ -125,29 +125,29 @@
 
 <!-- Metadata Modal -->
 <div id="metadata-modal" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center">
-  <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden">
+  <div class="bg-card rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden">
     <div class="px-6 py-4 border-b border-slate-100">
-      <h3 class="text-lg font-semibold text-slate-900">🏷️ Book Metadata</h3>
+      <h3 class="text-lg font-semibold text-primary">🏷️ Book Metadata</h3>
     </div>
     <form id="metadata-form" class="p-6 space-y-4" data-action="submit-metadata">
       <input type="hidden" id="meta-title" name="title" />
       <input type="hidden" id="meta-author" name="author" />
       <div>
-        <label for="meta-hardcover-id" class="block text-sm font-medium text-slate-700 mb-1">HardCover ID</label>
+        <label for="meta-hardcover-id" class="block text-sm font-medium text-secondary mb-1">HardCover ID</label>
         <input type="number" id="meta-hardcover-id" name="hardcover_id"
-               class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-transparent"
                placeholder="e.g. 12345" />
-        <p class="text-xs text-slate-400 mt-1">Found in the URL: hardcover.app/books/<strong>12345</strong>/title</p>
+        <p class="text-xs text-muted mt-1">Found in the URL: hardcover.app/books/<strong>12345</strong>/title</p>
       </div>
       <div>
-        <label for="meta-isbn" class="block text-sm font-medium text-slate-700 mb-1">ISBN</label>
+        <label for="meta-isbn" class="block text-sm font-medium text-secondary mb-1">ISBN</label>
         <input type="text" id="meta-isbn" name="isbn"
-               class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-transparent"
                placeholder="e.g. 9780140449242" />
       </div>
       <div class="flex justify-end gap-3 pt-2">
-        <button type="button" data-action="close-metadata-modal" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50">Cancel</button>
-        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Save</button>
+        <button type="button" data-action="close-metadata-modal" class="px-4 py-2 text-sm font-medium text-secondary bg-card border border-card rounded-lg hover:bg-page-alt">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg hover:bg-accent-hover">Save</button>
       </div>
     </form>
   </div>
@@ -155,28 +155,28 @@
 
 <!-- Cover Selector Modal -->
 <div id="cover-selector-modal" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center">
-  <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 overflow-hidden max-h-[80vh] flex flex-col">
+  <div class="bg-card rounded-xl shadow-xl max-w-2xl w-full mx-4 overflow-hidden max-h-[80vh] flex flex-col">
     <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-      <h3 class="text-lg font-semibold text-slate-900">📚 Select Cover</h3>
-      <button data-action="close-cover-selector" class="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
+      <h3 class="text-lg font-semibold text-primary">📚 Select Cover</h3>
+      <button data-action="close-cover-selector" class="text-muted hover:text-secondary text-xl leading-none">&times;</button>
     </div>
     <div class="p-6 space-y-4 overflow-y-auto flex-1">
       <input type="hidden" id="cs-title" />
       <input type="hidden" id="cs-author" />
       <div class="flex gap-3">
         <input type="text" id="cs-query" placeholder="Search by title + author..."
-               class="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent" />
-        <button data-action="search-covers" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition shrink-0">Search</button>
+               class="flex-1 px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-transparent" />
+        <button data-action="search-covers" class="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-hover transition shrink-0">Search</button>
       </div>
       <div id="cs-results" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 min-h-[120px]">
-        <div class="col-span-full text-center text-slate-400 py-12 text-sm" id="cs-empty">
+        <div class="col-span-full text-center text-muted py-12 text-sm" id="cs-empty">
           <p>Enter a search term and click Search to find covers.</p>
         </div>
       </div>
     </div>
     <div class="px-6 py-3 border-t border-slate-100 flex justify-between items-center">
-      <span id="cs-source-note" class="text-xs text-slate-400">Covers from Open Library{% if has_hardcover_key %} and Hardcover{% endif %}</span>
-      <button data-action="close-cover-selector" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50">Close</button>
+      <span id="cs-source-note" class="text-xs text-muted">Covers from Open Library{% if has_hardcover_key %} and Hardcover{% endif %}</span>
+      <button data-action="close-cover-selector" class="px-4 py-2 text-sm font-medium text-secondary bg-card border border-card rounded-lg hover:bg-page-alt">Close</button>
     </div>
   </div>
 </div>

@@ -5,18 +5,18 @@
 <div class="space-y-6">
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h1 class="text-2xl font-bold text-slate-900">Highlights</h1>
-        <span class="text-sm text-slate-500">{{ total_count }} total</span>
+        <h1 class="text-2xl font-bold text-primary">Highlights</h1>
+        <span class="text-sm text-muted">{{ total_count }} total</span>
     </div>
 
     <!-- Search Bar -->
     <form method="GET" action="/highlights" class="flex flex-col sm:flex-row gap-3">
         <div class="flex-1 relative">
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-lg">🔍</span>
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-muted text-lg">🔍</span>
             <input type="text" name="search" value="{{ search or '' }}" placeholder="Search highlights..." 
-                   class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-shadow" />
+                   class="w-full pl-10 pr-4 py-2.5 bg-card border border-card rounded-lg text-sm text-secondary placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-transparent transition-shadow" />
         </div>
-        <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+        <button type="submit" class="px-5 py-2.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-hover transition-colors shadow-sm">
             Search
         </button>
     </form>
@@ -24,97 +24,97 @@
     <!-- Filters -->
     <form method="GET" action="/highlights" class="flex flex-wrap items-center gap-3">
         {% if search %}<input type="hidden" name="search" value="{{ search }}" />{% endif %}
-        <select name="source" data-action="submit-form" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-shadow">
+        <select name="source" data-action="submit-form" class="px-3 py-2 bg-card border border-card rounded-lg text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-accent/40 transition-shadow">
             <option value="all" {% if source_filter == 'all' or not source_filter %}selected{% endif %}>All Sources</option>
             <option value="koreader" {% if source_filter == 'koreader' %}selected{% endif %}>KOReader</option>
             <option value="readwise" {% if source_filter == 'readwise' %}selected{% endif %}>Readwise</option>
             <option value="manual" {% if source_filter == 'manual' %}selected{% endif %}>Manual</option>
             <option value="scan" {% if source_filter == 'scan' %}selected{% endif %}>Scan</option>
         </select>
-        <select name="sort" data-action="submit-form" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-shadow">
+        <select name="sort" data-action="submit-form" class="px-3 py-2 bg-card border border-card rounded-lg text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-accent/40 transition-shadow">
             <option value="newest" {% if sort == 'newest' or not sort %}selected{% endif %}>Newest First</option>
             <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest First</option>
         </select>
-        <select name="favorites" data-action="submit-form" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-shadow">
+        <select name="favorites" data-action="submit-form" class="px-3 py-2 bg-card border border-card rounded-lg text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-accent/40 transition-shadow">
             <option value="" {% if not favorites_filter %}selected{% endif %}>All Highlights</option>
             <option value="1" {% if favorites_filter == '1' %}selected{% endif %}>⭐ Favorites</option>
         </select>
         {% if source_filter and source_filter != 'all' %}
-        <a href="/highlights?search={{ search or '' }}" class="text-sm text-slate-500 hover:text-slate-700 underline">Clear filters</a>
+        <a href="/highlights?search={{ search or '' }}" class="text-sm text-muted hover:text-secondary underline">Clear filters</a>
         {% endif %}
         {% if book %}
-        <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
+        <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-accent-light text-accent">
           📖 {{ book }}
-          <a href="/highlights?search={{ search or '' }}&source={{ source_filter or '' }}" class="ml-1 hover:text-indigo-900">&times;</a>
+          <a href="/highlights?search={{ search or '' }}&source={{ source_filter or '' }}" class="ml-1 hover:text-accent">&times;</a>
         </span>
         {% endif %}
     </form>
 
     <!-- Highlights Table (desktop) -->
     {% if highlights %}
-    <div class="hl-table-wrapper bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+    <div class="hl-table-wrapper bg-card rounded-xl border border-card overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200">
-                <thead class="bg-slate-50">
+            <table class="min-w-full divide-y divide-card">
+                <thead class="bg-page-alt">
                     <tr>
-                        <th class="px-2 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-10">
-                            <input type="checkbox" id="select-all" data-action="toggle-select-all" class="rounded border-slate-300" />
+                        <th class="px-2 py-3 text-center text-xs font-semibold text-muted uppercase tracking-wider w-10">
+                            <input type="checkbox" id="select-all" data-action="toggle-select-all" class="rounded border-card" />
                         </th>
-                        <th class="px-2 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-10">⭐</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Highlight</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Book</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Author</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Source</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Date</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Tags</th>
+                        <th class="px-2 py-3 text-center text-xs font-semibold text-muted uppercase tracking-wider w-10">⭐</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Highlight</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Book</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider hidden md:table-cell">Author</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider hidden lg:table-cell">Source</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider hidden md:table-cell">Date</th>
+                        <th class="px-5 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider hidden sm:table-cell">Tags</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-card">
                     {% for h in highlights %}
-                    <tr class="highlight-row hover:bg-slate-50 transition-colors cursor-pointer" data-target="detail-{{ h.id }}" data-hl-id="{{ h.id }}">
+                    <tr class="highlight-row hover:bg-page-alt transition-colors cursor-pointer" data-target="detail-{{ h.id }}" data-hl-id="{{ h.id }}">
                         <td class="px-2 py-3 text-center">
-                            <input type="checkbox" class="hl-select rounded border-slate-300" value="{{ h.id }}" data-action="update-batch-bar" />
+                            <input type="checkbox" class="hl-select rounded border-card" value="{{ h.id }}" data-action="update-batch-bar" />
                         </td>
                         <td class="px-2 py-3 text-center">
                             <button data-action="toggle-fav" data-hl-id="{{ h.id }}" class="text-lg leading-none hover:scale-110 transition-transform {% if h.favorite %}text-amber-400{% else %}text-slate-300 hover:text-amber-300{% endif %}">
                                 {% if h.favorite %}⭐{% else %}☆{% endif %}
                             </button>
                         </td>
-                        <td class="px-5 py-3 text-sm text-slate-800 max-w-xs">
+                        <td class="px-5 py-3 text-sm text-primary max-w-xs">
                             <span class="block truncate">{{ h.text[:100] }}{% if h.text|length > 100 %}…{% endif %}</span>
                         </td>
-                        <td class="px-5 py-3 text-sm text-slate-700">{{ h.book_title }}</td>
-                        <td class="px-5 py-3 text-sm text-slate-500 hidden md:table-cell">{{ h.book_author }}</td>
+                        <td class="px-5 py-3 text-sm text-secondary">{{ h.book_title }}</td>
+                        <td class="px-5 py-3 text-sm text-muted hidden md:table-cell">{{ h.book_author }}</td>
                         <td class="px-5 py-3 hidden lg:table-cell">
                             <span class="source-badge source-{{ h.source_type | lower }}">{{ h.source_type }}</span>
                         </td>
-                        <td class="px-5 py-3 text-sm text-slate-500 hidden md:table-cell whitespace-nowrap">{{ h.highlighted_at }}</td>
+                        <td class="px-5 py-3 text-sm text-muted hidden md:table-cell whitespace-nowrap">{{ h.highlighted_at }}</td>
                         <td class="px-5 py-3 hidden sm:table-cell">
                             <div class="flex flex-wrap gap-1">
                                 {% for tag in h.tags[:3] %}
                                 <span class="tag-pill">{{ tag }}</span>
                                 {% endfor %}
                                 {% if h.tags|length > 3 %}
-                                <span class="text-xs text-slate-400">+{{ h.tags|length - 3 }}</span>
+                                <span class="text-xs text-muted">+{{ h.tags|length - 3 }}</span>
                                 {% endif %}
                             </div>
                         </td>
                     </tr>
                     <!-- Expanded Detail Row -->
                     <tr id="detail-{{ h.id }}" class="highlight-detail hidden">
-                        <td colspan="7" class="px-5 py-4 bg-slate-50 border-b border-slate-200">
+                        <td colspan="7" class="px-5 py-4 bg-page-alt border-b border-card">
                             <div class="space-y-3 max-w-3xl">
                                 <div class="flex items-start gap-3">
-                                    <span class="text-lg text-indigo-500 mt-0.5">❝</span>
-                                    <p class="text-base text-slate-800 leading-relaxed italic font-serif">{{ h.text }}</p>
+                                    <span class="text-lg text-accent mt-0.5">❝</span>
+                                    <p class="text-base text-primary leading-relaxed italic font-serif">{{ h.text }}</p>
                                 </div>
                                 {% if h.note %}
-                                <div class="ml-8 px-4 py-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-600">
-                                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Note</span>
+                                <div class="ml-8 px-4 py-3 bg-card border border-card rounded-lg text-sm text-secondary">
+                                    <span class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">Note</span>
                                     {{ h.note }}
                                 </div>
                                 {% endif %}
-                                <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 ml-8">
+                                <div class="flex flex-wrap items-center gap-2 text-xs text-muted ml-8">
                                     <span>📖 {{ h.book_title }}</span>
                                     {% if h.book_author %}<span>✍️ {{ h.book_author }}</span>{% endif %}
                                     <span class="source-badge source-{{ h.source_type | lower }}">{{ h.source_type }}</span>
@@ -126,43 +126,43 @@
                                         {% endfor %}
                                     </span>
                                     {% endif %}
-                                    <button data-action="copy-text" data-text="{{ h.text }}" data-label="Highlight" class="px-3 py-1 bg-white border border-slate-200 text-slate-600 rounded text-xs font-medium hover:bg-slate-50 transition-colors">📋 Copy</button>
-                                    <button data-action="toggle-edit" data-hl-id="{{ h.id }}" class="px-3 py-1 bg-white border border-slate-200 text-slate-600 rounded text-xs font-medium hover:bg-slate-50 transition-colors">✏️ Edit</button>
-                                    <button data-action="load-context" data-hl-id="{{ h.id }}" class="px-3 py-1 bg-white border border-slate-200 text-slate-600 rounded text-xs font-medium hover:bg-slate-50 transition-colors">📖 Context</button>
+                                    <button data-action="copy-text" data-text="{{ h.text }}" data-label="Highlight" class="px-3 py-1 bg-card border border-card text-secondary rounded text-xs font-medium hover:bg-page-alt transition-colors">📋 Copy</button>
+                                    <button data-action="toggle-edit" data-hl-id="{{ h.id }}" class="px-3 py-1 bg-card border border-card text-secondary rounded text-xs font-medium hover:bg-page-alt transition-colors">✏️ Edit</button>
+                                    <button data-action="load-context" data-hl-id="{{ h.id }}" class="px-3 py-1 bg-card border border-card text-secondary rounded text-xs font-medium hover:bg-page-alt transition-colors">📖 Context</button>
                                     <button data-action="delete-hl" data-hl-id="{{ h.id }}" class="px-3 py-1 bg-red-50 border border-red-200 text-red-600 rounded text-xs font-medium hover:bg-red-100 transition-colors">🗑️ Delete</button>
                                     {% if h.share_token %}
-                                    <a href="/share/{{ h.share_token }}" target="_blank" class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-medium hover:bg-indigo-100 transition-colors">📤 Share</a>
+                                    <a href="/share/{{ h.share_token }}" target="_blank" class="px-3 py-1 bg-accent-light text-accent rounded text-xs font-medium hover:bg-indigo-100 transition-colors">📤 Share</a>
                                     {% endif %}
                                 </div>
                             </div>
                             <!-- Inline Edit Form -->
-                            <div id="edit-{{ h.id }}" class="hidden mt-4 ml-8 p-4 bg-white border border-slate-200 rounded-lg">
+                            <div id="edit-{{ h.id }}" class="hidden mt-4 ml-8 p-4 bg-card border border-card rounded-lg">
                                 <div class="space-y-3">
                                     <div>
-                                        <label class="text-xs font-semibold text-slate-500 block mb-1">Highlight</label>
-                                        <textarea id="edit-text-{{ h.id }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-serif italic" rows="3">{{ h.text }}</textarea>
+                                        <label class="text-xs font-semibold text-muted block mb-1">Highlight</label>
+                                        <textarea id="edit-text-{{ h.id }}" class="w-full px-3 py-2 border border-card rounded-lg text-sm font-serif italic" rows="3">{{ h.text }}</textarea>
                                     </div>
                                     <div>
-                                        <label class="text-xs font-semibold text-slate-500 block mb-1">Note</label>
-                                        <textarea id="edit-note-{{ h.id }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" rows="2">{{ h.note or '' }}</textarea>
+                                        <label class="text-xs font-semibold text-muted block mb-1">Note</label>
+                                        <textarea id="edit-note-{{ h.id }}" class="w-full px-3 py-2 border border-card rounded-lg text-sm" rows="2">{{ h.note or '' }}</textarea>
                                     </div>
                                     <div class="flex gap-3">
                                         <div class="flex-1">
-                                            <label class="text-xs font-semibold text-slate-500 block mb-1">Book</label>
-                                            <input id="edit-book-{{ h.id }}" type="text" value="{{ h.book_title }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                            <label class="text-xs font-semibold text-muted block mb-1">Book</label>
+                                            <input id="edit-book-{{ h.id }}" type="text" value="{{ h.book_title }}" class="w-full px-3 py-2 border border-card rounded-lg text-sm">
                                         </div>
                                         <div class="flex-1">
-                                            <label class="text-xs font-semibold text-slate-500 block mb-1">Author</label>
-                                            <input id="edit-author-{{ h.id }}" type="text" value="{{ h.book_author or '' }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                            <label class="text-xs font-semibold text-muted block mb-1">Author</label>
+                                            <input id="edit-author-{{ h.id }}" type="text" value="{{ h.book_author or '' }}" class="w-full px-3 py-2 border border-card rounded-lg text-sm">
                                         </div>
                                     </div>
                                     <div>
-                                        <label class="text-xs font-semibold text-slate-500 block mb-1">Tags (comma-separated)</label>
-                                        <input id="edit-tags-{{ h.id }}" type="text" value="{{ h.tags | join(', ') }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                        <label class="text-xs font-semibold text-muted block mb-1">Tags (comma-separated)</label>
+                                        <input id="edit-tags-{{ h.id }}" type="text" value="{{ h.tags | join(', ') }}" class="w-full px-3 py-2 border border-card rounded-lg text-sm">
                                     </div>
                                     <div class="flex gap-2 justify-end">
-                                        <button data-action="cancel-edit" data-hl-id="{{ h.id }}" class="px-4 py-2 bg-white border border-slate-200 text-sm text-slate-600 rounded-lg hover:bg-slate-50">Cancel</button>
-                                        <button data-action="save-edit" data-hl-id="{{ h.id }}" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">Save</button>
+                                        <button data-action="cancel-edit" data-hl-id="{{ h.id }}" class="px-4 py-2 bg-card border border-card text-sm text-secondary rounded-lg hover:bg-page-alt">Cancel</button>
+                                        <button data-action="save-edit" data-hl-id="{{ h.id }}" class="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-hover">Save</button>
                                     </div>
                                 </div>
                             </div>
@@ -182,13 +182,13 @@
         <div class="hl-card-swipe-container">
             <div class="hl-card">
                 <div class="flex items-start gap-3">
-                    <input type="checkbox" class="hl-select mt-1 rounded border-slate-300 shrink-0" value="{{ h.id }}" data-action="update-batch-bar" />
+                    <input type="checkbox" class="hl-select mt-1 rounded border-card shrink-0" value="{{ h.id }}" data-action="update-batch-bar" />
                     <div class="min-w-0 flex-1" data-action="toggle-mobile-detail" data-hl-id="{{ h.id }}">
                         <div class="hl-card-text">{{ h.text[:150] }}{% if h.text|length > 150 %}…{% endif %}</div>
                         <div class="hl-card-meta">
-                            <span class="font-medium text-slate-700 truncate max-w-[140px]">{{ h.book_title }}</span>
-                            {% if h.book_author %}<span class="text-slate-400">·</span><span class="truncate max-w-[100px]">{{ h.book_author }}</span>{% endif %}
-                            <span class="text-slate-400">·</span>
+                            <span class="font-medium text-secondary truncate max-w-[140px]">{{ h.book_title }}</span>
+                            {% if h.book_author %}<span class="text-muted">·</span><span class="truncate max-w-[100px]">{{ h.book_author }}</span>{% endif %}
+                            <span class="text-muted">·</span>
                             <span class="source-badge source-{{ h.source_type | lower }}">{{ h.source_type }}</span>
                         </div>
                         <div class="flex flex-wrap gap-1 mt-1.5">
@@ -196,68 +196,68 @@
                             <span class="tag-pill">{{ tag }}</span>
                             {% endfor %}
                             {% if h.tags|length > 3 %}
-                            <span class="text-xs text-slate-400">+{{ h.tags|length - 3 }}</span>
+                            <span class="text-xs text-muted">+{{ h.tags|length - 3 }}</span>
                             {% endif %}
                         </div>
                         <div class="hl-card-detail" id="card-detail-{{ h.id }}">
                             <div class="space-y-3">
                                 <div class="flex items-start gap-2">
-                                    <span class="text-lg text-indigo-500">❝</span>
-                                    <p class="text-sm text-slate-700 leading-relaxed italic font-serif">{{ h.text }}</p>
+                                    <span class="text-lg text-accent">❝</span>
+                                    <p class="text-sm text-secondary leading-relaxed italic font-serif">{{ h.text }}</p>
                                 </div>
                                 {% if h.note %}
-                                <div class="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600">
-                                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Note</span>
+                                <div class="px-3 py-2.5 bg-page-alt border border-card rounded-lg text-sm text-secondary">
+                                    <span class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">Note</span>
                                     {{ h.note }}
                                 </div>
                                 {% endif %}
-                                <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                                <div class="flex flex-wrap items-center gap-2 text-xs text-muted">
                                     <span>📖 {{ h.book_title }}</span>
                                     {% if h.book_author %}<span>✍️ {{ h.book_author }}</span>{% endif %}
                                     <span>📅 {{ h.highlighted_at }}</span>
                                 </div>
                                 <div class="flex gap-2">
-                                    <button data-action="copy-text" data-text="{{ h.text }}" data-label="Highlight" class="flex-1 px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-50">📋 Copy</button>
-                                    <button data-action="toggle-edit" data-hl-id="{{ h.id }}" class="flex-1 px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-50">✏️ Edit</button>
-                                    <button data-action="load-context" data-hl-id="{{ h.id }}" class="flex-1 px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-50">📖 Context</button>
+                                    <button data-action="copy-text" data-text="{{ h.text }}" data-label="Highlight" class="flex-1 px-3 py-2 bg-card border border-card text-secondary rounded-lg text-xs font-medium hover:bg-page-alt">📋 Copy</button>
+                                    <button data-action="toggle-edit" data-hl-id="{{ h.id }}" class="flex-1 px-3 py-2 bg-card border border-card text-secondary rounded-lg text-xs font-medium hover:bg-page-alt">✏️ Edit</button>
+                                    <button data-action="load-context" data-hl-id="{{ h.id }}" class="flex-1 px-3 py-2 bg-card border border-card text-secondary rounded-lg text-xs font-medium hover:bg-page-alt">📖 Context</button>
                                     {% if h.share_token %}
-                                    <a href="/share/{{ h.share_token }}" target="_blank" class="flex-1 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-medium hover:bg-indigo-100 text-center">📤 Share</a>
+                                    <a href="/share/{{ h.share_token }}" target="_blank" class="flex-1 px-3 py-2 bg-accent-light text-accent rounded-lg text-xs font-medium hover:bg-indigo-100 text-center">📤 Share</a>
                                     {% endif %}
                                     <button data-action="delete-hl" data-hl-id="{{ h.id }}" class="flex-1 px-3 py-2 bg-red-50 border border-red-200 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100">🗑️ Delete</button>
                                 </div>
                                 <!-- Inline Edit Form -->
-                                <div id="edit-{{ h.id }}" class="hidden p-4 bg-white border border-slate-200 rounded-lg">
+                                <div id="edit-{{ h.id }}" class="hidden p-4 bg-card border border-card rounded-lg">
                                     <div class="space-y-3">
                                         <div>
-                                            <label class="text-xs font-semibold text-slate-500 block mb-1">Highlight</label>
-                                            <textarea id="edit-text-{{ h.id }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-serif italic" rows="3">{{ h.text }}</textarea>
+                                            <label class="text-xs font-semibold text-muted block mb-1">Highlight</label>
+                                            <textarea id="edit-text-{{ h.id }}" class="w-full px-3 py-2 border border-card rounded-lg text-sm font-serif italic" rows="3">{{ h.text }}</textarea>
                                         </div>
                                         <div>
-                                            <label class="text-xs font-semibold text-slate-500 block mb-1">Note</label>
-                                            <textarea id="edit-note-{{ h.id }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" rows="2">{{ h.note or '' }}</textarea>
+                                            <label class="text-xs font-semibold text-muted block mb-1">Note</label>
+                                            <textarea id="edit-note-{{ h.id }}" class="w-full px-3 py-2 border border-card rounded-lg text-sm" rows="2">{{ h.note or '' }}</textarea>
                                         </div>
                                         <div class="flex gap-3">
                                             <div class="flex-1">
-                                                <label class="text-xs font-semibold text-slate-500 block mb-1">Book</label>
-                                                <input id="edit-book-{{ h.id }}" type="text" value="{{ h.book_title }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                                <label class="text-xs font-semibold text-muted block mb-1">Book</label>
+                                                <input id="edit-book-{{ h.id }}" type="text" value="{{ h.book_title }}" class="w-full px-3 py-2 border border-card rounded-lg text-sm">
                                             </div>
                                             <div class="flex-1">
-                                                <label class="text-xs font-semibold text-slate-500 block mb-1">Author</label>
-                                                <input id="edit-author-{{ h.id }}" type="text" value="{{ h.book_author or '' }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                                <label class="text-xs font-semibold text-muted block mb-1">Author</label>
+                                                <input id="edit-author-{{ h.id }}" type="text" value="{{ h.book_author or '' }}" class="w-full px-3 py-2 border border-card rounded-lg text-sm">
                                             </div>
                                         </div>
                                         <div>
-                                            <label class="text-xs font-semibold text-slate-500 block mb-1">Tags (comma-separated)</label>
-                                            <input id="edit-tags-{{ h.id }}" type="text" value="{{ h.tags | join(', ') }}" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                                            <label class="text-xs font-semibold text-muted block mb-1">Tags (comma-separated)</label>
+                                            <input id="edit-tags-{{ h.id }}" type="text" value="{{ h.tags | join(', ') }}" class="w-full px-3 py-2 border border-card rounded-lg text-sm">
                                         </div>
                                         <div class="flex gap-2 justify-end">
-                                            <button data-action="cancel-edit" data-hl-id="{{ h.id }}" class="px-4 py-2 bg-white border border-slate-200 text-sm text-slate-600 rounded-lg hover:bg-slate-50">Cancel</button>
-                                            <button data-action="save-edit" data-hl-id="{{ h.id }}" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">Save</button>
+                                            <button data-action="cancel-edit" data-hl-id="{{ h.id }}" class="px-4 py-2 bg-card border border-card text-sm text-secondary rounded-lg hover:bg-page-alt">Cancel</button>
+                                            <button data-action="save-edit" data-hl-id="{{ h.id }}" class="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-hover">Save</button>
                                         </div>
                                     </div>
                                 </div>
                                 <!-- Context Container -->
-                                <div id="context-{{ h.id }}" class="hidden mt-3 space-y-2 pt-3 border-t border-slate-200"></div>
+                                <div id="context-{{ h.id }}" class="hidden mt-3 space-y-2 pt-3 border-t border-card"></div>
                             </div>
                         </div>
                     </div>
@@ -280,19 +280,19 @@
 
     <!-- Pagination -->
     <div class="flex items-center justify-between">
-        <p class="text-sm text-slate-500">
+        <p class="text-sm text-muted">
             Page {{ page }} of {{ total_pages }}
         </p>
         <div class="flex gap-2">
             {% if page > 1 %}
             <a href="?search={{ search or '' }}&source={{ source_filter or '' }}&sort={{ sort or 'newest' }}&favorites={{ favorites_filter }}&book={{ book or '' }}&page={{ page - 1 }}"
-               class="px-4 py-2 bg-white border border-slate-200 text-sm text-slate-700 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
+               class="px-4 py-2 bg-card border border-card text-sm text-secondary rounded-lg hover:bg-page-alt transition-colors shadow-sm">
                 ← Previous
             </a>
             {% endif %}
             {% if page < total_pages %}
             <a href="?search={{ search or '' }}&source={{ source_filter or '' }}&sort={{ sort or 'newest' }}&favorites={{ favorites_filter }}&book={{ book or '' }}&page={{ page + 1 }}"
-               class="px-4 py-2 bg-white border border-slate-200 text-sm text-slate-700 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
+               class="px-4 py-2 bg-card border border-card text-sm text-secondary rounded-lg hover:bg-page-alt transition-colors shadow-sm">
                 Next →
             </a>
             {% endif %}
@@ -303,21 +303,21 @@
     <div id="batch-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 hidden">
         <div class="bg-slate-900 text-white rounded-xl shadow-2xl px-5 py-3 flex items-center gap-4 text-sm">
             <span id="batch-count" class="font-medium whitespace-nowrap">0 selected</span>
-            <span class="text-slate-400">|</span>
+            <span class="text-muted">|</span>
             <button data-action="batch-add-tag" class="hover:text-emerald-400 transition-colors whitespace-nowrap">🏷️ Add Tag</button>
-            <span class="text-slate-600">|</span>
+            <span class="text-secondary">|</span>
             <button data-action="batch-delete" class="hover:text-red-400 transition-colors whitespace-nowrap">🗑️ Delete</button>
-            <span class="text-slate-600">|</span>
-            <button data-action="clear-selection" class="text-slate-400 hover:text-white transition-colors">Cancel</button>
+            <span class="text-secondary">|</span>
+            <button data-action="clear-selection" class="text-muted hover:text-white transition-colors">Cancel</button>
         </div>
     </div>
 
     {% else %}
     <!-- Empty State -->
-    <div class="bg-white rounded-xl border border-slate-200 p-12 text-center shadow-sm">
+    <div class="bg-card rounded-xl border border-card p-12 text-center shadow-sm">
         <p class="text-4xl mb-3">📝</p>
-        <h3 class="text-lg font-semibold text-slate-700 mb-1">No highlights found</h3>
-        <p class="text-slate-500 text-sm">
+        <h3 class="text-lg font-semibold text-secondary mb-1">No highlights found</h3>
+        <p class="text-muted text-sm">
             {% if search or source_filter %}
             Try adjusting your search or filters.
             {% else %}
@@ -325,7 +325,7 @@
             {% endif %}
         </p>
         {% if not search and not source_filter %}
-        <a href="/import" class="inline-block mt-4 px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+        <a href="/import" class="inline-block mt-4 px-5 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-hover transition-colors shadow-sm">
             📥 Import Highlights
         </a>
         {% endif %}

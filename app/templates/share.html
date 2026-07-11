@@ -28,7 +28,7 @@
         <div class="text-center py-20">
             <p class="text-4xl mb-4">🔍</p>
             <h1 class="text-xl font-bold text-white mb-2">Highlight not found</h1>
-            <p class="text-slate-400">This share link may have been revoked or is invalid.</p>
+            <p class="text-muted">This share link may have been revoked or is invalid.</p>
         </div>
         {% else %}
         <!-- The card image -->
@@ -40,23 +40,23 @@
         <div class="text-center">
             <p class="text-lg font-semibold text-white">{{ highlight.book_title }}</p>
             {% if highlight.book_author %}
-            <p class="text-slate-400">{{ highlight.book_author }}</p>
+            <p class="text-muted">{{ highlight.book_author }}</p>
             {% endif %}
             {% if highlight.note %}
             <div class="mt-4 px-6 py-4 bg-slate-800 rounded-xl inline-block max-w-lg">
                 <p class="text-sm text-slate-300 italic">{{ highlight.note }}</p>
             </div>
             {% endif %}
-            <p class="mt-6 text-xs text-slate-600">
-                <img src="/static/logo-32.png" class="inline-block w-4 h-4 mr-1 align-text-bottom" alt=""> <a href="https://github.com/cansas/commonplace" class="hover:text-slate-400 transition-colors">commonplace</a>
+            <p class="mt-6 text-xs text-secondary">
+                <img src="/static/logo-32.png" class="inline-block w-4 h-4 mr-1 align-text-bottom" alt=""> <a href="https://github.com/cansas/commonplace" class="hover:text-muted transition-colors">commonplace</a>
                 — self-hosted highlight library
             </p>
             <div class="mt-4 text-center">
                 <button onclick="navigator.clipboard.writeText('{{ highlight.text|replace("'", "\\'")|replace("\n", "\\n") }}').then(function(){var e=document.getElementById('copy-msg');e.textContent='Copied!';setTimeout(function(){e.textContent=''},2000);})"
-                        class="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm cursor-pointer">
+                        class="px-5 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-hover transition-colors shadow-sm cursor-pointer">
                     📋 Copy Text
                 </button>
-                <p id="copy-msg" class="text-xs text-slate-400 mt-2"></p>
+                <p id="copy-msg" class="text-xs text-muted mt-2"></p>
             </div>
         </div>
         {% endif %}

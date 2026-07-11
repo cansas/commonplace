@@ -69,16 +69,16 @@
                 <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-lg">📝</div>
                 <div>
                     <h2 class="text-base font-semibold text-primary">Readwise Obsidian Export</h2>
-                    <p class="text-xs text-secondary">Upload <code class="text-indigo-600 bg-indigo-50 px-1 rounded">.md</code> files from the Readwise/Books/ folder.</p>
+                    <p class="text-xs text-secondary">Upload <code class="text-accent bg-accent-light px-1 rounded">.md</code> files from the Readwise/Books/ folder.</p>
                 </div>
             </div>
 
             <form method="POST" action="/import/readwise" enctype="multipart/form-data" class="space-y-4">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-                <div class="border-2 border-dashed border-card rounded-lg p-5 text-center hover:border-indigo-300 transition-colors">
+                <div class="border-2 border-dashed border-card rounded-lg p-5 text-center hover:border-accent transition-colors">
                     <label for="readwise-file" class="cursor-pointer block">
                         <span class="text-3xl block mb-2">📄</span>
-                        <span class="text-sm text-indigo-600 font-medium hover:text-indigo-800">Choose .md file</span>
+                        <span class="text-sm text-accent font-medium hover:text-indigo-800">Choose .md file</span>
                         <span class="block text-xs text-secondary mt-1">or drag and drop</span>
                         <input type="file" id="readwise-file" name="file" accept=".md" class="hidden" data-action="update-filename" data-display="readwise-file-name" />
                     </label>
@@ -96,15 +96,15 @@
 
                 <div>
                     <textarea name="content" rows="6" placeholder="Paste your Readwise markdown content here..." 
-                              class="w-full px-4 py-3 bg-page border border-card rounded-lg text-sm text-primary placeholder-secondary focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-shadow"></textarea>
+                              class="w-full px-4 py-3 bg-page border border-card rounded-lg text-sm text-primary placeholder-secondary focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-transparent transition-shadow"></textarea>
                 </div>
 
                 <div class="flex items-center gap-3">
                     <label class="flex items-center gap-2 text-sm text-secondary cursor-pointer">
-                        <input type="checkbox" name="dry_run" value="true" class="rounded border-card text-indigo-600 focus:ring-indigo-400" />
+                        <input type="checkbox" name="dry_run" value="true" class="rounded border-card text-accent focus:ring-accent/40" />
                         Dry run (preview only)
                     </label>
-                    <button type="submit" class="flex-1 px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                    <button type="submit" class="flex-1 px-5 py-2.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-hover transition-colors shadow-sm">
                         📥 Import from Readwise
                     </button>
                 </div>
