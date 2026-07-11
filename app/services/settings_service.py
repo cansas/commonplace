@@ -90,7 +90,9 @@ def get_theme() -> str:
 
 def set_theme(t: str) -> None:
     t = t.strip().lower()
-    if t not in ("modern", "reader", "dark", "glass", "contemporary", "contemporary-dark"):
+    from app.services.theme_service import get_all_themes
+    valid = {th["name"] for th in get_all_themes()}
+    if t not in valid:
         t = "modern"
     set("theme", t)
 
