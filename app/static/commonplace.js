@@ -1275,7 +1275,7 @@
     window.runDedup = function() {
         window.confirmModal('Deduplicate highlights?', 'Merge highlights with identical text/book/author into one, preserving tags and review history.').then(function(ok) {
             if (!ok) return;
-            fetch('/api/settings/dedup', {method: 'POST', headers: {'X-CSRF-Token': window.csrfToken}})
+            fetch('/api/settings/dedup', {method: 'POST', headers: {'X-CSRF-Token': CSRF_TOKEN}})
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (data.ok) {
