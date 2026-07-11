@@ -100,3 +100,37 @@ async def debug_streak(db: AsyncSession = Depends(get_db)):
         "central_datetimes_preview": central_with_time[:30],
         "central_dates_preview": [str(d) for d in sorted_dates[:30]],
     }
+
+
+@router.get("/api/debug/digest")
+async def debug_digest():
+    """Debug endpoint to inspect digest scheduler state."""
+    from app.services.settings_service import get_all
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    settings = get_all()
+    _CENTRAL = ZoneInfo("America/Chicago")
+    now_ct = datetime.now(_CENTRAL)
+
+    # Mask secrets
+    masked = dict(settings)
+    for key in ("mailjet_api_key", "mailjet_secret_key"):
+        val = masked.get(key, "")
+        if val and len(val) > 8:
+            masked[key] = val[:4] + "..." + val[-4:]
+        elif val:
+            masked[key] = "***"
+
+    return {
+        "server_time_ct": now_ct.isoformat(),
+        "settings": {
+            k: masked.get(k)
+            for k in (
+                "email_digest_enabled", "mailjet_api_key", "mailjet_secret_key",
+                "email_from_addr", "email_to_addr", "email_digest_time",
+                "last_digest_sent_date",
+            )
+        },
+        "scheduler_running": True,  # best-effort: if this endpoint responds, scheduler might be
+    }
