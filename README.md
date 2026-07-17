@@ -1,6 +1,6 @@
 # commonplace
 
-## I am working on a multi-user version of Commonplace cansas/commonplace-multi is the repo. It has a migration nuilt in (backup your current dbase!).
+## I am working on a multi-user version of Commonplace cansas/commonplace-multi is the repo. It has a migration built in (backup your current dbase!).
 
 A self-hosted Readwise alternative — capture, browse, review, and resurface your highlights.
 
