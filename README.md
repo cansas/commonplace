@@ -8,7 +8,7 @@ A self-hosted Readwise alternative — capture, browse, review, and resurface yo
 - **Browse**: Full-text search, filter by source/tag/favorites, book view with covers
 - **Review**: Daily review
 - **Achievements**: Unlock witty milestones as you build your review streak
-- **Sync**: Push highlights from KOReader via custom plugin, sync to Obsidian via plugin, auto-sync from BookOrbit (kobo, koreader, and web annotations), or push from Readest via its built-in Readwise integration
+- **Sync**: Push highlights from KOReader via custom plugin, sync to Obsidian via plugin, auto-sync from BookOrbit (kobo, koreader, and web annotations), pull from Readeck (read-it-later annotations), or push from Readest via its built-in Readwise integration
 - **Self-hosted**: Single Docker container, SQLite database, no external services required
 
 ## Quick Start
@@ -44,6 +44,7 @@ For full setup instructions, see [INSTALL.md](INSTALL.md).
 - **Themes** — Modern, Reader, Dark, plus unlimited **custom themes** — drop a `.css` file into `data/themes/` or upload via Settings → Appearance ([documentation](THEMES.md))
 - **Streaks** — track daily review streaks with current and best counters
 - **BookOrbit Sync** — auto-import annotations from BookOrbit (kobo, koreader, web) with SHA256 fingerprint dedup. Configure in Settings → BookOrbit tab
+- **Readeck Sync** — pull annotations from a self-hosted Readeck instance (read-it-later) with SHA256 fingerprint dedup and per-bookmark source tracking. Configure in Settings → Readeck tab: server URL, API token (Readeck profile → API token), and an auto-sync toggle. Manual Sync Now runs on demand; token and connection failures surface as errors instead of a silent 0-import report
 - **Readest Sync** — push highlights from the Readest reader (desktop, web, mobile) via its built-in Readwise integration. Configure in Readest → Settings → Integrations → Readwise: paste a Commonplace API token and set the base URL to `https://your-commonplace-host/api`. Highlights auto-push while reading (5s debounce) plus a manual "Push All" per book
 - **First-run wizard** — web-based admin creation, no env vars required
 
