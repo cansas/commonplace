@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from fastapi import FastAPI, Depends, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
@@ -229,6 +229,18 @@ async def ping():
     Requires ``Authorization: Token ***  Returns 200 if valid, 401 if not.
     """
     return {"ok": True, "version": app.version}
+
+
+@app.get("/api/auth/", response_class=Response)
+async def api_auth_check():
+    """Token validation for Readest's built-in Readwise integration.
+
+    The Readest client calls ``GET {baseUrl}/auth/`` on connect and treats
+    HTTP 204 as "token valid". AuthMiddleware has already verified the
+    ``Authorization: Token *** header before this handler runs, so a 204
+    response is all that's needed.
+    """
+    return Response(status_code=204)
 
 
 @app.get("/", response_class=HTMLResponse)

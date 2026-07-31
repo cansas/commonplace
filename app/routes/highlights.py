@@ -592,7 +592,8 @@ async def highlight_cover_image(hl_id: int, db: AsyncSession = Depends(get_db)):
     return Response(content=raw, media_type=mime)
 
 
-@router.post("/api/highlights/batch")
+@router.post("/api/highlights/batch", include_in_schema=True)
+@router.post("/api/highlights/", include_in_schema=False)
 async def batch_import(
     data: ReadwiseBatchImport,
     db: AsyncSession = Depends(get_db),
@@ -604,7 +605,9 @@ async def batch_import(
     Returns per-item results so the caller can distinguish new imports
     from skipped duplicates.
 
-    Useful for BookOrbit sync and other bulk import tools.
+    Useful for BookOrbit sync, Readest's built-in Readwise integration
+    (which POSTs to ``/api/highlights/`` with the same body), and other
+    bulk import tools.
     """
     imported = 0
     skipped = 0
