@@ -82,6 +82,10 @@ async def settings_page(
     from app.services.bookorbit_sync import get_sync_config
     bookorbit_config = get_sync_config()
 
+    # Readeck sync config
+    from app.services.readeck_sync import get_sync_config as get_readeck_sync_config
+    readeck_config = get_readeck_sync_config()
+
     return render(
         request,
         "settings.html",
@@ -99,12 +103,18 @@ async def settings_page(
             hardcover_key=get_hardcover_api_key(),
             email_config=get_email_config(),
             bookorbit_config=bookorbit_config,
+            readeck_config=readeck_config,
         ),
     )
 
 
 def get_bookorbit_config() -> dict:
     from app.services.bookorbit_sync import get_sync_config
+    return get_sync_config()
+
+
+def get_readeck_config() -> dict:
+    from app.services.readeck_sync import get_sync_config
     return get_sync_config()
 
 
@@ -162,6 +172,59 @@ async def trigger_bookorbit_sync(
     from app.services.bookorbit_sync import sync_from_bookorbit
 
     result = await sync_from_bookorbit()
+    return {"ok": True, "result": result}
+
+
+# ── Readeck Sync Settings ───────────────────────────────────────────────────
+
+
+@router.post("/api/settings/readeck-sync")
+async def save_readeck_sync_settings(
+    request: Request,
+    body: dict,
+):
+    """Save Readeck sync configuration."""
+    from app.services.settings_service import set as _set
+
+    allowed = {"readeck_url", "readeck_api_token", "readeck_sync_enabled"}
+    for k in allowed:
+        if k in body:
+            _set(k, body[k])
+    # Clear any previous disabled reason when saving new settings
+    if "readeck_api_token" in body or "readeck_sync_enabled" in body:
+        _set("readeck_disabled_reason", "")
+    return {"ok": True}
+
+
+@router.post("/api/settings/readeck-test")
+async def test_readeck_connection(
+    request: Request,
+    body: dict,
+):
+    """Test Readeck connection."""
+    from app.services.readeck_sync import test_connection
+
+    url = body.get("readeck_url", "").strip()
+    api_token = body.get("readeck_api_token", "").strip()
+
+    # Fall back to stored values for fields not provided
+    if not url:
+        url = _get("readeck_url", "")
+    if not api_token:
+        api_token = _get("readeck_api_token", "")
+
+    result = await test_connection(url, api_token)
+    return result
+
+
+@router.post("/api/settings/readeck-sync-now")
+async def trigger_readeck_sync(
+    request: Request,
+):
+    """Manually trigger a Readeck sync."""
+    from app.services.readeck_sync import sync_from_readeck
+
+    result = await sync_from_readeck()
     return {"ok": True, "result": result}
 
 

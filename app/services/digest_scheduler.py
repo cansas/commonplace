@@ -1,4 +1,4 @@
-"""Scheduler for daily email digest + BookOrbit sync.
+"""Scheduler for daily email digest + BookOrbit/Readeck sync.
 
 Uses APScheduler to check every 5 minutes whether the digest should be sent,
 and every 15 minutes whether BookOrbit sync should run.
@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 _SCHEDULER = None
 _BOOKORBIT_SYNC_INTERVAL = 15  # minutes between BookOrbit sync checks
+_READECK_SYNC_INTERVAL = 15  # minutes between Readeck sync checks
 
 
 async def check_and_send_digest():
@@ -98,8 +99,25 @@ async def check_and_run_bookorbit_sync():
         logger.error("BookOrbit sync failed: %s", e)
 
 
+async def check_and_run_readeck_sync():
+    """Check if Readeck sync is enabled and run it if so."""
+    enabled = get("readeck_sync_enabled", False)
+    if not enabled:
+        return
+    try:
+        from app.services.readeck_sync import sync_from_readeck
+        result = await sync_from_readeck()
+        if result["posted"] > 0 or result["errors"] > 0:
+            logger.info(
+                "Readeck sync: posted=%d skipped=%d errors=%d",
+                result["posted"], result["skipped"], result["errors"],
+            )
+    except Exception as e:
+        logger.error("Readeck sync failed: %s", e)
+
+
 def start_scheduler():
-    """Start the background scheduler that checks for digest delivery and BookOrbit sync."""
+    """Start the background scheduler that checks for digest delivery and sync jobs."""
     global _SCHEDULER
     if _SCHEDULER is not None:
         return
@@ -109,8 +127,13 @@ def start_scheduler():
     _SCHEDULER.add_job(check_and_send_digest, "interval", minutes=5, id="digest_check")
     # Check BookOrbit sync every 15 minutes
     _SCHEDULER.add_job(check_and_run_bookorbit_sync, "interval", minutes=_BOOKORBIT_SYNC_INTERVAL, id="bookorbit_sync")
+    # Check Readeck sync every 15 minutes
+    _SCHEDULER.add_job(check_and_run_readeck_sync, "interval", minutes=_READECK_SYNC_INTERVAL, id="readeck_sync")
     _SCHEDULER.start()
-    logger.info("Scheduler started (digest: 5min, BookOrbit sync: %dmin)", _BOOKORBIT_SYNC_INTERVAL)
+    logger.info(
+        "Scheduler started (digest: 5min, BookOrbit sync: %dmin, Readeck sync: %dmin)",
+        _BOOKORBIT_SYNC_INTERVAL, _READECK_SYNC_INTERVAL,
+    )
 
 
 def stop_scheduler():

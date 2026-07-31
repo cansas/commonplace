@@ -45,6 +45,7 @@
         <button data-tab="notifications" id="tab-notifications" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">🔔 Notifications</button>
         <button data-tab="appearance" id="tab-appearance" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">🎨 Appearance</button>
         <button data-tab="bookorbit" id="tab-bookorbit" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">📡 BookOrbit</button>
+        <button data-tab="readeck" id="tab-readeck" class="px-5 py-3 text-sm font-medium border-b-2 border-transparent hover:text-accent transition tab-btn">📰 Readeck</button>
     </div>
 
     <!-- ════════════ DATA TAB ════════════ -->
@@ -509,6 +510,98 @@
                 <p>Syncs annotations from <strong>all origins</strong> (kobo, koreader, web) in BookOrbit into Commonplace.</p>
                 <p>Dedup is handled via SHA256 fingerprint of <code>text + book_title + author</code> — existing highlights are skipped.</p>
                 <p>New annotations get a <code>bookorbit:&#123;id&#125;</code> source_id for exact reference.</p>
+            </div>
+        </section>
+    </div>
+    <!-- ════════════ READECK TAB ════════════ -->
+    <div id="panel-readeck" class="tab-panel space-y-6">
+
+        <!-- Connection -->
+        <section class="bg-card rounded-xl border border-card shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-card">
+                <h2 class="text-base font-semibold text-primary">📰 Readeck Sync</h2>
+                <p class="text-xs text-muted mt-0.5">Import annotations from your Readeck read-it-later server.</p>
+            </div>
+            <div class="px-6 py-5 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="rd-url" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">Server URL</label>
+                        <input type="url" id="rd-url" value="{{ readeck_config.url or '' }}" placeholder="https://readeck.example.com"
+                               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent font-mono" />
+                    </div>
+                    <div>
+                        <label for="rd-token" class="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">API Token</label>
+                        <input type="password" id="rd-token" value="{{ readeck_config.api_token or '' }}" placeholder="Readeck API token"
+                               class="w-full px-3 py-2 border border-card rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent font-mono" />
+                    </div>
+                </div>
+                <p class="text-xs text-muted">Create an API token in Readeck under Profile → API tokens. The token only needs read access to bookmarks and annotations.</p>
+
+                {% if readeck_config.disabled_reason %}
+                <div class="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+                    <span class="text-sm">⚠️</span>
+                    <p class="text-xs text-amber-800">Sync disabled: {{ readeck_config.disabled_reason }}</p>
+                </div>
+                {% endif %}
+
+                <div class="flex items-center gap-3 pt-1">
+                    <button data-action="test-readeck" class="px-4 py-2 border border-card text-secondary text-sm font-medium rounded-lg hover:bg-page-alt transition">
+                        🔌 Test Connection
+                    </button>
+                    <button data-action="save-readeck" class="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg btn-primary hover:bg-accent-hover transition shadow-sm">
+                        💾 Save Settings
+                    </button>
+                    <button data-action="sync-readeck-now" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition shadow-sm">
+                        🔄 Sync Now
+                    </button>
+                    <span id="rd-result" class="text-xs text-muted"></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Status -->
+        <section class="bg-card rounded-xl border border-card shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-card">
+                <h2 class="text-base font-semibold text-primary">📊 Sync Status</h2>
+            </div>
+            <div class="px-6 py-5">
+                <div class="flex items-center gap-6 text-sm">
+                    <div>
+                        <span class="text-muted">Auto-sync:</span>
+                        <span class="font-semibold text-primary ml-1">
+                            {%- if readeck_config.enabled -%}✅ On{%- else -%}⬜ Off{%- endif -%}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-muted">Last synced:</span>
+                        <span class="font-semibold text-primary ml-1">
+                            {%- if readeck_config.last_synced_at -%}{{ readeck_config.last_synced_at[:19] | replace('T', ' ') }}{%- else -%}Never{%- endif -%}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-muted">Last imported:</span>
+                        <span class="font-semibold text-primary ml-1">{{ readeck_config.last_imported_count or 0 }}</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 pt-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="rd-auto-sync" {% if readeck_config.enabled %}checked{% endif %}
+                               class="w-4 h-4 rounded border-card text-accent focus:ring-accent/40" />
+                        <span class="text-sm font-medium text-primary">Enable automatic sync (every 15 minutes)</span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- Info -->
+        <section class="bg-card rounded-xl border border-card shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-card">
+                <h2 class="text-base font-semibold text-primary">ℹ️ About</h2>
+            </div>
+            <div class="px-6 py-5 space-y-2 text-sm text-muted">
+                <p>Syncs annotations from all bookmarks in your Readeck server into Commonplace as <strong>articles</strong>.</p>
+                <p>Dedup is handled via SHA256 fingerprint of <code>text + title + author</code> - existing highlights are skipped.</p>
+                <p>New annotations get a <code>readeck:&#123;bookmark_id&#125;:&#123;annotation_id&#125;</code> source_id for exact reference.</p>
             </div>
         </section>
     </div>

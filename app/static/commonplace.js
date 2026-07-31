@@ -1042,7 +1042,7 @@
     };
 
     (function() {
-        var valid = ['data', 'api-keys', 'email', 'notifications', 'appearance', 'bookorbit'];
+        var valid = ['data', 'api-keys', 'email', 'notifications', 'appearance', 'bookorbit', 'readeck'];
         var tab = location.hash.slice(1) || 'data';
         if (!valid.includes(tab)) tab = 'data';
         window.switchTab(tab);
@@ -1258,6 +1258,85 @@
             }
         })
         .catch(function() { setBookOrbitResult('Network error', true); if (btn) btn.disabled = false; });
+    };
+
+    /* ── Readeck Sync ─────────────────────────────────────── */
+
+    function getReadeckFields() {
+        return {
+            readeck_url: document.getElementById('rd-url').value.trim(),
+            readeck_api_token: document.getElementById('rd-token').value,
+            readeck_sync_enabled: document.getElementById('rd-auto-sync').checked,
+        };
+    }
+
+    function setReadeckResult(msg, isError) {
+        var el = document.getElementById('rd-result');
+        el.textContent = msg;
+        el.style.color = isError ? '#dc2626' : '#6b7280';
+    }
+
+    window.testReadeck = function() {
+        var fields = getReadeckFields();
+        if (!fields.readeck_url || !fields.readeck_api_token) {
+            setReadeckResult('Fill in URL and API token first', true);
+            return;
+        }
+        setReadeckResult('Testing...', false);
+        fetch('/api/settings/readeck-test', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(fields),
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.ok) setReadeckResult('Connected!', false);
+            else setReadeckResult('Failed: ' + (d.error || 'unknown'), true);
+        })
+        .catch(function() { setReadeckResult('Network error', true); });
+    };
+
+    window.saveReadeck = function() {
+        var fields = getReadeckFields();
+        setReadeckResult('Saving...', false);
+        fetch('/api/settings/readeck-sync', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(fields),
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.ok) setReadeckResult('Settings saved', false);
+            else setReadeckResult('Save failed', true);
+        })
+        .catch(function() { setReadeckResult('Network error', true); });
+    };
+
+    window.syncReadeckNow = function() {
+        setReadeckResult('Syncing... (may take a moment)', false);
+        var btn = document.querySelector('[data-action="sync-readeck-now"]');
+        if (btn) btn.disabled = true;
+        fetch('/api/settings/readeck-sync-now', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.ok) {
+                var r = d.result;
+                setReadeckResult(
+                    'Done: ' + r.posted + ' imported, ' + r.skipped + ' skipped, ' + r.errors + ' errors',
+                    r.errors > 0
+                );
+                if (btn) btn.disabled = false;
+                // Reload page to refresh status
+                location.reload();
+            } else {
+                setReadeckResult('Sync failed', true);
+                if (btn) btn.disabled = false;
+            }
+        })
+        .catch(function() { setReadeckResult('Network error', true); if (btn) btn.disabled = false; });
     };
 
     window.confirmReset = function() {
@@ -1510,6 +1589,9 @@
             else if (action === 'test-bookorbit' && window.testBookOrbit) { e.preventDefault(); window.testBookOrbit(); }
             else if (action === 'save-bookorbit' && window.saveBookOrbit) { e.preventDefault(); window.saveBookOrbit(); }
             else if (action === 'sync-bookorbit-now' && window.syncBookOrbitNow) { e.preventDefault(); window.syncBookOrbitNow(); }
+            else if (action === 'test-readeck' && window.testReadeck) { e.preventDefault(); window.testReadeck(); }
+            else if (action === 'save-readeck' && window.saveReadeck) { e.preventDefault(); window.saveReadeck(); }
+            else if (action === 'sync-readeck-now' && window.syncReadeckNow) { e.preventDefault(); window.syncReadeckNow(); }
             else if (action === 'revoke-token') {
                 var name = btn.getAttribute('data-token-name') || 'this token';
                 if (!confirm('Revoke token \'' + name + '\'? This will break the device until a new token is configured.')) {
