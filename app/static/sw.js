@@ -1,5 +1,5 @@
 // commonplace — service worker: cache static assets + push notifications
-const CACHE = "commonplace-v4";
+const CACHE = "commonplace-v5";
 const PRECACHE = [
   "/static/style.css",
   "/static/themes.css",

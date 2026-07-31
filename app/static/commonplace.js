@@ -1250,10 +1250,10 @@
                     r.errors > 0
                 );
                 if (btn) btn.disabled = false;
-                // Reload page to refresh status
-                location.reload();
+                // Reload after a pause so the result message stays readable
+                setTimeout(function() { location.reload(); }, 2500);
             } else {
-                setBookOrbitResult('Sync failed', true);
+                setBookOrbitResult(d.error || 'Sync failed', true);
                 if (btn) btn.disabled = false;
             }
         })
@@ -1329,10 +1329,10 @@
                     r.errors > 0
                 );
                 if (btn) btn.disabled = false;
-                // Reload page to refresh status
-                location.reload();
+                // Reload after a pause so the result message stays readable
+                setTimeout(function() { location.reload(); }, 2500);
             } else {
-                setReadeckResult('Sync failed', true);
+                setReadeckResult(d.error || 'Sync failed', true);
                 if (btn) btn.disabled = false;
             }
         })
