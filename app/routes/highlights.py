@@ -35,6 +35,7 @@ async def highlights_page(
     source: Optional[str] = Query(default=""),
     book: Optional[str] = Query(default=""),
     favorites: Optional[str] = Query(default=""),
+    category: Optional[str] = Query(default=""),
     page: int = Query(default=1, ge=1),
     db: AsyncSession = Depends(get_db),
 ):
@@ -61,6 +62,8 @@ async def highlights_page(
         query = query.where(Highlight.book_title.ilike(f"%{_escape_ilike(book)}%", escape="\\"))
     if favorites == "1":
         query = query.where(Highlight.favorite == 1)
+    if category and category != "all":
+        query = query.where(Highlight.category == category)
 
     # Count total
     count_q = select(sa_func.count()).select_from(query.subquery())
@@ -99,6 +102,7 @@ async def highlights_page(
             source_filter=source,
             book=book,
             favorites_filter=favorites,
+            category_filter=category,
             page=page,
             total_pages=total_pages,
             total_count=total,
@@ -168,6 +172,7 @@ async def list_highlights(
     since: Optional[str] = "",
     search: Optional[str] = "",
     book_title: Optional[str] = "",
+    category: Optional[str] = "",
     db: AsyncSession = Depends(get_db),
 ):
     if search and search.strip():
@@ -189,6 +194,8 @@ async def list_highlights(
             query = query.where(Highlight.created_at >= since_dt)
         except (ValueError, TypeError):
             pass
+    if category:
+        query = query.where(Highlight.category == category)
     result = await db.execute(query.offset(skip).limit(limit))
     return result.scalars().all()
 

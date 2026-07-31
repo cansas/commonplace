@@ -30,6 +30,16 @@
             <option value="readwise" {% if source_filter == 'readwise' %}selected{% endif %}>Readwise</option>
             <option value="manual" {% if source_filter == 'manual' %}selected{% endif %}>Manual</option>
             <option value="scan" {% if source_filter == 'scan' %}selected{% endif %}>Scan</option>
+            <option value="kobo" {% if source_filter == 'kobo' %}selected{% endif %}>Kobo</option>
+            <option value="web" {% if source_filter == 'web' %}selected{% endif %}>Web</option>
+            <option value="bookorbit" {% if source_filter == 'bookorbit' %}selected{% endif %}>BookOrbit</option>
+            <option value="readest" {% if source_filter == 'readest' %}selected{% endif %}>Readest</option>
+            <option value="readeck" {% if source_filter == 'readeck' %}selected{% endif %}>Readeck</option>
+        </select>
+        <select name="category" data-action="submit-form" class="px-3 py-2 bg-card border border-card rounded-lg text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-accent/40 transition-shadow">
+            <option value="" {% if not category_filter %}selected{% endif %}>All Types</option>
+            <option value="books" {% if category_filter == 'books' %}selected{% endif %}>📚 Books</option>
+            <option value="articles" {% if category_filter == 'articles' %}selected{% endif %}>📰 Articles</option>
         </select>
         <select name="sort" data-action="submit-form" class="px-3 py-2 bg-card border border-card rounded-lg text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-accent/40 transition-shadow">
             <option value="newest" {% if sort == 'newest' or not sort %}selected{% endif %}>Newest First</option>
