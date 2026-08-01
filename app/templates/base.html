@@ -19,7 +19,7 @@
     {% for t in custom_themes %}<link rel="stylesheet" href="/static/themes/{{ t.name }}.css" />{% endfor %}
     {% block head_extra %}{% endblock %}
 </head>
-<body class="bg-page text-primary antialiased min-h-screen flex flex-col md:flex-row"
+<body class="theme-{{ user_theme or 'modern' }} bg-page text-primary antialiased min-h-screen flex flex-col md:flex-row"
       data-theme="{{ user_theme or 'modern' }}"
       data-theme-order="{% for t in all_themes %}{{ t.name }}{% if not loop.last %},{% endif %}{% endfor %}">
 
