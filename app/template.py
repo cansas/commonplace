@@ -57,6 +57,9 @@ def render(request, template_name: str, context: dict = None, **kwargs):
     ctx = dict(context or {})
     ctx.setdefault("csrf_token", getattr(request.state, "csrf_token", None) or generate_csrf_token(request.session))
     ctx.setdefault("user_theme", request.session.get("theme", "modern"))
+    # Version string for cache-busting (?v=) on static assets and the SW URL.
+    # Without this, a browser can keep running last release's commonplace.js.
+    ctx.setdefault("app_version", getattr(request.app, "version", "") or "")
     ctx.setdefault("vapid_public_key", _get_vapid_public_key())
     ctx.setdefault("custom_themes", discover_custom_themes())
     ctx.setdefault("all_themes", get_all_themes())

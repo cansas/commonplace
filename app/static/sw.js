@@ -1,5 +1,10 @@
 // commonplace — service worker: cache static assets + push notifications
-const CACHE = "commonplace-v5";
+//
+// Scripts and stylesheets are NETWORK-FIRST. A cache-first worker outlives
+// releases, so a cached commonplace.js can hide a whole new UI (or a new
+// settings field) indefinitely — that is exactly how the BookOrbit API key
+// field looked broken in 2.2.0. Images stay cache-first: they never change.
+const CACHE = "commonplace-v6";
 const PRECACHE = [
   "/static/style.css",
   "/static/themes.css",
@@ -24,22 +29,45 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// ── Fetch: cache static assets ───────────────────────────────
+// ── Fetch: static assets ─────────────────────────────────────
+// Code (js/css): network first, cache only as an offline fallback.
+// Everything else under /static/: cache first, refresh in the background.
+const isCode = (path) => /\.(js|css)$/.test(path);
+
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (
-    event.request.method === "GET" &&
-    url.origin === self.location.origin &&
-    url.pathname.startsWith("/static/")
+    event.request.method !== "GET" ||
+    url.origin !== self.location.origin ||
+    !url.pathname.startsWith("/static/")
   ) {
-    event.respondWith(
-      caches.match(event.request).then((cached) => cached || fetch(event.request).then((r) => {
-        const clone = r.clone();
-        caches.open(CACHE).then((cache) => cache.put(event.request, clone));
-        return r;
-      }))
-    );
+    return;
   }
+
+  if (isCode(url.pathname)) {
+    event.respondWith(
+      fetch(event.request).then((r) => {
+        if (r && r.ok) {
+          const clone = r.clone();
+          caches.open(CACHE).then((cache) => cache.put(event.request, clone));
+        }
+        return r;
+      }).catch(() =>
+        caches.match(event.request).then((cached) =>
+          cached || new Response("", { status: 504, statusText: "Offline" })
+        )
+      )
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request).then((cached) => cached || fetch(event.request).then((r) => {
+      const clone = r.clone();
+      caches.open(CACHE).then((cache) => cache.put(event.request, clone));
+      return r;
+    }))
+  );
 });
 
 // ── Push: receive and display notification ───────────────────

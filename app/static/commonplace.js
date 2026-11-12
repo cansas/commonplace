@@ -193,8 +193,13 @@
     /* ── Base page initialisation ──────────────────── */
 
     // PWA service worker
+    // Registered with the app version so every release installs a fresh worker
+    // (the SW route is cache-busted by that query string), and written so a
+    // stale worker can never quietly keep serving last release's JavaScript.
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/static/sw.js', { scope: '/' }).catch(function(e) {
+        var versionMeta = document.querySelector('meta[name="app-version"]');
+        var swUrl = '/static/sw.js' + (versionMeta && versionMeta.content ? '?v=' + encodeURIComponent(versionMeta.content) : '');
+        navigator.serviceWorker.register(swUrl, { scope: '/', updateViaCache: 'none' }).catch(function(e) {
             console.warn('SW registration failed (push disabled):', e.message);
         });
     }
