@@ -126,16 +126,21 @@ async def save_bookorbit_sync_settings(
     request: Request,
     body: dict,
 ):
-    """Save BookOrbit sync configuration."""
+    """Save BookOrbit sync configuration.
+
+    Two credential styles are accepted and stored side by side: an API key
+    (preferred) and the legacy username/password pair. Saving is not
+    destructive — an empty API key falls back to username/password.
+    """
     from app.services.settings_service import set as _set
 
-    allowed = {"bookorbit_url", "bookorbit_username", "bookorbit_password",
-               "bookorbit_sync_enabled"}
+    allowed = {"bookorbit_url", "bookorbit_api_key", "bookorbit_username",
+               "bookorbit_password", "bookorbit_sync_enabled"}
     for k in allowed:
         if k in body:
             _set(k, body[k])
     # Clear any previous disabled reason when saving new settings
-    if "bookorbit_password" in body or "bookorbit_sync_enabled" in body:
+    if ({"bookorbit_api_key", "bookorbit_password", "bookorbit_sync_enabled"} & set(body)):
         _set("bookorbit_disabled_reason", "")
     return {"ok": True}
 
@@ -145,23 +150,25 @@ async def test_bookorbit_connection(
     request: Request,
     body: dict,
 ):
-    """Test BookOrbit connection."""
+    """Test BookOrbit connection with an API key or username/password."""
     from app.services.bookorbit_sync import test_connection
 
-    url = body.get("bookorbit_url", "").strip()
-    username = body.get("bookorbit_username", "").strip()
-    password = body.get("bookorbit_password", "").strip()
+    url = (body.get("bookorbit_url") or "").strip()
+    api_key = (body.get("bookorbit_api_key") or "").strip()
+    username = (body.get("bookorbit_username") or "").strip()
+    password = (body.get("bookorbit_password") or "").strip()
 
     # Fall back to stored values for fields not provided
     if not url:
         url = _get("bookorbit_url", "")
+    if not api_key:
+        api_key = _get("bookorbit_api_key", "")
     if not username:
         username = _get("bookorbit_username", "")
     if not password:
         password = _get("bookorbit_password", "")
 
-    result = await test_connection(url, username, password)
-    return result
+    return await test_connection(url, username, password, api_key)
 
 
 @router.post("/api/settings/bookorbit-sync-now")
@@ -169,13 +176,18 @@ async def trigger_bookorbit_sync(
     request: Request,
 ):
     """Manually trigger a BookOrbit sync."""
-    from app.services.bookorbit_sync import sync_from_bookorbit, get_sync_config
+    from app.services.bookorbit_sync import (
+        sync_from_bookorbit, get_sync_config, has_credentials,
+    )
 
     config = get_sync_config()
     if not config["enabled"]:
         return {"ok": False, "error": "BookOrbit sync is not enabled. Save settings first."}
-    if not config["url"] or not config["username"]:
-        return {"ok": False, "error": "BookOrbit URL and username are not configured."}
+    if not has_credentials(config):
+        return {
+            "ok": False,
+            "error": "BookOrbit sync needs a server URL plus an API key or username and password.",
+        }
 
     result = await sync_from_bookorbit()
     return {"ok": True, "result": result}

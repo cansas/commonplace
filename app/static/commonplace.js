@@ -1183,12 +1183,20 @@
     /* ── BookOrbit Sync ──────────────────────────────────── */
 
     function getBookOrbitFields() {
+        var keyEl = document.getElementById('bo-api-key');
         return {
             bookorbit_url: document.getElementById('bo-url').value.trim(),
+            bookorbit_api_key: keyEl ? keyEl.value.trim() : '',
             bookorbit_username: document.getElementById('bo-username').value.trim(),
             bookorbit_password: document.getElementById('bo-password').value,
             bookorbit_sync_enabled: document.getElementById('bo-auto-sync').checked,
         };
+    }
+
+    function hasBookOrbitCredentials(fields) {
+        if (!fields.bookorbit_url) return false;
+        if (fields.bookorbit_api_key) return true;
+        return !!(fields.bookorbit_username && fields.bookorbit_password);
     }
 
     function setBookOrbitResult(msg, isError) {
@@ -1199,8 +1207,8 @@
 
     window.testBookOrbit = function() {
         var fields = getBookOrbitFields();
-        if (!fields.bookorbit_url || !fields.bookorbit_username || !fields.bookorbit_password) {
-            setBookOrbitResult('Fill in URL, username, and password first', true);
+        if (!hasBookOrbitCredentials(fields)) {
+            setBookOrbitResult('Fill in the URL and either an API key or a username and password', true);
             return;
         }
         setBookOrbitResult('Testing...', false);
@@ -1211,14 +1219,22 @@
         })
         .then(function(r) { return r.json(); })
         .then(function(d) {
-            if (d.ok) setBookOrbitResult('Connected!', false);
-            else setBookOrbitResult('Failed: ' + (d.error || 'unknown'), true);
+            if (d.ok) {
+                var how = d.method === 'api_key' ? 'API key' : 'username/password';
+                setBookOrbitResult('Connected using ' + how + (d.username ? ' (' + d.username + ')' : ''), false);
+            } else {
+                setBookOrbitResult('Failed: ' + (d.error || 'unknown'), true);
+            }
         })
         .catch(function() { setBookOrbitResult('Network error', true); });
     };
 
     window.saveBookOrbit = function() {
         var fields = getBookOrbitFields();
+        if (!hasBookOrbitCredentials(fields)) {
+            setBookOrbitResult('Fill in the URL and either an API key or a username and password', true);
+            return;
+        }
         setBookOrbitResult('Saving...', false);
         fetch('/api/settings/bookorbit-sync', {
             method: 'POST',
