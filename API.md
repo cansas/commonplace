@@ -1201,6 +1201,70 @@ Revokes a token from the settings page form.
 
 ---
 
+### `POST /api/settings/bookorbit-sync` — Save BookOrbit sync settings
+
+**Auth:** API token or session  
+**CSRF:** Not required (JSON body)
+
+**JSON body** (all fields optional — only the ones present are written):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `bookorbit_url` | string | BookOrbit base URL, e.g. `http://192.168.1.130:3000` |
+| `bookorbit_api_key` | string | API key from BookOrbit → Settings → You → API keys (preferred) |
+| `bookorbit_username` | string | Fallback login username |
+| `bookorbit_password` | string | Fallback login password |
+| `bookorbit_sync_enabled` | bool | Run the sync every 15 minutes |
+
+Sending `bookorbit_api_key`, `bookorbit_password`, or `bookorbit_sync_enabled` clears
+the stored failure reason. An empty `bookorbit_api_key` leaves the username/password
+path in charge, so a setup created before API keys existed keeps working unchanged.
+
+**Response:**
+```json
+{ "ok": true }
+```
+
+---
+
+### `POST /api/settings/bookorbit-test` — Test BookOrbit credentials
+
+**Auth:** API token or session  
+**CSRF:** Not required (JSON body)
+
+Takes the same fields as above. Any field omitted falls back to the stored value.
+When an API key is present it is checked against `GET /api/v1/auth/me`, otherwise the
+credentials are checked with `POST /api/v1/auth/login`.
+
+**Response — success:**
+```json
+{ "ok": true, "method": "api_key", "username": "brandon", "access": "" }
+```
+`method` is `api_key` or `password`.
+
+**Response — failure:**
+```json
+{ "ok": false, "method": "api_key", "error": "Invalid API key" }
+```
+
+---
+
+### `POST /api/settings/bookorbit-sync-now` — Run a BookOrbit sync now
+
+**Auth:** API token or session  
+**CSRF:** Not required
+
+**Response:**
+```json
+{ "ok": true, "result": { "posted": 12, "skipped": 124, "errors": 0, "last_id": 149 } }
+```
+
+Returns `{"ok": false, "error": "..."}` when sync is disabled or has no usable
+credentials (server URL plus an API key, or a username and password) instead of a
+misleading `0/0/0` result.
+
+---
+
 ## 9. Share (Public Cards)
 
 All share endpoints are **public** (no auth required) and **CSRF-exempt** (under `/share/` prefix).

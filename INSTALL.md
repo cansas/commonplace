@@ -9,6 +9,7 @@ scratch: server, KOReader plugin, and Obsidian plugin.
 - [First-Time Setup](#first-time-setup)
 - [KOReader Plugin](#koreader-plugin)
 - [Obsidian Plugin](#obsidian-plugin)
+- [BookOrbit Sync](#bookorbit-sync)
 - [Updating](#updating)
 
 ---
@@ -148,6 +149,41 @@ refuses to start with a clear error message.
 - **Ribbon icon** (download arrow) — click to sync
 - **Command palette** — "Sync highlights from commonplace"
 - **Settings page** — "Sync Now" button
+
+---
+
+## BookOrbit Sync
+
+If you run [BookOrbit](https://github.com/bookorbit/bookorbit) next to commonplace,
+commonplace can pull its annotations (kobo, koreader, web) on a timer. Everything is
+configured in **Settings → BookOrbit**: server URL (for example
+`http://192.168.1.130:3000`), credentials, and the auto-sync toggle. Sync runs every
+15 minutes while enabled; **Sync Now** runs it on demand.
+
+Two credential styles are supported, and the API key wins whenever both are set.
+
+### API key (recommended)
+
+1. In BookOrbit, open **Settings → You → API keys** and create a key with access
+   **Read**. Pick an expiry. The key starts with `bok_` and is shown once.
+2. In commonplace, paste it into **Settings → BookOrbit → API Key** and save.
+3. **Test Connection** should answer `Connected using API key (<your name>)`.
+
+A read key with no extra permissions is enough — the sync only performs `GET`s. Give
+each tool its own key so one can be revoked without breaking the others, and keep
+libraries and permissions as narrow as you can afford. See BookOrbit's own
+`docs/API_KEYS.md` for the full key model.
+
+### Username and password
+
+Leave **API Key** blank and fill in **Username** and **Password** instead. The sync
+then logs in with `POST /api/v1/auth/login` and reuses the session cookie, exactly as it
+did before BookOrbit had API keys. Setups that were configured this way keep working
+with no change.
+
+Either way, a rejected credential is reported in the settings page (for example
+`Sync disabled: auth_failed: Invalid API key`) rather than showing a misleading
+"0 imported" result.
 
 ---
 
